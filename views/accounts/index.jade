@@ -1,0 +1,38 @@
+extends ../layout
+
+block head
+    script(src="/scripts/a/index.js")
+block content
+  h2 Accounts 
+  a(class='btn btn-success', href='/demoapp/accounts/add') Create Account
+  - if (typeof(accounts) !== 'undefined'){
+  p#msg
+  table(align='center', id='tab-account', cellspacing='10')
+    thead(align='left')
+        tr: th: a(href='id_sort', id='id_sort') ID 
+            th: a(href='name_sort', id='name_sort') User 
+            th: a(href='mail_sort', id='mail_sort') Mail 
+            th: a(href='role_sort', id='role_sort') Role
+            th Actions
+    tbody
+        - each acc in accounts
+            tr(align='left')
+                td #{acc.accountId}
+                td #{acc.username}
+                td #{acc.email}
+                td #{acc.role}
+                td 
+                    table
+                        tr 
+                            td: a(href='/demoapp/accounts/#{acc.accountId}', class='btn btn-success') View
+                            td: a(href='/demoapp/accounts/#{acc.accountId}/edit', class='btn btn-warning') Edit
+                            td: a(href='/demoapp/accounts/#{acc.accountId}/delete', class='btn btn-danger') Delete
+                                
+  table(align='center', id='nav')
+    tr
+      td: a(href='back',class='btn btn-warning',id='btn-back') Back 
+      td: a(href='next',class='btn btn-warning',id='btn-next') Next 
+  - }
+  - else {
+     p No Accounts found!    
+  - }

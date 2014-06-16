@@ -1,0 +1,27 @@
+{
+  "name": "Echo-Rest-Api",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node echo-ws.js"
+  },
+  "dependencies": {
+    "async": "*",
+    "body-parser": "^1.2.2",
+    "cookie-session": "^1.0.2",
+    "express": "*",
+    "jade": "*",
+    "jsonwebtoken": "*",
+    "mysql": "*",
+    "oauth2orize": "^1.0.1",
+    "passport": "*",
+    "passport-http": "*",
+    "passport-http-bearer": "*",
+    "passport-oauth2-client-password": "^0.1.1",
+    "redis": "*",
+    "request": "^2.36.0",
+    "serve-static": "^1.2.0",
+    "swagger-node-express": "^2.0.3",
+    "swagger-ui": "^2.0.17"
+  }
+}

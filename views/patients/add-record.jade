@@ -1,0 +1,11 @@
+extends ../layout
+
+block head
+    script(src="/scripts/p/add-daily.js")  
+block content
+    input(type='hidden', id='ID', value=id)
+    h2 Answer Daily Questions (API Call is missing)
+    p(id='patient')
+    div.container
+      table(id='questions')
+    

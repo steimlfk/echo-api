@@ -1,0 +1,64 @@
+extends ../layout
+
+block head
+    script(src="/scripts/q/submit.js")  
+
+block content
+        h2 Add Question
+        p#msg
+        form(id='Editform', action='add', method='post')     
+            table(align='center', id='add-question')
+                tr(align='left')
+                    td 
+                        label(for='question[text]',class='control-label') Text
+                    td 
+                        input(id='question[text]',name='question[text]', type='text', class='q-text')
+                tr(align='left')
+                    td
+                        label(for='question[category]',class='control-label') Category
+                    td 
+                        select(id='question[category]',name='question[category]')
+                            option(value='catscale') Catscale
+                            option(value='ccqweek') CCQ Week
+                            option(value='charlson') Charlson
+                            option(value='daily') Daily Answers
+                tr(align='left')
+                    td
+                        label(for='question[type]',class='control-label') Type
+                    td 
+                        select(id='question[type]',name='question[type]')
+                            option(value='radio') radio
+                            option(value='boolean') boolean
+                            option(value='mixed') mixed
+                tr(align='center')
+                    td
+                        label(class='control-label').
+                            Answers
+                    td 
+                        label(class='control-label').
+                            Text
+                    td
+                        label(class='control-label').
+                            Value
+                tr(align='left')
+                    td 
+                        label(class='control-label', for='answervalue[1]').
+                            Answer 1 
+                    td 
+                        input(id='answertext[1]', name='answertext[1]', type='text', class='question-text')
+                    td 
+                        input(id='answervalue[1]',name='answervalue[1]', type='text', class='question-value')
+                tr(align='left')
+                    td 
+                        label(class='control-label', for='answervalue[2]').
+                            Answer 2 
+                    td 
+                        input(id='answertext[2]',name='answertext[2]', type='text', class='question-text')
+                    td 
+                        input(id='answervalue[2]',name='answervalue[2]', type='text', class='question-value')
+                    td
+                        input(type='Button', id='0', value='Add',  class='btn btn-success btn-add')
+            input(type='submit', value='Save', class='btn btn-success')
+
+                        
+                    
