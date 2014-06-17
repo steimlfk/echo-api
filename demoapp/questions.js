@@ -48,7 +48,6 @@ exports.viewAdd = function(req, res, next){
 };
 
 exports.saveNew = function(req, res, next){
-	console.log(req.body);
 	var question = req.body.question;
 	question.answers = new Array();
 	for (var i = 0; i < req.body.answertext.length; i++){
@@ -60,7 +59,7 @@ exports.saveNew = function(req, res, next){
 	var re1 = request.post(uri1, {
 		'auth' : {
 			'bearer' : req.user.token
-		},
+		}, 
 		'json' : question,
 		strictSSL : false
 	}, function(err, resp, body){

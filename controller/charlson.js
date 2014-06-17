@@ -99,92 +99,92 @@ exports.models = {
 			            		 "format": "Date",
 			            		 "description": "Date of Diagnose"
 			            	 },
-			            	 "Myocardial_Infarction":{
+			            	 "myocardialInfarction":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "Congestive_Heart_Failure":{
+			            	 "congestiveHeartFailure":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "Peripheral_Vascular_Disease":{
+			            	 "peripheralVascularDisease":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "Cerebrovascular_disease":{
+			            	 "cerebrovascularDisease":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "Dementia":{
+			            	 "dementia":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "Chronic_Pulmonary_Diasease":{
+			            	 "ChronicPulmonaryDiasease":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "Connective_tissue_disease":{
+			            	 "connectiveTissueDisease":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "Ulcer_disease":{
+			            	 "ulcerDisease":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "Liver_disease_mild":{
+			            	 "liverDiseaseMild":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "Diabetes":{
+			            	 "diabetes":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "Hemiplegia":{
+			            	 "hemiplegia":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "Renal_disease_moderate_or_severe":{
+			            	 "renalDiseaseModerateOrSevere":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "Diabetes_with_end_organ_damage":{
+			            	 "diabetesWithEndOrganDamage":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "Any_tumor":{
+			            	 "anyTumor":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "Metastatic_solid_malignancy":{
+			            	 "metastaticSolidMalignancy":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "Leukemia":{
+			            	 "leukemia":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "Malignant_Lymphoma":{
+			            	 "malignantLymphoma":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 
 			            	 },
-			            	 "Liver_disease_moderate_or_severe":{
+			            	 "liverDiseaseModerateOrSevere":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "AIDS":{
+			            	 "aids":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "No_condition_available_for_Charlson_Index":{
+			            	 "noConditionAvailable":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "Total_Charlson":{
+			            	 "totalCharlson":{
 			            		 "type":"boolean",
 			            		 "description": "Value for given Answer",
 			            	 },
-			            	 "Group":{
+			            	 "group":{
 			            		 "type":"integer",
 			            		 "format": "int32",
 			            		 "description": "",
@@ -194,7 +194,7 @@ exports.models = {
 			            		 "format": "int32",
 			            		 "description" : "",
 			            	 },
-			            	 "Optional":{
+			            	 "optional":{
 			            		 "type": "boolean",
 			            		 "description" : "",
 			            	 }

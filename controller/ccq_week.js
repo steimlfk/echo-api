@@ -155,27 +155,27 @@ exports.models = {
 					"format": "int32",
 					"description": "Value for given Answer",
 				},
-				"Total_CCQ_Score":{
+				"totalCCQScore":{
 					"type":"number",
 					"format": "float",
 					"description": "Value for given Answer",
 				},
-				"Symptom_Score":{
+				"symptomScore":{
 					"type":"number",
 					"format": "float",
 					"description": "Value for given Answer",
 				},
-				"Mental_State_Score":{
+				"mentalStateScore":{
 					"type":"number",
 					"format": "float",
 					"description": "Value for given Answer",
 				},
-				"Functional_State_Score":{
+				"functionalStateScore":{
 					"type":"number",
 					"format": "float",
 					"description": "Value for given Answer",
 				},
-				"Group":{
+				"group":{
 					"type":"integer",
 					"format": "int32",
 					"description": "",

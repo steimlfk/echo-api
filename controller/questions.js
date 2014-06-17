@@ -29,7 +29,7 @@ exports.add = function(req,res){
                   var sql2 = 'Insert into answers (questionId, text, value) VALUES ' ;
                   for (var i = 0; i <= req.body.answers.length - 1; i++){
                      sql2 += '(' + result.insertId + ',' 
-                     +  db.escape(req.body.answers[i].answertext) + ','
+                     +  db.escape(req.body.answers[i].text) + ','
                      + db.escape(req.body.answers[i].value) + ')';
                      if (i < req.body.answers.length-1) sql2 += ',';
                   }

@@ -213,7 +213,7 @@ exports.models = {
 					"format": "int64",
 					"description": "Unique Identifier",
 				},
-				"user":{
+				"username":{
 					"type":"string",
 					"description": "Username"
 				}, 
