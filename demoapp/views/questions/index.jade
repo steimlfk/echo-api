@@ -3,7 +3,7 @@ extends ../layout
 block head
 block content
   h2 Questions 
-  a(class='btn btn-success', href='/demoapp/questions/add') Add new Question
+  a(class='btn btn-success', href=webpath+'/questions/add') Add new Question
   - if (typeof(questions) !== 'undefined'){
   p#msg
   div(class='container') 

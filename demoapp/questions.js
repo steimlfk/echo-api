@@ -35,15 +35,15 @@ exports.index = function(req, res, next){
 		}
 		if (body){
 			var questions = JSON.parse(body);
-			res.render('questions/index', {questions: questions , username:req.user.username, role:req.user.role});
+			res.render('questions/index', {questions: questions , username:req.user.username, role:req.user.role, webpath:mPath});
 		}
-		else res.render('questions/index', {username:req.user.username, role:req.user.role});
+		else res.render('questions/index', {username:req.user.username, role:req.user.role, webpath:mPath});
 	});
 
 };
 
 exports.viewAdd = function(req, res, next){
-	res.render('questions/edit', {role:req.user.role,username:req.user.username});
+	res.render('questions/edit', {role:req.user.role,username:req.user.username, webpath:mPath});
 
 };
 

@@ -62,9 +62,9 @@ exports.index = function(req, res, next){
 			for (var i = 0; i < pats.patients.length; i++){
 				pats.patients[i].dateOfBirth = pats.patients[i].dateOfBirth.split("T")[0];
 			}
-			res.render('patients/index', {patients: pats.patients, username:req.user.username, role:req.user.role});
+			res.render('patients/index', {patients: pats.patients, username:req.user.username, role:req.user.role, webpath:mPath});
 		}
-		else res.render('patients/index', {username:req.user.username, role:req.user.role});
+		else res.render('patients/index', {username:req.user.username, role:req.user.role, webpath:mPath});
 	});
 
 };
@@ -85,7 +85,7 @@ exports.viewUpdate = function(req, res, next){
 			var pat = JSON.parse(body); 
 			pat.dateOfBirth = pat.dateOfBirth.split("T")[0];
 			pat.firstDiagnose = pat.firstDiagnose.split("T")[0];
-			res.render('patients/edit', {patient: pat, username:req.user.username, role:req.user.role});
+			res.render('patients/edit', {patient: pat, username:req.user.username, role:req.user.role, webpath:mPath});
 		}
 		else res.redirect(mPath+ '/patients');
 	});
@@ -107,12 +107,12 @@ exports.viewAdd = function(req, res, next){
 			}
 			if (body){
 				var docs = JSON.parse(body); 
-				res.render('patients/edit', {doctors: docs,username:req.user.username, role:req.user.role});
+				res.render('patients/edit', {doctors: docs,username:req.user.username, role:req.user.role, webpath:mPath});
 			}
-			else res.render('patients/edit', {doctors: [{'username' : 'No doctors registered!', 'doctorId' : -1}], role:req.user.role,username:req.user.username});
+			else res.render('patients/edit', {doctors: [{'username' : 'No doctors registered!', 'doctorId' : -1}], role:req.user.role,username:req.user.username, webpath:mPath});
 		});
 	}
-	else res.render('patients/edit', {role:req.user.role,username:req.user.username});
+	else res.render('patients/edit', {role:req.user.role,username:req.user.username, webpath:mPath});
 
 };
 
@@ -215,6 +215,7 @@ exports.viewSingleOne  = function(req, res, next){
 			catscale : catscale,
 			charlson : charlson,
 			daily : daily,
+			webpath:mPath
 		})
 	});
 };

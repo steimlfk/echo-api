@@ -1,7 +1,7 @@
 doctype html
 html
   head
-    title ECHO Playground
+    title ECHO Prototype
     link(rel='stylesheet', href='/stylesheets/style.css')
     link(rel='stylesheet', href='/stylesheets/bootstrap.css')
   body
@@ -15,12 +15,12 @@ html
         br
         br
         div.text-center
-          h1 ECHO Playground
+          h1 ECHO Prototype
           h2 Login 
           - if (typeof(message) !== 'undefined'){
           p #{message}
           - }
-          form#loginform(action='/demoapp/login', method='POST')
+          form#loginform(action=webpath+'/login', method='POST')
             table(align='center')
               tr
                 td: label(name='username') Username

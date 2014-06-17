@@ -1,7 +1,7 @@
 doctype html
 html
   head
-    title ECHO Playground
+    title ECHO Prototype
     link(rel='stylesheet', href='/stylesheets/style.css')
     link(rel='stylesheet', href='/stylesheets/bootstrap.css')
     script(src="/scripts/jquery.js")
@@ -12,21 +12,21 @@ html
         table
           tr
             td
-              a(href='/demoapp/accounts?page=1', class='btn btn-success') Accounts
+              a(href=webpath+'/accounts?page=1', class='btn btn-success') Accounts
             td  
-              a(href='/demoapp/patients?page=1', class='btn btn-success') Patients
+              a(href=webpath+'/patients?page=1', class='btn btn-success') Patients
             td  
-              a(href='/demoapp/questions', class='btn btn-success') Questions
+              a(href=webpath+'/questions', class='btn btn-success') Questions
       div(class='pull-right')
         table
           tr 
             td Welcome #{username}! Role: #{role}
             td
-              a(href='/demoapp/home', class='btn btn-warning') View Profile
+              a(href=webpath+'/home', class='btn btn-warning') View Profile
             td
-              a(href='/demoapp/logout', class='btn btn-warning') Logout
+              a(href=webpath+'/logout', class='btn btn-warning') Logout
       br
       br
       div(id='content', class='text-center')
-        h1 ECHO Playground
+        h1 ECHO Prototype
         block content

@@ -16,7 +16,7 @@ module.exports = function(host, port, path, ssl){
 	mHost = host;
 	mPort = port;
 	mPath = path;
-	mSSL = ssl;
+	mSSL = (ssl || false);
 	if (mSSL == true) httpMode = httpMode; 
 
 	var patients = require ('./patients.js');
@@ -28,7 +28,7 @@ module.exports = function(host, port, path, ssl){
 	var questions = require ('./questions.js');
 	questions.setup(host,port,path, ssl);
 
-	router.get  ('/', function(req,res,next){res.redirect('/login');});
+	router.get  ('/', function(req,res,next){res.redirect(mPath+'/login');});
 	router.get	('/login', loginPage);
 	router.post	('/login', login);
 	router.get	('/logout', logout);
@@ -60,7 +60,7 @@ var loginPage = function(req,res,next){
 	else{
 		var msg;
 		if (req.session) msg = req.session.messages;
-		res.render('login',{message : msg}); 
+		res.render('login',{message : msg, webpath:mPath}); 
 	}
 };
 

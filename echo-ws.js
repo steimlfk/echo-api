@@ -30,6 +30,7 @@ dys =        	       require('./controller/dyn_scale');
 /**
  * Config & Vars
  */
+var ssl = false;
 var app = express();
 var oauth2 = require('./config/oauth2');
 var api_docs = "/api-docs";
@@ -49,7 +50,7 @@ if (state == 'bluemix') host = "echo-rest-api.ng.bluemix.net";
 if (state == 'dev') url_port = 3000;
 
 app.set('port', port);									
-app.set('views', __dirname + '/views');						//required for webdemo
+app.set('views', __dirname + '/demoapp/views');				//required for webdemo
 app.set('view engine', 'jade');								//required for webdemo
 app.use(bodyParser());					
 app.use(session({ secret: 'echo_secret' }));				//required for webdemo
@@ -62,8 +63,8 @@ var auth = require('./config/auth');
 /**
  * REST API
  */
-
-app.get('/', function(req, res){res.redirect('/demoapp/login');});	//required for webdemo
+var webdemo_path = '/demoapp'
+	app.get('/', function(req, res){res.redirect(webdemo_path+'/login');});	//required for webdemo
 
 app.use('/accounts',  passport.authenticate(['bearer'], { session: false }));
 app.use('/logout',    passport.authenticate(['bearer'], { session: false }));
@@ -120,7 +121,7 @@ swagger.addPost(	{'spec': daily_answers.addSpec,'action': daily_answers.add});
 //swagger.addGet(		{'spec': dys.listSpec,'action': dys.list});
 //swagger.addPost(	{'spec': dys.addSpec,'action': dys.add});
 
-// Doenst appear in API Doc
+//Doenst appear in API Doc
 //swagger.addModels(fagerstrom);
 //swagger.addGet(		{'spec': fagerstrom.listSpec,'action': fagerstrom.list});
 //swagger.addPost(	{'spec': fagerstrom.addSpec,'action': fagerstrom.add});
@@ -138,8 +139,7 @@ swagger.addPost(	{'spec': questions.addSpec,'action': questions.add});
  * Demo Web-App
  */
 
-app.use('/demoapp', require('./demoapp')(host, url_port, '/demoapp'));
-
+app.use(webdemo_path, require('./demoapp')(host, url_port, webdemo_path, ssl));
 
 /**
  * Swagger UI
@@ -180,23 +180,25 @@ swagger.configure("http://"+host+":"+url_port, "0.1");
 /**
  * Main
  */
-//HTTPS
 
-//var options = {
-//		  key: fs.readFileSync('../privatekey.pem'),
-//		  cert: fs.readFileSync('../certificate.pem')
-//		};
-//
-//https.createServer(options, app).listen(app.get('port'), function(){
-//console.log('ECHO REST API listening on host ' +host + ' on port ' + app.get('port'));
-//console.log('Server running in State: ' + state);
-//console.log('Swagger Base: https://'+host+':'+url_port + api_docs);
-//});
+if (ssl){
+	var options = {
+			key: fs.readFileSync('../privatekey.pem'),
+			cert: fs.readFileSync('../certificate.pem')
+	};
 
+	https.createServer(options, app).listen(app.get('port'), function(){
+		console.log('ECHO REST API listening on host ' +host + ' on port ' + app.get('port'));
+		console.log('Server running in State: ' + state);
+		console.log('Server uses SSL');
+		console.log('Swagger Base: https://'+host+':'+url_port + api_docs);
+	});
 
-
-http.createServer(app).listen(app.get('port'), function(){
-	console.log('ECHO REST API listening on host ' +host + ' on port ' + app.get('port'));
-	console.log('Server running in State: ' + state);
-	console.log('Swagger Base: http://'+host+':'+url_port + api_docs);
-});
+}
+else {
+	http.createServer(app).listen(app.get('port'), function(){
+		console.log('ECHO REST API listening on host ' +host + ' on port ' + app.get('port'));
+		console.log('Server running in State: ' + state);
+		console.log('Swagger Base: http://'+host+':'+url_port + api_docs);
+	});
+}

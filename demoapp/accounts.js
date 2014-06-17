@@ -60,9 +60,9 @@ exports.index = function(req, res, next){
 		}
 		if (body){
 			var acc = JSON.parse(body);
-			res.render('accounts/index', {accounts: acc.accounts , username:req.user.username, role:req.user.role});
+			res.render('accounts/index', {accounts: acc.accounts , username:req.user.username, role:req.user.role, webpath:mPath});
 		}
-		else res.render('accounts/index', {username:req.user.username, role:req.user.role});
+		else res.render('accounts/index', {username:req.user.username, role:req.user.role, webpath:mPath});
 	});
 
 };
@@ -81,14 +81,14 @@ exports.viewUpdate = function(req, res, next){
 		}
 		if (body){
 			var acc = JSON.parse(body); 
-			res.render('accounts/edit', {account: acc, username:req.user.username, role:req.user.role});
+			res.render('accounts/edit', {account: acc, username:req.user.username, role:req.user.role, webpath:mPath});
 		}
 		else res.redirect(mPath + '/accounts');
 	});
 };
 
 exports.viewAdd = function(req, res, next){
-	res.render('accounts/edit', {role:req.user.role,username:req.user.username});
+	res.render('accounts/edit', {role:req.user.role,username:req.user.username, webpath:mPath});
 
 };
 
@@ -168,7 +168,7 @@ exports.viewSingleOne = function(req, res, next){
 		}
 		if (body){
 			var acc = JSON.parse(body); 
-			res.render('accounts/details', {account: acc, username:req.user.username, role:req.user.role});
+			res.render('accounts/details', {account: acc, username:req.user.username, role:req.user.role, webpath:mPath});
 		}
 		else res.redirect(mPath+ '/accounts?page=1');
 	});
