@@ -18,14 +18,14 @@ fs = require('fs');
 var patients =         require('./controller/patients'),
 accounts =             require('./controller/accounts'),
 catscale =             require('./controller/catscale'),
-fagerstrom =           require('./controller/fagerstrom'),
-cessation =            require('./controller/cessation'),
+//fagerstrom =           require('./controller/fagerstrom'),
+//cessation =            require('./controller/cessation'),
 questions =            require('./controller/questions'),
 daily_m =              require('./controller/daily_measurements'),
 daily_answers =        require('./controller/daily_answers'),
 charlson =             require('./controller/charlson'),
-ccqweek =              require('./controller/ccq_week'),
-dys =        	       require('./controller/dyn_scale');
+ccqweek =              require('./controller/ccq_week');
+//dys =        	       require('./controller/dyn_scale');
 
 /**
  * Config & Vars
