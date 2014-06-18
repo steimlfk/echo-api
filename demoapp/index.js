@@ -95,7 +95,7 @@ var login = function(req,res,next){
 		req.logIn(user, function(err) {
 			if (err) { return next(err); }
 			req.session.messages = [];
-			return res.redirect(mPath+'/home');
+			return res.redirect(mPath+'/accounts/'+ req.user.accountId);
 		});
 	});
 
