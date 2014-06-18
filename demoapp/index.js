@@ -28,12 +28,11 @@ module.exports = function(host, port, path, ssl){
 	var questions = require ('./questions.js');
 	questions.setup(host,port,path, ssl);
 
-	router.get  ('/', function(req,res,next){res.redirect(mPath+'/login');});
+	router.get  ('/', root);
 	router.get	('/login', loginPage);
 	router.post	('/login', login);
 	router.get	('/logout', logout);
 	router.use	('*', checkAuth);
-	router.get	('/home', home);
 	router.get	('/patients', patients.index);
 	router.get	('/patients/add', patients.viewAdd);
 	router.post	('/patients/add', patients.saveNew);
@@ -55,8 +54,15 @@ module.exports = function(host, port, path, ssl){
 	return router;
 }
 
+var root = function(req,res,next){
+	if (req.isAuthenticated()) {
+		res.redirect(mPath+'/accounts/'+req.user.accountId);
+	}
+	else res.redirect(mPath+'/login');
+};
+
 var loginPage = function(req,res,next){	 
-	if (req.isAuthenticated()) {res.redirect(mPath+'/home');}
+	if (req.isAuthenticated()) {res.redirect(mPath+'/accounts/'+req.user.accountId);}
 	else{
 		var msg;
 		if (req.session) msg = req.session.messages;
@@ -94,10 +100,6 @@ var login = function(req,res,next){
 	});
 
 
-}
-
-var home = function(req, res, next){
-	res.redirect(mPath + '/accounts/' + req.user.accountId);
 }
 
 var logout = function(req,res,next){	

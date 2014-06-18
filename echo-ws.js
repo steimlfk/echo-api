@@ -63,8 +63,8 @@ var auth = require('./config/auth');
 /**
  * REST API
  */
-var webdemo_path = '/demoapp'
-	app.get('/', function(req, res){res.redirect(webdemo_path+'/login');});	//required for webdemo
+var webdemo_path = '/demoapp';
+app.get('/', function(req, res){res.redirect(webdemo_path+'/login');});	//required for webdemo
 
 app.use('/accounts',  passport.authenticate(['bearer'], { session: false }));
 app.use('/logout',    passport.authenticate(['bearer'], { session: false }));
