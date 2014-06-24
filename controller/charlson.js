@@ -40,7 +40,7 @@ exports.add = function(req,res){
 		} else {
 			var data = req.body;
 			var id = db.escape(req.params.id);
-			data.RefPatient = id;
+			data.patientId = req.params.id;
 			connection.query('INSERT INTO charlson SET ?', data, function(err, result) {
 				if (err) {
 					console.error('Query error on POST /charlson record: ',err);
@@ -48,7 +48,7 @@ exports.add = function(req,res){
 				} else {
 					res.statusCode = 201;
 					var real_id = id.replace(/'/g, "");
-					res.location('/patients/'+ real_id + '/charlson/' + result.insertId);
+					res.location('/patients/'+ rea_id + '/charlson/' + result.insertId);
 					res.send();
 				}
 				connection.release();
@@ -71,7 +71,7 @@ exports.listSpec = {
 
 exports.addSpec = {
 		summary : "Add  Charlson Records",
-		notes: "The Score Value don't has to be provided as the Database will calculate it. The DB also sets the date",
+		notes: "The Score Value don't has to be provided as the Database will calculate it. The DB also sets the date if not provided",
 		path : "/patients/{id}/charlson",
 		method: "POST",
 		nickname : "addCharlson",
@@ -84,10 +84,10 @@ exports.addSpec = {
 exports.models = {
 		"Charlson":{
 			"id":"Charlson",
-			"required": ["patientId","diagnoseDate","Myocardial_Infarction","Congestive_Heart_Failure","Peripheral_Vascular_Disease",
-			             "Cerebrovascular_disease","Dementia","Chronic_Pulmonary_Diasease","Connective_tissue_disease","Ulcer_disease","Liver_disease_mild",
-			             "Diabetes","Hemiplegia","Renal_disease_moderate_or_severe","Diabetes_with_end_organ_damage","Any_tumor","Leukemia","Malignant_Lymphoma",
-			             "Liver_disease_moderate_or_severe","Metastatic_solid_malignancy","AIDS","No_condition_available_for_Charlson_Index","Total_Charlson"],
+			"required": ["patientId","diagnoseDate","myocardialInfarction","congestiveHeartFailure","peripheralVascularDisease",
+			             "cerebrovascularDisease","dementia","chronicPulmonaryDiasease","connectiveTissueDisease","ulcerDisease","liverDiseaseMild",
+			             "diabetes","hemiplegia","renalDiseaseModerateOrSevere","diabetesWithEndOrganDamage","anyTumor","leukemia","malignantLymphoma",
+			             "liverDiseaseModerateOrSevere","metastaticSolidMalignancy","aids","noConditionAvailable","totalCharlson"],
 			             "properties":{
 			            	 "patientId":{
 			            		 "type":"integer",

@@ -52,10 +52,10 @@ block content
                     table(align='center') 
                         tr
                             td(align='left'): label(for='lastName',class='control-label') Last Name
-                            td: input(type='text',id='lastName',name='lastName',class='input-xlarge',placeholder='Last Name', value=(patient?patient.surname:''))
+                            td: input(type='text',id='lastName',name='lastName',class='input-xlarge',placeholder='Last Name', value=(patient?patient.lastName:''))
                         tr
                             td(align='left'): label(for='firstName',class='control-label') First Name
-                            td: input(type='text',id='firstName',name='firstName',placeholder='Name',class='input-xlarge', value=(patient?patient.name:''))
+                            td: input(type='text',id='firstName',name='firstName',placeholder='First Name',class='input-xlarge', value=(patient?patient.firstName:''))
                         tr
                             td(align='left'): label(for='secondName',class='control-label') Second Name
                             td: input(type='text',id='secondName',name='secondName',placeholder='Second Name',class='input-xlarge',value=(patient?patient.secondName:'')) 

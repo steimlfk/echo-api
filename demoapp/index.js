@@ -31,8 +31,9 @@ module.exports = function(host, port, path, ssl){
 	router.get  ('/', root);
 	router.get	('/login', loginPage);
 	router.post	('/login', login);
-	router.get	('/logout', logout);
+	
 	router.use	('*', checkAuth);
+	router.get	('/logout', logout);
 	router.get	('/patients', patients.index);
 	router.get	('/patients/add', patients.viewAdd);
 	router.post	('/patients/add', patients.saveNew);
@@ -40,6 +41,14 @@ module.exports = function(host, port, path, ssl){
 	router.get	('/patients/:id/edit', patients.viewUpdate);
 	router.post	('/patients/:id/update', patients.saveUpdate);
 	router.get	('/patients/:id/delete', patients.del);
+	router.get	('/patients/:id/catscale', patients.viewNewCatscale);
+	router.post	('/patients/:id/catscale', patients.addNewCatscale);
+	router.get	('/patients/:id/ccq', patients.viewNewCCQ);
+	router.post	('/patients/:id/ccq', patients.addNewCCQ);
+	router.get	('/patients/:id/charlson', patients.viewNewCharlson);
+	router.post	('/patients/:id/charlson', patients.addNewCharlson);
+	router.get	('/patients/:id/daily', patients.viewNewDaily);
+	router.post	('/patients/:id/daily', patients.addNewDaily);
 	router.get	('/accounts', accounts.index);
 	router.get	('/accounts/add', accounts.viewAdd);
 	router.post	('/accounts/add', accounts.saveNew);

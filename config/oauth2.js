@@ -27,10 +27,10 @@ server.exchange(oauth2orize.exchange.password(function(client, username, passwor
 				};
 //				redis.hdel('users:'+ rows[0].accountId, 'token', redis.print);
 
-				var token = jwt.sign(tokencontent, tokensecret, {"expiresInMinutes": 270});
+				var token = jwt.sign(tokencontent, tokensecret, {"expiresInMinutes": 10080});
 
 //				redis.hset('users:'+ rows[0].accountId, 'token', token, redis.print);
-				done(null, token, null, { 'expires_in': '270', 'role': rows[0].role, 'accountId' : rows[0].accountId });
+				done(null, token, null, { 'expires_in': '10080', 'role': rows[0].role, 'accountId' : rows[0].accountId });
 				
 				connection.release();
 			});
@@ -41,7 +41,7 @@ server.exchange(oauth2orize.exchange.password(function(client, username, passwor
 
 exports.loginSpec = {
 		summary : "Login with OAuth2 (Strategy: Ressource Owner Password Credentials)",
-		notes : "Returns a token, which is needed to authenticate against all other API-Methods (Header: Authorization: Bearer [token]). Token is stored in Redis-DB to invalidate all other tokens of the logged in user.",
+		notes : "Returns a token, which is needed to authenticate against all other API-Methods (Header: Authorization: Bearer [token]).",
 		path : "/login",
 		method: "POST",
 		nickname : "login",

@@ -26,11 +26,15 @@ block content
                     td
                         label(for='question[type]',class='control-label') Type
                     td 
-                        select(id='question[type]',name='question[type]')
+                        select(id='question[type]',name='question[type]', class='type')
                             option(value='radio') radio
                             option(value='boolean') boolean
-                            option(value='mixed') mixed
-                tr(align='center')
+                tr(align='center',class='boolean', style="display:none")
+                    td 
+                        label(for='question[value]',class='control-label') Value
+                    td(align='left') 
+                        input(id='question[value]',name='question[value]', type='text', class='question-value')
+                tr(align='center', class='radio',style="display:none")
                     td
                         label(class='control-label').
                             Answers
@@ -40,7 +44,7 @@ block content
                     td
                         label(class='control-label').
                             Value
-                tr(align='left')
+                tr(align='left', class='radio',style="display:none")
                     td 
                         label(class='control-label', for='answervalue[1]').
                             Answer 1 
@@ -48,7 +52,7 @@ block content
                         input(id='answertext[1]', name='answertext[1]', type='text', class='question-text')
                     td 
                         input(id='answervalue[1]',name='answervalue[1]', type='text', class='question-value')
-                tr(align='left')
+                tr(align='left', class='radio',style="display:none")
                     td 
                         label(class='control-label', for='answervalue[2]').
                             Answer 2 

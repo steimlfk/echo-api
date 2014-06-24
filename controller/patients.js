@@ -12,6 +12,9 @@ exports.list = function(req,res,next){
 			res.send(503);
 		} else {
 			var qry = 'SELECT * FROM patients';
+			if (req.user.role == 'doctor') {
+				qry += ' WHERE doctorId = ' + db.escape (req.user.accountId);
+			}
 			if (req.query.sortBy && req.query.sortBy != 'undefined'){
 				qry += ' ORDER BY ' + req.query.sortBy + ' ';
 				var order = 'ASC';
@@ -48,13 +51,16 @@ exports.list = function(req,res,next){
 }
  
 exports.listOne = function(req,res,next){
-   
 	db.getConnection(function(err, connection) {
 		if (err) {
 			console.error('DB Connection error on GET single user: ',err);
 			res.send(503);
 		} else {
-			connection.query('SELECT * FROM patients where patientId='+db.escape(req.params.id), function(err, rows, fields) {
+			var qry =  'SELECT * FROM patients where patientId='+db.escape(req.params.id);
+			if (req.user.role == 'doctor') {
+				qry += ' AND doctorId = ' + db.escape (req.user.accountId);
+			}
+			connection.query(qry, function(err, rows, fields) {
 				if (err) {
 					console.error('Query error on GET single user: ',err);
 					return  res.send(500);

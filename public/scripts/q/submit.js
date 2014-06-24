@@ -8,6 +8,25 @@ function isInt(value) {
 }
 
 $(document).ready(function(){
+	
+	if ($('select.type').val() == 'boolean'){
+		$('.boolean').toggle();
+	};
+	if ($('select.type').val() == 'radio'){
+		$('.radio').toggle();
+	};
+	
+	$(document).on('change', 'select.type', function() {
+		if ($('select.type').val() == 'boolean'){
+			$('.boolean').toggle();
+			$('.radio').toggle();
+		};
+		if ($('select.type').val() == 'radio'){
+			$('.boolean').toggle();
+			$('.radio').toggle();
+		};
+		
+	});	
 
 	$(document).on('click', "input.btn-add", function() {
 

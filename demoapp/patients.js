@@ -57,7 +57,7 @@ exports.index = function(req, res, next){
 			return res.redirect(mPath+'/login');
 		}
 		if (body){
-			
+
 			var pats = JSON.parse(body)
 			for (var i = 0; i < pats.patients.length; i++){
 				pats.patients[i].dateOfBirth = pats.patients[i].dateOfBirth.split("T")[0];
@@ -118,13 +118,13 @@ exports.viewAdd = function(req, res, next){
 
 exports.saveNew = function(req, res, next){
 	var b = req.body;
-	
+
 	var account = new Object();
 	account.username = b.username;
 	account.password = b.password;
 	account.email = b.email;
 	account.role = 'patient';
-	
+
 	var patient = new Object();
 	patient.firstName = b.firstName;
 	patient.lastName = b.lastName;
@@ -141,7 +141,7 @@ exports.saveNew = function(req, res, next){
 	patient.notes = b.notes;
 	patient.trial = b.trial;
 	patient.optional = b.optional;
-	
+
 	var uri1 = httpMode+'://'+mHost+':'+mPort+'/accounts/';
 	var uri2 = httpMode+'://'+mHost+':'+mPort+'/patients/';
 	var re1 = request.post(uri1, {
@@ -191,7 +191,7 @@ exports.viewSingleOne  = function(req, res, next){
 			},
 			strictSSL : false
 		}, function(err, resp, body){
- 			if (err) callback (err, null);
+			if (err) callback (err, null);
 			else callback(null, body);
 		});
 	}
@@ -216,7 +216,7 @@ exports.viewSingleOne  = function(req, res, next){
 			charlson : charlson,
 			daily : daily,
 			webpath:mPath
-		})
+		});
 	});
 };
 
@@ -252,3 +252,138 @@ exports.del = function(req, res, next){
 		res.redirect(mPath+ '/patients?page=1')
 	});
 };
+
+
+exports.addNewCatscale = function (req, res, next){
+	console.log(req.body);
+	var uri1 = httpMode+'://'+mHost+':'+mPort+'/patients/' + req.params.id + '/catscale';
+	var re1 = request.post(uri1, {
+		'auth' : {
+			'bearer' : req.user.token
+		},
+		'json' : req.body,
+		strictSSL : false
+	}, function(err, resp, body){
+		if (resp.statusCode == '401'){
+			req.session.messages = ['Token Expired! Please login again and repeat.'];
+			return res.redirect(mPath+'/login');
+		}
+		res.redirect(mPath+ '/patients/' + req.params.id)
+	});
+}
+
+exports.addNewCCQ = function (req, res, next){
+	console.log(req.body);
+	var uri1 = httpMode+'://'+mHost+':'+mPort+'/patients/' + req.params.id + '/ccqweek';
+	var re1 = request.post(uri1, {
+		'auth' : {
+			'bearer' : req.user.token
+		},
+		'json' : req.body,
+		strictSSL : false
+	}, function(err, resp, body){
+		if (resp.statusCode == '401'){
+			req.session.messages = ['Token Expired! Please login again and repeat.'];
+			return res.redirect(mPath+'/login');
+		}
+		res.redirect(mPath+'/patients/' + req.params.id)
+	});
+}
+
+exports.addNewCharlson = function (req, res, next){
+	console.log(req.body);
+	var uri1 = httpMode+'://'+mHost+':'+mPort+'/patients/' + req.params.id + '/charlson';
+	var re1 = request.post(uri1, {
+		'auth' : {
+			'bearer' : req.user.token
+		},
+		'json' : req.body,
+		strictSSL : false
+	}, function(err, resp, body){
+		if (resp.statusCode == '401'){
+			req.session.messages = ['Token Expired! Please login again and repeat.'];
+			return res.redirect(mPath+'/login');
+		}
+		res.redirect(mPath+'/patients/' + req.params.id)
+	});
+}
+
+
+exports.addNewDaily = function (req, res, next){
+	var input = new Object();
+	var arr = new Array();
+	for (var key in req.body) {
+		var answer = new Object();
+		answer.questionId = key;
+		answer.score = req.body[key];
+		arr.push(answer);
+	}
+	input.answers = arr;
+	var uri1 = httpMode+'://'+mHost+':'+mPort+'/patients/' + req.params.id + '/daily-answers';
+	var re1 = request.post(uri1, {
+		'auth' : {
+			'bearer' : req.user.token
+		},
+		'json' : input,
+		strictSSL : false
+	}, function(err, resp, body){
+		if (resp.statusCode == '401'){
+			req.session.messages = ['Token Expired! Please login again and repeat.'];
+			return res.redirect(mPath+'/login');
+		}
+		res.redirect(mPath+'/patients/' + req.params.id)
+	});
+}
+
+
+
+exports.viewNewCatscale = function (req, res, next){
+	getQuestions(req, res, next, 'catscale');
+}
+
+exports.viewNewCCQ = function (req, res, next){
+	getQuestions(req, res, next, 'ccq');
+}
+
+exports.viewNewDaily = function (req, res, next){
+	getQuestions(req, res, next, 'daily');
+}
+
+exports.viewNewCharlson = function (req, res, next){
+	getQuestions(req, res, next, 'charlson');
+}
+
+
+function getQuestions(req, res, next, category){
+	var uri1 = httpMode+'://'+mHost+':'+mPort+'/questions/' +category;
+	var re1 = request.get(uri1, {
+		'auth' : {
+			'bearer' : req.user.token
+		},
+		strictSSL : false
+	}, function(err, resp, body){
+		if (resp.statusCode == '401'){
+			req.session.messages = ['Token Expired! Please login again and repeat.'];
+			return res.redirect(mPath+'/login');
+		}
+		var re2 = request.get(httpMode+'://'+mHost+':'+mPort+'/patients/'+req.params.id, {
+			'auth' : {
+				'bearer' : req.user.token
+			},
+			strictSSL : false
+		}, function(err, resp1, body1){
+			if (resp1.statusCode == '401'){
+				req.session.messages = ['Token Expired! Please login again and repeat.'];
+				return res.redirect(mPath+'/login');
+			}
+			res.render('patients/add-record', {
+				username : req.user.username,
+				role : req.user.role,
+				patient : JSON.parse(body1),
+				webpath:mPath,
+				questions : JSON.parse(body),
+				mode: category
+			});
+		});
+	});
+}

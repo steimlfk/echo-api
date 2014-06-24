@@ -48,12 +48,20 @@ exports.viewAdd = function(req, res, next){
 };
 
 exports.saveNew = function(req, res, next){
-	var question = req.body.question;
-	question.answers = new Array();
-	for (var i = 0; i < req.body.answertext.length; i++){
-		question.answers[i] = new Object();
-		question.answers[i].value = req.body.answervalue[i];
-		question.answers[i].text = req.body.answertext[i];
+	var question = new Object();
+	question.text = req.body.question.text;
+	question.category = req.body.question.category
+	question.type = req.body.question.type
+	if (req.body.question.type == 'radio'){
+		question.answers = new Array();
+		for (var i = 0; i < req.body.answertext.length; i++){
+			question.answers[i] = new Object();
+			question.answers[i].value = req.body.answervalue[i];
+			question.answers[i].text = req.body.answertext[i];
+		}
+	}
+	if (req.body.question.type == 'boolean'){
+		question.value = req.body.question.value;
 	}
 	var uri1 = httpMode+'://'+mHost+':'+mPort+'/questions/';
 	var re1 = request.post(uri1, {
@@ -70,3 +78,5 @@ exports.saveNew = function(req, res, next){
 		res.redirect(mPath+'/questions')
 	});
 };
+
+

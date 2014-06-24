@@ -22,7 +22,6 @@ exports.add = function(req,res){
 			}
 			sql += ';';
             
-            console.log(sql);
             connection.query(sql, function(err, result) {
                 if (err) {
                     console.error('Query error on POST new daily-answer: ',err);

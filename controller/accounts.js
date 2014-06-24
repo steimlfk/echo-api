@@ -131,6 +131,7 @@ exports.update = function(req,res,next){
 			console.error('DB Connection error on PUT accounts: ',err);
 			res.send(503);
 		} else {
+			
 			connection.query('UPDATE accounts SET ? WHERE accountId = '+connection.escape(req.params.id), req.body, function(err, result) {
 				if (err) {
 					console.error('Query error on PUT single accounts: ',err);
@@ -180,7 +181,7 @@ exports.addSpec = {
 		path : "/accounts",
 		method: "POST",
 		nickname : "addAccount",
-		parameters : [swagger.bodyParam("Account", "new Account", "Account")]
+		parameters : [swagger.bodyParam("Account", "new Account", "NewAccount")]
 
 }
 
@@ -199,20 +200,47 @@ exports.updateSpec = {
 		path : "/accounts/{id}",
 		method: "PUT",
 		nickname : "updateAccount",
-		parameters : [swagger.pathParam("id", "Account to update", "string"),swagger.bodyParam("Account", "updated Account Record", "Account")],
+		parameters : [swagger.pathParam("id", "Account to update", "string"),swagger.bodyParam("Account", "updated Account Record", "NewAccount")],
 		responseMessages : [swagger.errors.notFound('id')]
 };
 
 exports.models = {
 		"Account":{
 			"id":"Account", 
-			"required": ["accountId", "user", "password", "role", "email"],
+			"required": ["accountId", "username", "password", "role", "email"],
 			"properties":{
 				"accountId":{
 					"type":"integer",
 					"format": "int64",
 					"description": "Unique Identifier",
 				},
+				"username":{
+					"type":"string",
+					"description": "Username"
+				}, 
+				"password":{
+					"type":"string",
+					"description": "Password"
+				},
+				"role":{
+					"type":"string",
+					"description" : "Role",
+					"enum":[
+					        "admin",
+					        "doctor",
+					        "patient"
+					        ]
+				},
+				"email":{
+					"type": "string",
+					"description" : "E-Mail Address",
+				}
+			}
+		},
+		"NewAccount":{
+			"id":"Account", 
+			"required": ["username", "password", "role", "email"],
+			"properties":{
 				"username":{
 					"type":"string",
 					"description": "Username"

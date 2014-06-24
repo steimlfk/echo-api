@@ -9,7 +9,7 @@ block content
             td.details  #{patient.lastName}
         tr(align='left')
             td.details(align='left') First Name 
-            td.details #{patient.firstname}
+            td.details #{patient.firstName}
         tr(align='left')
             td.details(align='left') Second Name 
             td.details #{patient.secondName}
@@ -30,7 +30,7 @@ block content
             td.details #{patient.weight}
         tr(align='left')
             td.details Date of Diagnose 
-            td.details #{patient.firstdiagnose}
+            td.details #{patient.firstDiagnose}
         tr(align='left')
             td.details FileNo 
             td.details #{patient.fileNo}
@@ -96,7 +96,7 @@ block content
       -} 
     div(align='left', class='container')
       p
-      a(href='blub', id='btn-add-ccq', class='btn btn-success', align='left') Add Weekly CCQ Record
+      a(href=patient.patientId+'/ccq', id='btn-add-ccq', class='btn btn-success', align='left') Add Weekly CCQ Record
     div(align='left', class='container')
       h2 Charlson Index
       - if (charlson.length > 0) {
@@ -112,7 +112,7 @@ block content
       - }
     div(align='left', class='container')
       p
-      a(href='blub', id='btn-add-ccq', class='btn btn-success', align='left') Add Charlson Record
+      a(href=patient.patientId+'/charlson', id='btn-add-ccq', class='btn btn-success', align='left') Add Charlson Record
     div(align='left', class='container')
       h2 Catscale
       - if (catscale.length > 0) {
@@ -128,7 +128,7 @@ block content
       - }
     div(align='left', class='container') 
       p
-      a(href='blub', id='btn-add-ccq', class='btn btn-success', align='left') Add Catscale Record
+      a(href=patient.patientId+'/catscale', id='btn-add-ccq', class='btn btn-success', align='left') Add Catscale Record
     div(align='left', class='container')
       h2 Missing: Readings
     div(align='left', class='container')

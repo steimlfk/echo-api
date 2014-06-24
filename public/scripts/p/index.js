@@ -32,6 +32,8 @@ $(document).ready(function() {
 		}
 	}
 
+
+	
 	if (!queryDict['page']){
 		document.getElementById('nav').style.display = 'none';
 	}
