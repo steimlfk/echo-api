@@ -34,7 +34,6 @@ if (process.env.VCAP_SERVICES) {
 			db_pwd = mysqlCreds.password;
 			db_database = mysqlCreds.name;
 			state = 'bluemix';
-			//createTable();
 		}
 	}
 }

@@ -15,14 +15,18 @@ fs = require('fs');
 /**
  * Controller
  */
-var patients =         require('./controller/patients'),
-accounts =             require('./controller/accounts'),
-catscale =             require('./controller/catscale'),
-questions =            require('./controller/questions'),
-daily_m =              require('./controller/daily_measurements'),
-daily_answers =        require('./controller/daily_answers'),
-charlson =             require('./controller/charlson'),
-ccqweek =              require('./controller/ccq_week');
+var patients =         	require('./controller/patients'),
+accounts =             	require('./controller/accounts'),
+catscale =             	require('./controller/cats'),
+questions =            	require('./controller/questions'),
+daily_answers =        	require('./controller/daily_reports'),
+death =        			require('./controller/death'),
+charlson =             	require('./controller/charlsons'),
+readings =           	require('./controller/readings'),
+treatments =           	require('./controller/treatments'),
+notifications =         require('./controller/notifications'),
+commands =        		require('./controller/commands'),
+ccqweek =              	require('./controller/ccqs');
 
 /**
  * Config & Vars
@@ -45,6 +49,7 @@ var url_port = 80;
 if (state == 'openstack') host = "echo.informatik.uni-stuttgart.de";
 if (state == 'bluemix') host = "echo-rest-api.ng.bluemix.net";
 if (state == 'dev') url_port = 3000;
+if (state == 'tsl') host = "dev4.tsl.gr"
 
 app.set('port', port);									
 app.set('views', __dirname + '/demoapp/views');				//required for webdemo
@@ -61,12 +66,17 @@ var auth = require('./config/auth');
  * REST API
  */
 var webdemo_path = '/demoapp';
-app.get('/', function(req, res){res.redirect(webdemo_path+'/login');});	//required for webdemo
+//app.get('/', function(req, res){res.redirect(webdemo_path+'/login');});	//required for webdemo
+app.get('/', function(req, res){res.redirect('/docs');});
 
-app.use('/accounts',  passport.authenticate(['bearer'], { session: false }));
-app.use('/logout',    passport.authenticate(['bearer'], { session: false }));
-app.use('/patients',  passport.authenticate(['bearer'], { session: false }));
-app.use('/questions', passport.authenticate(['bearer'], { session: false }));
+
+app.use('/accounts',  		passport.authenticate(['bearer'], { session: false }));
+app.use('/logout',    		passport.authenticate(['bearer'], { session: false }));
+app.use('/patients',  		passport.authenticate(['bearer'], { session: false }));
+app.use('/questions', 		passport.authenticate(['bearer'], { session: false }));
+app.use('/notifications', 	passport.authenticate(['bearer'], { session: false }));
+app.use('/createPatientAndAccount', passport.authenticate(['bearer'], { session: false }));
+app.use('/changeDoctor',	 passport.authenticate(['bearer'], { session: false }));
 
 swagger.addPost({'spec': oauth2.loginSpec, 'action': oauth2.endpoint});
 
@@ -77,7 +87,6 @@ app.use('/login', function(err,req,res,next){
 swagger.addModels(accounts);
 swagger.addGet(		{'spec': accounts.listSpec,'action': accounts.list});
 swagger.addPost(	{'spec': accounts.addSpec,'action': accounts.add});
-app.get('/accounts/doctors', accounts.listDoctors);
 swagger.addGet(		{'spec': accounts.listOneSpec,'action': accounts.listOne});
 swagger.addPut(		{'spec': accounts.updateSpec,'action': accounts.update});
 swagger.addDelete(	{'spec': accounts.delSpec,'action': accounts.del});
@@ -91,42 +100,55 @@ swagger.addPut(		{'spec': patients.updateSpec,'action': patients.update});
 swagger.addDelete(	{'spec': patients.delSpec,'action': patients.del});
 
 
-app.post(   '/patients/:id/daily-measurements',               function(req, res){    daily_m.add(req,res,db,fs) });
-app.get(    '/patients/:id/daily-measurements',               function(req, res){    daily_m.list(req,res) });    
-app.get(    '/patients/:id/daily-measurements/:mid',          function(req, res){    daily_m.getMetaData(req,res) });
-app.get(    '/patients/:id/daily-measurements/:mid/data',     function(req, res){    daily_m.getFile(req,res) });    
-
 swagger.addModels(catscale);
 swagger.addGet(		{'spec': catscale.listSpec,'action': catscale.list});
 swagger.addPost(	{'spec': catscale.addSpec,'action': catscale.add});
+swagger.addGet(		{'spec': catscale.listOneSpec,'action': catscale.listOne});
+swagger.addPut(		{'spec': catscale.updateSpec,'action': catscale.update});
+swagger.addDelete(	{'spec': catscale.delSpec,'action': catscale.del});
+
 
 swagger.addModels(ccqweek);
 swagger.addGet(		{'spec': ccqweek.listSpec,'action': ccqweek.list});
 swagger.addPost(	{'spec': ccqweek.addSpec,'action': ccqweek.add});
+swagger.addGet(		{'spec': ccqweek.listOneSpec,'action': ccqweek.listOne});
+swagger.addPut(		{'spec': ccqweek.updateSpec,'action': ccqweek.update});
+swagger.addDelete(	{'spec': ccqweek.delSpec,'action': ccqweek.del});
 
 
 swagger.addModels(charlson);
 swagger.addGet(		{'spec': charlson.listSpec,'action': charlson.list});
 swagger.addPost(	{'spec': charlson.addSpec,'action': charlson.add});
+swagger.addGet(		{'spec': charlson.listOneSpec,'action': charlson.listOne});
+swagger.addPut(		{'spec': charlson.updateSpec,'action': charlson.update});
+swagger.addDelete(	{'spec': charlson.delSpec,'action': charlson.del});
 
 swagger.addModels(daily_answers);
 swagger.addGet(		{'spec': daily_answers.listSpec,'action': daily_answers.list});
 swagger.addPost(	{'spec': daily_answers.addSpec,'action': daily_answers.add});
+swagger.addGet(		{'spec': daily_answers.listOneSpec,'action': daily_answers.listOne});
+swagger.addPut(		{'spec': daily_answers.updateSpec,'action': daily_answers.update});
+swagger.addDelete(	{'spec': daily_answers.delSpec,'action': daily_answers.del});
 
-////Doenst appear in API Doc
-//swagger.addModels(dys);
-//swagger.addGet(		{'spec': dys.listSpec,'action': dys.list});
-//swagger.addPost(	{'spec': dys.addSpec,'action': dys.add});
+swagger.addModels(death);
+swagger.addGet(		{'spec': death.listSpec,'action': death.list});
+swagger.addPost(	{'spec': death.addSpec,'action': death.add});
+swagger.addPut(		{'spec': death.updateSpec,'action': death.update});
+swagger.addDelete(	{'spec': death.delSpec,'action': death.del});
 
-//Doenst appear in API Doc
-//swagger.addModels(fagerstrom);
-//swagger.addGet(		{'spec': fagerstrom.listSpec,'action': fagerstrom.list});
-//swagger.addPost(	{'spec': fagerstrom.addSpec,'action': fagerstrom.add});
+swagger.addModels(readings);
+swagger.addGet(		{'spec': readings.listSpec,'action': readings.list});
+swagger.addPost(	{'spec': readings.addSpec,'action': readings.add});
+swagger.addGet(		{'spec': readings.listOneSpec,'action': readings.listOne});
+swagger.addPut(		{'spec': readings.updateSpec,'action': readings.update});
+swagger.addDelete(	{'spec': readings.delSpec,'action': readings.del});
 
-//Doesnt appear in API Doc
-//swagger.addModels(cessation);
-//swagger.addGet(		{'spec': cessation.listSpec,'action': cessation.list});
-//swagger.addPost(	{'spec': cessation.addSpec,'action': cessation.add});
+swagger.addModels(treatments);
+swagger.addGet(		{'spec': treatments.listSpec,'action': treatments.list});
+swagger.addPost(	{'spec': treatments.addSpec,'action': treatments.add});
+swagger.addGet(		{'spec': treatments.listOneSpec,'action': treatments.listOne});
+swagger.addPut(		{'spec': treatments.updateSpec,'action': treatments.update});
+swagger.addDelete(	{'spec': treatments.delSpec,'action': treatments.del});
 
 swagger.addModels(questions);
 swagger.addGet(		{'spec': questions.listSpec,'action': questions.list});
@@ -135,6 +157,14 @@ swagger.addGet(		{'spec': questions.listCatscaleSpec,'action': questions.listCat
 swagger.addGet(		{'spec': questions.listCCQSpec,'action': questions.listCCQ});
 swagger.addGet(		{'spec': questions.listCharlsonSpec,'action': questions.listCharlson});
 swagger.addGet(		{'spec': questions.listDailySpec,'action': questions.listDaily});
+
+swagger.addModels(notifications);
+swagger.addGet(		{'spec': notifications.listSpec,'action': notifications.list});
+swagger.addGet(		{'spec': notifications.addSpec,'action': notifications.add});
+
+swagger.addModels(commands);
+swagger.addPost({'spec': commands.createSpec, 'action': commands.createPatientAndAccount});
+swagger.addPost({'spec': commands.changeSpec, 'action': commands.changeDoctor});
 
 /**
  * Demo Web-App
@@ -176,12 +206,27 @@ swagger.configureDeclaration("questions", {
 	produces: ["application/json"]
 });
 
+swagger.configureDeclaration("notifications", {
+	description : "Ops about Notifications",
+	produces: ["application/json"]
+});
+
 swagger.configure("http://"+host+":"+url_port, "0.1");
 
 /**
  * Main
  */
-
+/*
+var bcrypt = require('bcryptjs');
+var salt = bcrypt.genSaltSync(10);
+console.log("nimda: "+bcrypt.hashSync("nimda", salt));
+console.log("who: " +bcrypt.hashSync("who", salt));
+console.log("fumanshu: "+bcrypt.hashSync("fumanshu", salt));
+console.log("patient1: "+bcrypt.hashSync("patient1", salt));
+console.log("patient2: "+bcrypt.hashSync("patient2", salt));
+console.log("cxanthos: "+bcrypt.hashSync("cxanthos", salt));
+console.log("myadmin: "+bcrypt.hashSync("myadmin", salt));
+*/
 if (ssl){
 	var options = {
 			key: fs.readFileSync('../privatekey.pem'),

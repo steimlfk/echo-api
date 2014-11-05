@@ -12,7 +12,7 @@ exports.add = function(req,res){
 	db.getConnection(function(err, connection) {
 		if (err) {
 			console.error('DB Connection error on POST new question: ',err);
-			res.send(503);
+			res.send(500);
 		} else {
 
 			var question_text = db.escape(req.body.text);
@@ -76,7 +76,7 @@ exports.list = function(req,res){
 	db.getConnection(function(err, connection) {
 		if (err) {
 			console.error('DB Connection error on GET questions: ',err);
-			res.send(503);
+			res.send(500);
 		} else {
 			var qry = 'SELECT questionId,category,type,text,active FROM questions ORDER BY category,type,text';
 			connection.query(qry, function(err, rows) {
@@ -141,7 +141,7 @@ function getQuestions(req, res, next, cat){
 	db.getConnection(function(err, connection) {
 		if (err) {
 			console.error('DB Connection error on GET '+ cat +' questions: ',err);
-			res.send(503);
+			res.send(500);
 		} else {
 			var qry = 'SELECT questionId,category,type,text,active, mapping FROM questions where category=' + db.escape(cat);
 			connection.query(qry, function(err, rows) {
