@@ -79,5 +79,11 @@
 
 <div id="message-bar" class="swagger-ui-wrap">&nbsp;</div>
 <div id="swagger-ui-container" class="swagger-ui-wrap"></div>
+$(document).ready(function() {
+    var path = window.location.href;
+    var url = path.substring(0, path.indexOf(window.location.pathname));
+    url += '/api-docs';
+    $('input[name=baseUrl]').val(url);
+});
 </body>
 </html>
