@@ -1,0 +1,9 @@
+#!/bin/bash
+PIDS=`pgrep -u dev4 nodejs`
+if [ -z $PIDS ]
+then
+    nodejs ../echo-ws.js >> ../log 2>&1
+    # nodejs ../echo-ws.js  Starts the server
+    # >> ../log  Writes the output into the file "log"
+    # 2>&1  redirects the output of stderr to stdout
+fi
