@@ -2997,13 +2997,13 @@ INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doc
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','reportUpdate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','treatmentCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','treatmentUpdate');
-INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patients','accountsDisable');
-INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patients','accountsUpdate');
-INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patients','reportCreate');
-INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patients','reportDelete');
-INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patients','reportList');
-INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patients','reportListOne');
-INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patients','reportUpdate');
+INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','accountsDisable');
+INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','accountsUpdate');
+INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','reportCreate');
+INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','reportDelete');
+INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','reportList');
+INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','reportListOne');
+INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','reportUpdate');
 
 /*
 -- INSERT INTO `echo`.`accounts` (`accountId`,`username`,`password`,`role`,`email`,`enabled`,`reminderTime`,`notificationEnabled`,`notificationMode`,`mobile`) VALUES (1,'nimda','nimda','admin','admin@hospital.de',1,'18:00:00',1,'email','1337');
