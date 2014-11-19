@@ -143,7 +143,7 @@ function getQuestions(req, res, next, cat){
 			console.error('DB Connection error on GET '+ cat +' questions: ',err);
 			res.send(500);
 		} else {
-			var qry = 'SELECT questionId,category,type,text,active, mapping FROM questions where category=' + db.escape(cat);
+			var qry = 'SELECT questionId,category,type,text,active,label FROM questions where active = 1 and category=' + db.escape(cat);
 			connection.query(qry, function(err, rows) {
 				if (err) {
 					console.error('Query error on GET '+ cat +' questions: ',err);
