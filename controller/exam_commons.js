@@ -158,65 +158,68 @@ exports.list = function(req, res, next, exam){
  *  	5) add links to result 
  *  	6) send
  */
-exports.listOne = function(req,res,next, exam){
+exports.listOne = function(req,res,next, exam) {
 	// 1) Role Validation
-	if (req.user.role != 'doctor'){
+	if (req.user.role != 'doctor') {
 		res.statusCode = 403;
 		res.send({error: 'Forbidden'});
 	}
-	else{
+	else {
 		// 2) Get DB Connection
-		db.getConnection(function(err, connection) {
+		db.getConnection(function (err, connection) {
 			if (err) {
-				console.error('DB Connection error on GET single '+exam+' record: ',err);
+				console.error('DB Connection error on GET single ' + exam + ' record: ', err);
 				res.send(500);
 			} else {
 				//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
 				//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
-				connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
+				connection.changeUser({
+					user: req.user.accountId,
+					password: config.calculatePW(req.user.accountId)
+				}, function (err) {
 					if (err) {
 						// an error occured while changing user
-						console.error(err); res.statusCode = 500;
-						res.send({err: 'Internal Server Error'}); 
+						console.error(err);
+						res.statusCode = 500;
+						res.send({err: 'Internal Server Error'});
 					}
 					// 3) create SQL Query from parameters 
 					var id = req.params.id;
 					var rid = req.params.rid;
 					var qry = 'call listSingleExam(?,?,?)';
-					connection.query(qry,[exam,id,rid], function(err, rows) {
+					connection.query(qry, [exam, id, rid], function (err, rows) {
 						if (err) {
 							// Error Handling for sql signal statements for the triggers
 							// 22400 is equiv. to HTTP Error Code 400: Bad Request (has errors, should be altered and resend)
-							if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22400'){
+							if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22400') {
 								res.statusCode = 400;
 								res.send({error: err.message});
 							}
 							// Error Handling for sql signal statements for the triggers
 							// 22403 is equiv. to HTTP Error Code 403: Forbidden
-							else if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22403'){
+							else if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22403') {
 								res.statusCode = 403;
 								res.send({error: err.message});
 							}
 							// Error Handling: Something else went wrong!
-								console.error('Query error on GET '+exam+': ',err);
-								res.statusCode = 500;
-								res.send({error: 'Internal Server Error'});
-							}
+							console.error('Query error on GET ' + exam + ': ', err);
+							res.statusCode = 500;
+							res.send({error: 'Internal Server Error'});
 						}
 						else {
 							// was there any result?
-							if (rows[0].length > 0){
-								var host = 'http://'+req.headers.host;
+							if (rows[0].length > 0) {
+								var host = 'http://' + req.headers.host;
 								var result = new Array();
-								for (var i = 0; i < rows[0].length; i++){
-									var o  = rows[0][i];
+								for (var i = 0; i < rows[0].length; i++) {
+									var o = rows[0][i];
 									o._links = new Object();
 									o._links.self = new Object();
 									// create self link
-									o._links.self.href = host+'/patients/'+req.params.id+'/'+exam+'/'+rows[0][i].recordId;
+									o._links.self.href = host + '/patients/' + req.params.id + '/' + exam + '/' + rows[0][i].recordId;
 									o._links.patient = new Object();
 									// create link to corresponding patient
-									o._links.patient.href = host+'/patients/'+req.params.id;
+									o._links.patient.href = host + '/patients/' + req.params.id;
 									result.push(o);
 								}
 								// send result
@@ -224,7 +227,7 @@ exports.listOne = function(req,res,next, exam){
 
 							}
 							// there was no result
-							else{
+							else {
 								res.statusCode = 404;
 								res.send();
 							}
@@ -295,8 +298,7 @@ exports.del = function(req, res, next, exam){
 								res.statusCode = 500;
 								res.send({error: 'Internal Server Error'});
 							}
-
-						} else {
+						 	else {
 							// was there any row to delete?
 							if (result[0][0].affected_rows > 0){
 								res.statusCode = 204;
