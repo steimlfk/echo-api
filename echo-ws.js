@@ -31,7 +31,7 @@ ccqweek =              	require('./controller/ccqs');
 /**
  * Config & Vars
  */
-var ssl = false;
+var ssl = true;
 var app = express();
 var oauth2 = require('./config/oauth2');
 var api_docs = "/api-docs";
@@ -229,8 +229,8 @@ console.log("myadmin: "+bcrypt.hashSync("myadmin", salt));
 */
 if (ssl){
 	var options = {
-			key: fs.readFileSync('../privatekey.pem'),
-			cert: fs.readFileSync('../certificate.pem')
+			key: fs.readFileSync('ssl/privatekey.pem'),
+			cert: fs.readFileSync('ssl/certificate.pem')
 	};
 
 	https.createServer(options, app).listen(app.get('port'), function(){
