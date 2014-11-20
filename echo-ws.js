@@ -229,8 +229,8 @@ console.log("myadmin: "+bcrypt.hashSync("myadmin", salt));
 */
 if (ssl){
 	var options = {
-			key: fs.readFileSync('ssl/privatekey.pem'),
-			cert: fs.readFileSync('ssl/certificate.pem')
+			key: fs.readFileSync(__dirname + '/ssl/privatekey.pem'),
+			cert: fs.readFileSync(__dirname + '/ssl/certificate.pem')
 	};
 
 	https.createServer(options, app).listen(app.get('port'), function(){
