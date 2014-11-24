@@ -31,9 +31,9 @@ ccqweek =              	require('./controller/ccqs');
 /**
  * Config & Vars
  */
-var ssl = true;
 var app = express();
-var oauth2 = require('./config/oauth2');
+var oauth2 = require('./config/oauth2'),
+	ssl = require('./config/ssl.js');
 var api_docs = "/api-docs";
 swagger.setAppHandler(app);
 swagger.configureSwaggerPaths("", api_docs, "");
@@ -227,10 +227,11 @@ console.log("patient2: "+bcrypt.hashSync("patient2", salt));
 console.log("cxanthos: "+bcrypt.hashSync("cxanthos", salt));
 console.log("myadmin: "+bcrypt.hashSync("myadmin", salt));
 */
-if (ssl){
+if (ssl.useSsl){
 	var options = {
-			key: fs.readFileSync(__dirname + '/ssl/privatekey.pem'),
-			cert: fs.readFileSync(__dirname + '/ssl/certificate.pem')
+			key: fs.readFileSync(__dirname + ssl.privateKey),
+			cert: fs.readFileSync(__dirname + ssl.certificate),
+			password: ssl.password
 	};
 
 	https.createServer(options, app).listen(app.get('port'), function(){
