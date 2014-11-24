@@ -1,36 +1,35 @@
 #! /bin/bash
 root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 root="$root/.."
-LS=`ls "$root/config/*.example"`
+LS=`ls "$root/config/" | grep -E "example$"`
 for file in $LS; do
-    cp $file "$file.bak"
+    cp "$root/config/$file" "$root/config/$file.bak"
 done
-git pull
-LS2=`ls "$root/config/*.example"`
+git pull origin master
+LS2=`ls "$root/config/" | grep -E "example$"`
 toTest=()
 for file in $LS2; do
-    if [ -e "$file.bak" ]; then
-        output=diff $file "$file.bak"
-        if [ !-z "$output" ]; then
-            toTest+=$file
+    if [ -e "$root/config/$file.bak" ]; then
+        output=`diff "$root/config/$file" "$root/config/$file.bak"`
+        if [ ! -z "$output" ]; then
+            toTest=("${toTest[@]}" "$file")
         fi
     else
         target=${file%.example}
-        cp $file $target
-        toTest+=$target
+        cp "$root/config/$file" "$root/config/$target"
+        toTest=("${toTest[@]}" "$target")
     fi
 done
-amount=${#toTest[@]}
-if [ $amount != 0 ]; then
-    text="Changes in following files: ${toTest[0]}"
-    for i in [1 .. $amount]; do
-        text="$text, ${toTest[$i]}"
+amount=`expr ${#toTest[@]} - 1`
+if [ $amount != -1 ]; then
+    echo "Changes in following files:"
+    for i in `seq 0 $amount`; do
+        echo ${toTest[$i]}
     done
-    echo text
 else
     echo "Everything up to date"
 fi
-LS=`ls "$root/config/*.bak"`
+LS=`ls "$root/config/" | grep -E "bak$"`
 for file in $LS; do
-    rm $file
+    rm "$root/config/$file"
 done
