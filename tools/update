@@ -33,3 +33,4 @@ LS=`ls "$root/config/" | grep -E "bak$"`
 for file in $LS; do
     rm "$root/config/$file"
 done
+pkill -u ${USER} nodejs
