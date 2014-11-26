@@ -18,6 +18,7 @@ var bcrypt = require('bcryptjs');
 var prefix = "secret_";
 
 exports.db_pw_prefix = prefix;
+exports.host = 'localhost';
 
 exports.calculatePW = function(i){
 	return prefix+i.toString();
