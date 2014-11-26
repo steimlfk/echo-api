@@ -95,7 +95,7 @@ exports.list = function(req,res,next){
 						}
 						// is there any result?
 						if (rows.length > 0){
-							var host = 'http://'+req.headers.host;
+							var host = 'https://'+req.headers.host;
 							var result = new Array();
 							for (var i = 0; i < rows.length; i++){
 								var o  = rows[i];
@@ -198,7 +198,7 @@ exports.listOne = function(req,res,next){
 						}
 						// there was a matching patient
 						if (rows.length > 0){
-							var host = 'http://'+req.headers.host;
+							var host = 'https://'+req.headers.host;
 							var o  = rows[0];
 							o._links = new Object();
 							// add self link

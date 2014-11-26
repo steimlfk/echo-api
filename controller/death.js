@@ -67,7 +67,7 @@ exports.list = function(req, res, next){
 						else {
 							// row found
 							if (rows[0].length > 0){
-								var host = 'http://'+req.headers.host;
+								var host = 'https://'+req.headers.host;
 								var result = new Array();
 								var o  = rows[0][0];
 								o._links = new Object();

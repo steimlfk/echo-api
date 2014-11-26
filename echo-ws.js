@@ -212,7 +212,7 @@ swagger.configureDeclaration("notifications", {
 	produces: ["application/json"]
 });
 
-swagger.configure("http://"+host+":"+url_port, "0.1");
+swagger.configure("https://"+host+":"+url_port, "0.1");
 
 /**
  * Main
@@ -259,6 +259,6 @@ else {
 	http.createServer(app).listen(app.get('port'), function(){
 		console.log('ECHO REST API listening on host ' +host + ' on port ' + app.get('port'));
 		console.log('Server running in State: ' + state);
-		console.log('Swagger Base: http://'+host+':'+url_port + api_docs);
+		console.log('Swagger Base: https://'+host+':'+url_port + api_docs);
 	});
 }

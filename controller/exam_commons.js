@@ -93,7 +93,7 @@ exports.list = function(req, res, next, exam){
 						else {
 							// is there any result?
 							if (rows[0].length > 0){
-								var host = 'http://'+req.headers.host;
+								var host = 'https://'+req.headers.host;
 								var result = new Array();
 								for (var i = 0; i < rows[0].length; i++){
 									var o  = rows[0][i];
@@ -209,7 +209,7 @@ exports.listOne = function(req,res,next, exam) {
 						else {
 							// was there any result?
 							if (rows[0].length > 0) {
-								var host = 'http://' + req.headers.host;
+								var host = 'https://' + req.headers.host;
 								var result = new Array();
 								for (var i = 0; i < rows[0].length; i++) {
 									var o = rows[0][i];
