@@ -212,7 +212,7 @@ swagger.configureDeclaration("notifications", {
 	produces: ["application/json"]
 });
 
-swagger.configure("https://"+host+":"+url_port, "0.1");
+swagger.configure("https://"+host/*+":"+url_port*/, "0.1");
 
 /**
  * Main
