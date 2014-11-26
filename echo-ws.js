@@ -46,10 +46,11 @@ var state = mysql.state;
 var port = (process.env.VCAP_APP_PORT || 3000);
 var host = (process.env.VCAP_APP_HOST || 'localhost');
 var url_port = 80;
-if (state == 'openstack') host = "echo.informatik.uni-stuttgart.de";
+/*if (state == 'openstack') host = "echo.informatik.uni-stuttgart.de";
 if (state == 'bluemix') host = "echo-rest-api.ng.bluemix.net";
 if (state == 'dev') url_port = 3000;
-if (state == 'tsl') host = "dev4.tsl.gr"
+if (state == 'tsl') host = "dev4.tsl.gr"*/
+host = require('./config/config.js').host;
 
 app.set('port', port);									
 app.set('views', __dirname + '/demoapp/views');				//required for webdemo
