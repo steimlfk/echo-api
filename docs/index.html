@@ -25,7 +25,7 @@
   <script type="text/javascript">
     $(function () {
       window.swaggerUi = new SwaggerUi({
-      url: "http://echo.informatik.uni-stuttgart.de/api-docs",
+      url: "",
       dom_id: "swagger-ui-container",
       supportedSubmitMethods: ['get', 'post', 'put', 'delete'],
       onComplete: function(swaggerApi, swaggerUi){
@@ -85,6 +85,7 @@
         var url = path.substring(0, 
      path.indexOf(window.location.pathname));
         url += '/api-docs';
+        window.swaggerUi.url = url;
         $('input[name=baseUrl]').val(url);
         $('a[id=explore]').click();
     });
