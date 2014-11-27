@@ -25,7 +25,7 @@
   <script type="text/javascript">
     $(function () {
       window.swaggerUi = new SwaggerUi({
-      url: "http://echo.informatik.uni-stuttgart.de/api-docs",
+      url : path.substring(0, path.indexOf(window.location.pathname)) + '/api-docs',
       dom_id: "swagger-ui-container",
       supportedSubmitMethods: ['get', 'post', 'put', 'delete'],
       onComplete: function(swaggerApi, swaggerUi){
@@ -70,6 +70,7 @@
     <a id="logo" href="">echo api docs</a>
     <form id='api_selector'>
       
+      <div class='input'><input value="" id="input_baseUrl" name="baseUrl" type="text"/></div>
       <div class='input'><input placeholder="accessToken" id="input_apiKey" name="apiKey" type="text"/></div>
       <div class='input'><a id="explore" href="#">Explore</a></div>
     </form>
@@ -79,14 +80,14 @@
 <div id="message-bar" class="swagger-ui-wrap">&nbsp;</div>
 <div id="swagger-ui-container" class="swagger-ui-wrap"></div>
 <script language="javascript">
-    $(document).ready(function() {
+    /*$(document).ready(function() {
         var path = window.location.href;
         var url = path.substring(0, 
      path.indexOf(window.location.pathname));
         url += '/api-docs';
         $('input[name=baseUrl]').val(url);
         $('a[id=explore]').click();
-    });
+    });*/
 </script>
 </body>
 </html>
