@@ -85,6 +85,7 @@
         var url = path.substring(0, 
      path.indexOf(window.location.pathname));
         url += '/api-docs';
+        window.swaggerUi.url = url;
         $('input[name=baseUrl]').val(url);
         $('a[id=explore]').click();
     });
