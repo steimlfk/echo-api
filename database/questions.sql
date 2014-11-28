@@ -8,7 +8,27 @@ VALUES
 (5, 'cat', 'radio', '', 1, 'q5'),
 (6, 'cat', 'radio', '', 1, 'q6'),
 (7, 'cat', 'radio', '', 1, 'q7'),
-(8, 'cat', 'radio', '', 1, 'q8');
+(8, 'cat', 'radio', '', 1, 'q8'),
+
+(9, 'daily', 'check', 'Did your shortness of breath increase?', 1, 'q1'),
+(10, 'daily', 'check', 'Did your cough increase?', 1, 'q2'),
+(11, 'daily', 'check', 'Did your sputum change?', 1, 'q3'),
+(12, 'daily', 'check', 'Did you have chest pain or discomfort?', 1, 'q4'),
+(13, 'daily', 'check', 'Did you take the same medications? Or increased them?', 1, 'q5'),
+
+(14, 'daily', 'check', 'Can you do the daily work you did before?', 1, 'q1a'),
+(15, 'daily', 'check', 'Can you support yourself (go to toilet, shower)?', 1, 'q1b'),
+(16, 'daily', 'check', 'Can you walk?', 1, 'q1c'),
+
+(17, 'daily', 'check', 'Is your sputum yellow?', 1, 'q3a'),
+(18, 'daily', 'check', 'Is it green?', 1, 'q3b'),
+(19, 'daily', 'check', 'Or bloody?', 1, 'q3c'),
+
+(20, 'daily', 'mixed', 'SatoO2?', 1, 'satO2'),
+(21, 'daily', 'mixed', 'Heartrate?', 1, 'heartRate'),
+(22, 'daily', 'mixed', 'Temperature?', 1, 'temperature'),
+(23, 'daily', 'mixed', 'PETR?', 1, 'petr'),
+(24, 'daily', 'mixed', 'Walking Distance?', 1, 'walkingDist');
 
 INSERT INTO `echo`.`answers`
 (`answerId`,`questionId`,`text`,`value`)
@@ -68,4 +88,6 @@ VALUES
 (46, 8, '', 3),
 (47, 8, '', 4),
 (48, 8, 'I have no energy at all.', 5);
+
+ 
 

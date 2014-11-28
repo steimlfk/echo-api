@@ -122,7 +122,7 @@ exports.list = function(req,res){
 }
 
 exports.listCatscale = function(req, res, next){
-	getQuestions(req, res, next, 'catscale');
+	getQuestions(req, res, next, 'cat');
 }
 
 exports.listCCQ = function(req, res, next){
@@ -206,8 +206,8 @@ exports.addSpec = {
 }
 
 exports.listCatscaleSpec = {
-		summary : "List all catscale Questions",
-		path : "/questions/catscale",
+		summary : "List all CAT Questions",
+		path : "/questions/cat",
 		method: "GET",
 		type : "Question",
 		nickname : "listCatscaleQuestions",
