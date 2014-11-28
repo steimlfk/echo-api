@@ -31,9 +31,9 @@ ccqweek =              	require('./controller/ccqs');
 /**
  * Config & Vars
  */
-var ssl = true;
 var app = express();
-var oauth2 = require('./config/oauth2');
+var oauth2 = require('./config/oauth2'),
+	ssl = require('./config/ssl.js');
 var api_docs = "/api-docs";
 swagger.setAppHandler(app);
 swagger.configureSwaggerPaths("", api_docs, "");
@@ -46,10 +46,11 @@ var state = mysql.state;
 var port = (process.env.VCAP_APP_PORT || 3000);
 var host = (process.env.VCAP_APP_HOST || 'localhost');
 var url_port = 80;
-if (state == 'openstack') host = "echo.informatik.uni-stuttgart.de";
+/*if (state == 'openstack') host = "echo.informatik.uni-stuttgart.de";
 if (state == 'bluemix') host = "echo-rest-api.ng.bluemix.net";
 if (state == 'dev') url_port = 3000;
-if (state == 'tsl') host = "dev4.tsl.gr"
+if (state == 'tsl') host = "dev4.tsl.gr"*/
+host = require('./config/config.js').host;
 
 app.set('port', port);									
 app.set('views', __dirname + '/demoapp/views');				//required for webdemo
@@ -211,7 +212,7 @@ swagger.configureDeclaration("notifications", {
 	produces: ["application/json"]
 });
 
-swagger.configure("http://"+host+":"+url_port, "0.1");
+swagger.configure("https://"+host/*+":"+url_port*/, "0.1");
 
 /**
  * Main
@@ -227,10 +228,11 @@ console.log("patient2: "+bcrypt.hashSync("patient2", salt));
 console.log("cxanthos: "+bcrypt.hashSync("cxanthos", salt));
 console.log("myadmin: "+bcrypt.hashSync("myadmin", salt));
 */
-if (ssl){
+if (ssl.useSsl){
 	var options = {
-			key: fs.readFileSync(__dirname + '/ssl/privatekey.pem'),
-			cert: fs.readFileSync(__dirname + '/ssl/certificate.pem')
+			key: fs.readFileSync(__dirname + ssl.privateKey),
+			cert: fs.readFileSync(__dirname + ssl.certificate),
+			password: ssl.password
 	};
 
 	https.createServer(options, app).listen(app.get('port'), function(){
@@ -240,11 +242,23 @@ if (ssl){
 		console.log('Swagger Base: https://'+host+':'+url_port + api_docs);
 	});
 
+	var redirectApp = express(),
+		redirectServer = http.createServer(redirectApp);
+
+	redirectApp.use(function requireHTTPS(req, res, next) {
+		if (!req.secure) {
+			return res.redirect('https://' + req.headers.host + req.url);
+		}
+		next();
+	})
+
+	redirectServer.listen(8080);
+
 }
 else {
 	http.createServer(app).listen(app.get('port'), function(){
 		console.log('ECHO REST API listening on host ' +host + ' on port ' + app.get('port'));
 		console.log('Server running in State: ' + state);
-		console.log('Swagger Base: http://'+host+':'+url_port + api_docs);
+		console.log('Swagger Base: https://'+host+':'+url_port + api_docs);
 	});
 }
