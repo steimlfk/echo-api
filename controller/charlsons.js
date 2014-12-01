@@ -45,7 +45,7 @@ exports.add = function(req,res,next){
 	// 1) Validate Role!
 	if (req.user.role != 'doctor'){
 		res.statusCode = 403;
-		res.send({error: 'Forbidden'});
+		res.send({error: 'Forbidden. Invalid Role.'});
 	}
 	else{
 		// 2) Get DB Connection
@@ -126,7 +126,7 @@ exports.update = function(req,res,next){
 	// 1) Validate Role!
 	if (req.user.role != 'doctor'){
 		res.statusCode = 403;
-		res.send({error: 'Forbidden'});
+		res.send({error: 'Forbidden. Invalid Role.'});
 	}
 	else{
 		// 2) Get DB Connection

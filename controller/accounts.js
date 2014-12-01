@@ -228,7 +228,7 @@ exports.add = function(req,res,next){
 	// 1) Validate Role!
 	if (req.user.role == 'patient'){
 		res.statusCode = 403;
-		res.send({error: 'Forbidden'});
+		res.send({error: 'Forbidden. Invalid Role.'});
 	}
 	else{
 
@@ -331,7 +331,7 @@ exports.del =   function(req,res,next){
 	// 1) Validate Role!
 	if (req.user.role != 'admin'){
 		res.statusCode = 403;
-		res.send({error: 'Forbidden'});
+		res.send({error: 'Forbidden. Invalid Role.'});
 	}
 	else{
 		var host = 'https://'+req.headers.host;

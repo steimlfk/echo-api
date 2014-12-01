@@ -12,7 +12,7 @@ exports.createPatientAndAccount = function(req,res,next) {
 	// 1) Validate Role!
 	if (req.user.role == 'patient'){
 		res.statusCode = 403;
-		res.send({error: 'Forbidden'});
+		res.send({error: 'Forbidden. Invalid Role.'});
 	}
 	else {
 		// check if account and patient data was submitted
@@ -114,7 +114,7 @@ exports.changeDoctor = function(req,res,next){
 	// 1) Validate Role!
 	if (req.user.role != 'admin'){
 		res.statusCode = 403;
-		res.send({error: 'Forbidden'});
+		res.send({error: 'Forbidden. Invalid Role.'});
 	}
 	else{
 		// 2) Get DB Connection

@@ -27,7 +27,7 @@ exports.list = function(req,res,next){
 	// 1) Role Check 
 	if (req.user.role == 'patient'){
 		res.statusCode = 403;
-		res.send({error: 'Forbidden'});
+		res.send({error: 'Forbidden. Invalid Role.'});
 	}
 	else{
 		//2) Get DB Connection
@@ -169,7 +169,7 @@ exports.listOne = function(req,res,next){
 	// 1) Role Check
 	if (req.user.role == 'patient'){
 		res.statusCode = 403;
-		res.send({error: 'Forbidden'});
+		res.send({error: 'Forbidden. Invalid Role.'});
 	}
 	else{
 		// 2) Get DB Connection
@@ -233,7 +233,7 @@ exports.add = function(req,res,next){
 	// 1) Validate Role!
 	if (req.user.role == 'patient'){
 		res.statusCode = 403;
-		res.send({error: 'Forbidden'});
+		res.send({error: 'Forbidden. Invalid Role.'});
 	}
 	else{
 		// 2) Get DB Connection
@@ -311,7 +311,7 @@ exports.del =   function(req,res,next){
 	// 1) Validate Role!
 	if (req.user.role == 'patient'){
 		res.statusCode = 403;
-		res.send({error: 'Forbidden'});
+		res.send({error: 'Forbidden. Invalid Role.'});
 	}
 	else{
 		// 2) Get DB Connection
@@ -370,7 +370,7 @@ exports.update = function(req,res,next){
 	// 1) Validate Role 
 	if (req.user.role == 'patient'){
 		res.statusCode = 403;
-		res.send({error: 'Forbidden'});
+		res.send({error: 'Forbidden. Invalid Role.'});
 	}
 	else{
 		// 2) Get DB Connection
