@@ -48,7 +48,7 @@ exports.list = function(req, res, next, exam){
 						res.send({err: 'Internal Server Error'}); 
 					}
 					// 3) create SQL Query from parameters 
-
+					var qry = "call listExams(?,?,?,?)";
 					//extending statement if pagination is required (/accounts?page=<page>&pageSize=<pageSize>)
 					// default value for page parameter - zero means no pagination
 					var page = 0;
