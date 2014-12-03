@@ -37,12 +37,17 @@ if (process.env.VCAP_SERVICES) {
 		}
 	}
 }
+
+// timezone set to UTC+0 instead of local since local leads to incorrect displayed birthdays
+// since mysql Triggers use the now()-Function of MySQL the timezone may have to be adepted if the MySQL Server runs in
+// a different timezone than the backed...
 var db = mysql.createPool({
 	host : db_host,
 	user : db_user,
 	port : db_port,
 	password : db_pwd,
-	database : db_database
+	database : db_database,
+	timezone : 'UTC+0'
 });
 exports.db = db;
 exports.state = state;
