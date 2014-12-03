@@ -5,6 +5,14 @@ var bcrypt = require('bcryptjs');
 
 
 /**
+ *  Host and Port Config
+ */
+
+exports.host = 'localhost';
+exports.port = 3000;
+exports.url_port = 80;
+
+/**
  * Section about Database Users PW
  * 
  * This prefix is used to create the password for the database user. 
@@ -18,7 +26,6 @@ var bcrypt = require('bcryptjs');
 var prefix = "secret_";
 
 exports.db_pw_prefix = prefix;
-exports.host = 'localhost';
 
 exports.calculatePW = function(i){
 	return prefix+i.toString();

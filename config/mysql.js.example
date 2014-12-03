@@ -7,7 +7,7 @@ var mysql = require('mysql');
 //openstack
 
 var db_host = 'localhost';
-var db_user = 'root';
+var db_user = 'echo_db_usr'; //use always echo_db_usr, since its part of the create script!
 var db_port = 3306;
 var db_pwd = 'root';
 var db_database ='echo';

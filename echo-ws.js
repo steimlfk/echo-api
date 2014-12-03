@@ -33,6 +33,7 @@ ccqweek =              	require('./controller/ccqs');
  */
 var app = express();
 var oauth2 = require('./config/oauth2'),
+	config = require('./config/config.js'),
 	ssl = require('./config/ssl.js');
 var api_docs = "/api-docs";
 swagger.setAppHandler(app);
@@ -43,14 +44,10 @@ swagger.setHeaders = function setHeaders(res) {
 var mysql = require('./config/mysql');
 var state = mysql.state;
 
-var port = (process.env.VCAP_APP_PORT || 3000);
-var host = (process.env.VCAP_APP_HOST || 'localhost');
-var url_port = 80;
-/*if (state == 'openstack') host = "echo.informatik.uni-stuttgart.de";
-if (state == 'bluemix') host = "echo-rest-api.ng.bluemix.net";
-if (state == 'dev') url_port = 3000;
-if (state == 'tsl') host = "dev4.tsl.gr"*/
-host = require('./config/config.js').host;
+var port = config.port;
+var host = config.host;
+var url_port = config.url_port;
+
 
 app.set('port', port);									
 app.set('views', __dirname + '/demoapp/views');				//required for webdemo
@@ -82,6 +79,7 @@ app.use('/changeDoctor',	 passport.authenticate(['bearer'], { session: false }))
 swagger.addPost({'spec': oauth2.loginSpec, 'action': oauth2.endpoint});
 
 app.use('/login', function(err,req,res,next){
+	if (err) console.log(err);
 	res.status(401);
 	res.send();
 });
@@ -212,23 +210,14 @@ swagger.configureDeclaration("notifications", {
 	produces: ["application/json"]
 });
 
-swagger.configure("https://"+host/*+":"+url_port*/, "0.1");
 
 /**
  * Main
  */
-/*
-var bcrypt = require('bcryptjs');
-var salt = bcrypt.genSaltSync(10);
-console.log("nimda: "+bcrypt.hashSync("nimda", salt));
-console.log("who: " +bcrypt.hashSync("who", salt));
-console.log("fumanshu: "+bcrypt.hashSync("fumanshu", salt));
-console.log("patient1: "+bcrypt.hashSync("patient1", salt));
-console.log("patient2: "+bcrypt.hashSync("patient2", salt));
-console.log("cxanthos: "+bcrypt.hashSync("cxanthos", salt));
-console.log("myadmin: "+bcrypt.hashSync("myadmin", salt));
-*/
+
 if (ssl.useSsl){
+	swagger.configure("https://"+host+":"+url_port, "0.1");
+
 	var options = {
 			key: fs.readFileSync(__dirname + ssl.privateKey),
 			cert: fs.readFileSync(__dirname + ssl.certificate),
@@ -256,9 +245,11 @@ if (ssl.useSsl){
 
 }
 else {
+	swagger.configure("http://"+host+":"+url_port, "0.1");
+
 	http.createServer(app).listen(app.get('port'), function(){
 		console.log('ECHO REST API listening on host ' +host + ' on port ' + app.get('port'));
 		console.log('Server running in State: ' + state);
-		console.log('Swagger Base: https://'+host+':'+url_port + api_docs);
+		console.log('Swagger Base: http://'+host+':'+url_port + api_docs);
 	});
 }
