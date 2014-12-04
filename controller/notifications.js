@@ -11,7 +11,7 @@ var db = mysql.db;
 var config = require('../config/config.js');
 var commons = require('./exam_commons.js');
 
-/*
+/**
  *  GET /notifications
  *  
  *  Steps: 
@@ -122,8 +122,8 @@ exports.list = function(req, res, next){
 	});
 }
 
-
-/*
+//TODO: Remove Swagger Docu maybe?
+/**
  *  POST /notifications
  *  
  *  Since this is a debug function it only stores the request body in the database

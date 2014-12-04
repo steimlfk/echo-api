@@ -12,7 +12,7 @@ var db = mysql.db;
 var config = require('../config/config.js');
 
 
-/*
+/**
  *  GET /patients
  *  
  *  Steps:
@@ -155,7 +155,7 @@ exports.list = function(req,res,next){
 	}
 }
 
-/*
+/**
  *  GET /patients/id
  *    Steps: 
  *    	1) Role Check
@@ -219,7 +219,7 @@ exports.listOne = function(req,res,next){
 	}
 }
 
-/*
+/**
  *  POST /patients
  *  Steps: 
  *  	1) Validate Role!
@@ -297,7 +297,7 @@ exports.add = function(req,res,next){
 	}
 }
 
-/*
+/**
  *  DELETE /patients/id
  *  Steps: 
  *  	1) Validate Role!
@@ -356,7 +356,7 @@ exports.del =   function(req,res,next){
 	}
 }
 
-/*
+/**
  *  PUT /patients/id
  *  Steps:
  *  	1) Validate Role 

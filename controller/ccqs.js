@@ -12,28 +12,28 @@ var db = mysql.db;
 var config = require('../config/config.js');
 var commons = require('./exam_commons.js');
 
-/*
+/**
  *  GET /patients/id/ccqs
  */
 exports.list = function(req,res,next){
 	commons.list(req,res,next,'ccqs');
 }
 
-/*
+/**
  * GET /patients/id/ccqs/recordid
  */
 exports.listOne = function(req,res,next){
 	commons.listOne(req,res,next,'ccqs');
 }
 
-/*
+/**
  *  DELETE /patients/id/ccqs/recordid
  */
 exports.del = function(req,res,next){
 	commons.del(req,res,next,'ccqs');
 }
 
-/*
+/**
  *  POST /patients/id/ccqs
  *  Steps: 
  *  	1) Validate Role!
@@ -70,7 +70,7 @@ exports.add = function(req,res,next){
 					// any given ID in the body will be ignored and the ids from the url are used!
 					var id = parseInt(req.params.id);
 					// if no date is given make it null, so the trigger can set the date
-					var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null;
+					var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null; //TODO: (!A || B)
 					// make status lower case so the db triggers can validate the value (valid are baseline and exacerbation)
 					var status = (i.status)? i.status.toLowerCase() : "";
 					// query db 
@@ -110,7 +110,8 @@ exports.add = function(req,res,next){
 		});
 	}
 }
-/*
+
+/**
  *  PUT /patients/id/cats/recordid
  *  Steps: 
  *  	1) Validate Role!
@@ -148,7 +149,7 @@ exports.update = function(req,res,next){
 					var id = parseInt(req.params.id);
 					var rid = parseInt(req.params.rid);
 					// if no date is given make it null, so the trigger can set the date
-					var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null;
+					var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null; //TODO: (!A || B)
 					// make status lower case so the db triggers can validate the value (valid are baseline and exacerbation)
 					var status = (i.status)? i.status.toLowerCase() : "";
 					// query db 
@@ -224,7 +225,7 @@ exports.listSpec = {
 
 exports.addSpec = {
 		summary : "Add CCQ Records (Roles: doctor)",
-		notes: "This Function creates an new CCQ Record. If the Body contains patientId, its ignored. The totalX Values are computed by the database and the db will also set the date if none is provided. <br>This function passes its parameters to the SP ccqCreate. <br> The Score Values don't have to be provided. The Database will calculate them. The DB also sets the date<br><br>" +
+		notes: "This Function creates a new CCQ Record. If the Body contains patientId, its ignored. The totalX Values are computed by the database and the db will also set the date if none is provided. <br>This function passes its parameters to the SP ccqCreate. <br> The Score Values don't have to be provided. The Database will calculate them. The DB also sets the date<br><br>" +
 		"<b>Possible Results</b>: <br>" +
 		" <b>201</b>  Record is created and the location is returned in the Location Header <br>" +
 		" <b>400</b>  The provided data contains errors, e.g. a invalid value for status <br>" +

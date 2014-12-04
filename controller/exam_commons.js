@@ -12,7 +12,7 @@ var mysql = require('../config/mysql');
 var db = mysql.db;
 var config = require('../config/config.js');
 
-/*
+/**
  * GET lists from Catscales, CCQs, Charlsons, Treatments, Readings
  * 
  * Valid Values for exam parameter are: catscales, ccqs, charlsons, treatments, readings
@@ -67,7 +67,7 @@ exports.list = function(req, res, next, exam){
 							// if parsing failed assume pagination is wanted anyway - use 20
 							if (isNaN(pageSize)) pageSize = 20;
 						}
-					}
+					} //TODO: qry not declared
 					connection.query(qry, [exam, req.params.id, page, pageSize], function(err, rows) {
 						if (err) {
 							// Error Handling for sql signal statements for the triggers
@@ -144,7 +144,7 @@ exports.list = function(req, res, next, exam){
 	}
 }
 
-/*
+/**
  * GET single record from Catscales, CCQs, Charlsons, Treatments, Readings
  * 
  * Valid Values for exam parameter are: catscales, ccqs, charlsons, treatments, readings
@@ -239,7 +239,7 @@ exports.listOne = function(req,res,next, exam) {
 		});
 	}
 }
-/*
+/**
  * DELETE single record from Catscales, CCQs, Charlsons, Treatments, Readings
  * 
  * Valid Values for exam parameter are: catscales, ccqs, charlsons, treatments, readings

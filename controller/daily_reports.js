@@ -12,7 +12,7 @@ var db = mysql.db;
 var config = require('../config/config.js');
 
 
-/*
+/**
  *  GET /patients/id/daily_reports
  *    Steps: 
  *    	1) Validate Role!
@@ -144,7 +144,7 @@ exports.list = function(req, res, next){
 	}
 }
 
-/*
+/**
  *  GET /patients/id/daily_reports/recordid
  *    Steps: 
  *      1) Validate Role
@@ -236,7 +236,7 @@ exports.listOne = function(req,res,next){
 	}
 }
 
-/*
+/**
  *  DELETE /patients/id/daily_reports/recordid
  *    Steps: 
  *      1) Validate Role
@@ -314,7 +314,7 @@ exports.del = function(req, res, next, exam){
 	});
 	}
 }
-/*
+/**
  *  PUT /patients/id/daily_reports/recordid
  *  Steps: 
  *  	1) Validate Role!
@@ -352,7 +352,7 @@ exports.update = function(req,res,next){
 				var id = parseInt(req.params.id);
 				var rid = parseInt(req.params.rid);
 				// set date to null if not set
-				var date = (i.date || i.date != "")? i.date : null;
+				var date = (i.date || i.date != "")? i.date : null;//TODO: (!A || B)
 				// query db
 				connection.query('call reportUpdate(?,?,?, ?,?,?,?,?, ?,?,?,?,?,?, ?,?,?,?,?)', 
 						[rid, id, date, 
@@ -396,7 +396,7 @@ exports.update = function(req,res,next){
 	});
 	}
 }
-/*
+/**
  *  POST /patients/id/daily_reports
  *  Steps: 
  *  	1) Validate Role!
@@ -431,7 +431,7 @@ exports.add = function(req,res,next){
 				var i = req.body;
 				var id = parseInt(req.params.id);
 				// set date to null if not set
-				var date = (i.date || i.date != "")? i.date : null;
+				var date = (i.date || i.date != "")? i.date : null; //TODO: (!A || B)
 				// query db
 				connection.query('call reportCreate(?,?, ?,?,?,?,?, ?,?,?, ?,?,?, ?,?,?,?,?)', 
 						[id, date, 

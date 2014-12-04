@@ -10,7 +10,7 @@ var mysql = require('../config/mysql');
 var db = mysql.db;
 var config = require('../config/config.js');
 
-/*
+/**
  *  GET /patients/id/death
  *    Steps: 
  *    	1) Validate Role!
@@ -94,7 +94,7 @@ exports.list = function(req, res, next){
 	}
 }
 
-/*
+/**
  *  DELETE /patients/id/death
  *    Steps: 
  *      1) Validate Role
@@ -169,7 +169,7 @@ exports.del = function(req, res, next, exam){
 		});
 	}
 }
-/*
+/**
  *  PUT /patients/id/death
  *  Steps: 
  *  	1) Validate Role!
@@ -204,7 +204,7 @@ exports.update = function(req,res,next){
 					var i = req.body;
 					var id = parseInt(req.params.id);
 					// set date to null if date not set, so db can set it
-					var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null;
+					var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null; //TODO: (!A || B)
 					connection.query('call deathUpdate(?,?,?, ?,?,?,?)', 
 							[id, date,i.cardiovascular,i.respiratory,i.infectious_disease,i.malignancy,i.other], function(err, result) {
 						if (err) {
@@ -245,7 +245,7 @@ exports.update = function(req,res,next){
 		});
 	}
 }
-/*
+/**
  *  POST /patients/id/death
  *  Steps: 
  *  	1) Validate Role!
@@ -280,8 +280,8 @@ exports.add = function(req,res,next){
 					var i = req.body;
 					var id = parseInt(req.params.id);
 					// set date to null if date not set, so db can set it
-					var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null;
-					connection.query('call deathCreate(?,?,?, ?,?,?,?)', 
+					var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null; //TODO: (!A || B)
+					connection.query('call deathCreate(?,?,?, ?,?,?,?)', //TODO: Error when already dead
 							[id, date, i.cardiovascular,i.respiratory,i.infectious_disease,i.malignancy,i.other], function(err, result) {
 						if (err) {
 							// Error Handling for sql signal statements for the triggers
