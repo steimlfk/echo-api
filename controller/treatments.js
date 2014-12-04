@@ -33,7 +33,7 @@ exports.del = function(req,res,next){
 	commons.del(req,res,next,'treatments');
 }
 
-/*
+/** TODO:Catscale? AGAIN?
  *  POST /patients/id/cats
  *  Steps: 
  *  	1) Validate Role!
@@ -70,7 +70,7 @@ exports.add = function(req,res,next){
 					// any given ID in the body will be ignored and the ids from the url are used!
 					var id = parseInt(req.params.id);
 					// if no date is given make it null, so the trigger can set the date
-					var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null;
+					var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null; //TODO: (!A || B)
 					// make status lower case so the db triggers can validate the value (valid are baseline and exacerbation)
 					var status = (i.status)? i.status.toLowerCase() : "";
 					// query db 
@@ -115,7 +115,7 @@ exports.add = function(req,res,next){
 	}
 }
 
-/*
+/** TODO: CATSCALE!
  *  PUT /patients/id/cats/recordid
  *  Steps: 
  *  	1) Validate Role!
