@@ -548,6 +548,29 @@ END$$
 DELIMITER ;
 
 -- -----------------------------------------------------
+-- procedure accountsDelete
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `accountsDelete`(IN accountId INT)
+begin
+IF getRole() = 'admin' OR 'echo_db_usr' = substring_index(user(), '@', 1) then
+	set @id = accountId;
+	SET @stmt = "DELETE FROM accounts WHERE accountId = ?";
+	PREPARE s FROM @stmt;
+	EXECUTE s using @id;
+	SELECT row_count() as affected_rows;
+	DEALLOCATE PREPARE s;
+else
+	signal sqlstate '22403' set message_text = 'You are not authorized to disable an account';
+end if;
+
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
 -- procedure accountsList
 -- -----------------------------------------------------
 
@@ -2463,6 +2486,7 @@ GRANT EXECUTE ON procedure `echo`.`accountsCreate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`charlsonUpdate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`createDbUser` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`accountsDisable` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`accountsDelete` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`deleteExamRecord` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`accountsList` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`accountsListOne` TO 'echo_db_usr'@'localhost';
@@ -2962,6 +2986,7 @@ INSERT INTO `echo`.`perm_roles_views` (`role`, `view_obj`) VALUES ('patient', 'a
 INSERT INTO `echo`.`perm_roles_views` (`role`, `view_obj`) VALUES ('patient', 'notifications_view');
 
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','accountsCreate');
+INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','accountsDelete');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','accountsDisable');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','accountsUpdate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsAndAccountCreate');
@@ -2969,7 +2994,6 @@ INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('adm
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsRessourceUpdate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','accountsCreate');
-INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','accountsDisable');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','accountsUpdate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','catCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','catUpdate');
@@ -2997,7 +3021,6 @@ INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doc
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','reportUpdate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','treatmentCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','treatmentUpdate');
-INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','accountsDisable');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','accountsUpdate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','reportCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','reportDelete');
@@ -3005,9 +3028,7 @@ INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('pat
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','reportListOne');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','reportUpdate');
 
-/*
--- INSERT INTO `echo`.`accounts` (`accountId`,`username`,`password`,`role`,`email`,`enabled`,`reminderTime`,`notificationEnabled`,`notificationMode`,`mobile`) VALUES (1,'nimda','nimda','admin','admin@hospital.de',1,'18:00:00',1,'email','1337');
--- CREATE USER '1'@'localhost' IDENTIFIED BY '1';
--- GRANT EXECUTE ON procedure `echo`.`grantRolePermissions` TO '1'@'localhost';
--- CALL `echo`.`grantRolePermissions`(1, 'admin');
-*/
+CALL `echo`.`accountsCreate`('secret_', 'nimda', '$2a$10$5f3gnmB/Cbe1TjrJhaUvNe6MTT6w87Ckiqyr0j4VxLChMtZFIMHka', 'admin@hospital.de', 'admin', 1, '18:00', 1, 'email', '1337');
+
+CALL `echo`.`grantRolePermissions`(1, 'admin');
+
