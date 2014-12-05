@@ -9,6 +9,7 @@ var swagger = require('swagger-node-express');
 var mysql = require('../config/mysql');
 var db = mysql.db;
 var config = require('../config/config.js');
+var ssl = require('../config/ssl.js').useSsl;
 
 /*
  *  GET /patients/id/death
@@ -67,7 +68,7 @@ exports.list = function(req, res, next){
 						else {
 							// row found
 							if (rows[0].length > 0){
-								var host = 'https://'+req.headers.host;
+								var host = ((ssl)?'https://':'http://')+req.headers.host;
 								var result = new Array();
 								var o  = rows[0][0];
 								o._links = new Object();
@@ -328,7 +329,7 @@ exports.listSpec = {
 		method: "GET",
 		type : "Death",
 		nickname : "listDeath",
-		parameters : [swagger.pathParam("id", "Patient where the records belong to", "string")],
+		parameters : [swagger.pathParam("id", "Patient where the records belong to", "string")]
 
 }
 

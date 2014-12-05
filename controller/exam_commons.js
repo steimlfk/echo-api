@@ -11,6 +11,7 @@ var swagger = require('swagger-node-express');
 var mysql = require('../config/mysql');
 var db = mysql.db;
 var config = require('../config/config.js');
+var ssl = require('../config/ssl.js').useSsl;
 
 /*
  * GET lists from Catscales, CCQs, Charlsons, Treatments, Readings
@@ -93,7 +94,7 @@ exports.list = function(req, res, next, exam){
 						else {
 							// is there any result?
 							if (rows[0].length > 0){
-								var host = 'https://'+req.headers.host;
+								var host = ((ssl)?'https://':'http://')+req.headers.host;
 								var result = new Array();
 								for (var i = 0; i < rows[0].length; i++){
 									var o  = rows[0][i];
@@ -209,7 +210,7 @@ exports.listOne = function(req,res,next, exam) {
 						else {
 							// was there any result?
 							if (rows[0].length > 0) {
-								var host = 'https://' + req.headers.host;
+								var host = ((ssl)?'https://':'http://')+req.headers.host;
 								var result = new Array();
 								for (var i = 0; i < rows[0].length; i++) {
 									var o = rows[0][i];

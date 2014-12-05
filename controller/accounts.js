@@ -11,6 +11,7 @@ var mysql = require('../config/mysql');
 var db = mysql.db;
 var config = require('../config/config.js');
 var bcrypt = require('bcryptjs');
+var ssl = require('../config/ssl.js').useSsl;
 
 /*
  *  GET /accounts
@@ -97,7 +98,7 @@ exports.list = function(req,res,next){
 						// careful: rows.length > 0 if you execute a "normal" sql statement
 						//			 rows[0][0].length > 0 if you execute a SP
 						if (rows.length > 0){
-							var host = 'https://'+req.headers.host;
+							var host = ((ssl)?'https://':'http://')+req.headers.host;
 							var result = new Array();
 							// add "self" to all resources
 							for (var i = 0; i < rows.length; i++){
@@ -189,7 +190,7 @@ exports.listOne = function(req,res,next){
 							res.send({err: 'Internal Server Error'});
 					}
 					
-					var host = 'https://'+req.headers.host;
+					var host = ((ssl)?'https://':'http://')+req.headers.host;
 					// is there any result?
 					// careful: rows.length > 0 if you execute a "normal" sql statement
 					//			 rows[0][0].length > 0 if you execute a SP
@@ -232,7 +233,7 @@ exports.add = function(req,res,next){
 	}
 	else{
 
-		var host = 'https://'+req.headers.host;
+		var host = ((ssl)?'https://':'http://')+req.headers.host;
 		// 2) Get DB Connection
 		db.getConnection(function(err, connection) {
 			if (err) {
@@ -334,7 +335,7 @@ exports.del =   function(req,res,next){
 		res.send({error: 'Forbidden. Invalid Role.'});
 	}
 	else{
-		var host = 'https://'+req.headers.host;
+		var host = ((ssl)?'https://':'http://')+req.headers.host;
 		// 2) Get DB Connection
 		db.getConnection(function(err, connection) {
 			if (err) {
@@ -390,7 +391,7 @@ exports.del =   function(req,res,next){
  *  	5) send
  */
 exports.update = function(req,res,next){
-	var host = 'https://'+req.headers.host;
+	var host = ((ssl)?'https://':'http://')+req.headers.host;
 	// 1) Get DB Connection
 	db.getConnection(function(err, connection) {
 		if (err) {
