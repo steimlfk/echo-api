@@ -291,6 +291,7 @@ exports.add = function(req,res,next){
 								res.statusCode = 500;
 								res.send({err: 'Internal Server Error'});
 							}
+							connection.release();
 						} else {
 							// Since the SP accountsCreate created a new db user, rights have to be set for this new user
 							connection.query('CALL grantRolePermissions(?, ?)' , [parseInt(result[0][0].location), i.role], function(err, resu) {
