@@ -9,7 +9,6 @@ var swagger = require('swagger-node-express');
 var mysql = require('../config/mysql');
 var db = mysql.db;
 var config = require('../config/config.js');
-var commons = require('./exam_commons.js');
 var ssl = require('../config/ssl.js').useSsl;
 
 /*
@@ -197,7 +196,7 @@ exports.addSpec = {
 		path : "/notifications",
 		method: "POST",
 		nickname : "addNotification",
-		parameters : [swagger.bodyParam("NewNotification", "new Notification", "NewNotification")],
+		parameters : [swagger.bodyParam("NewNotification", "new Notification", "NewNotification")]
 
 }
 
@@ -209,7 +208,7 @@ exports.models = {
 				"accountId":{"type":"integer","format": "int32","description": "Identifier of the Notifications Owner"},
 				"date":{"type":"string","format": "Date", "description": "Date and Time of Notification"},
 				"type":{"type":"integer","format": "int32","description": "notification type (range 1-6)"},
-				"subjectsAccount":{"type":"integer","format": "int32","description": "Patients Account for Doctors Notifications (3,4,5 and 6)"},
+				"subjectsAccount":{"type":"integer","format": "int32","description": "Patients Account for Doctors Notifications (3,4,5 and 6)"}
 			}
 		},
 		"Notification":{
@@ -220,7 +219,7 @@ exports.models = {
 				"accountId":{"type":"integer","format": "int32","description": "Identifier of the Notifications Owner"},
 				"date":{"type":"string","format": "Date", "description": "Date and Time of Notification"},
 				"type":{"type":"integer","format": "int32","description": "notification type (range 1-6)"},
-				"message":{"type":"string"},
+				"message":{"type":"string"}
 			}
 		}
 }

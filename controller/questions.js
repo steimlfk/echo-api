@@ -7,7 +7,6 @@ var swagger = require('swagger-node-express');
 var db = mysql.db;
 var async = require('async');
 
-
 exports.add = function(req,res){
 	db.getConnection(function(err, connection) {
 		if (err) {
@@ -191,7 +190,7 @@ exports.listSpec = {
 		path : "/questions",
 		method: "GET",
 		type : "Question",
-		nickname : "listQuestions",
+		nickname : "listQuestions"
 
 }
 
@@ -201,7 +200,7 @@ exports.addSpec = {
 		path : "/questions",
 		method: "POST",
 		nickname : "addQuestion",
-		parameters : [swagger.bodyParam("Question", "new Question with Answers", "Question")],
+		parameters : [swagger.bodyParam("Question", "new Question with Answers", "Question")]
 
 }
 
@@ -210,7 +209,7 @@ exports.listCatscaleSpec = {
 		path : "/questions/cat",
 		method: "GET",
 		type : "Question",
-		nickname : "listCatscaleQuestions",
+		nickname : "listCatscaleQuestions"
 
 }
 
@@ -219,7 +218,7 @@ exports.listCCQSpec = {
 		path : "/questions/ccq",
 		method: "GET",
 		type : "Question",
-		nickname : "listCCQQuestions",
+		nickname : "listCCQQuestions"
 
 }
 
@@ -228,7 +227,7 @@ exports.listCharlsonSpec = {
 		path : "/questions/charlson",
 		method: "GET",
 		type : "Question",
-		nickname : "listCharlsonQuestions",
+		nickname : "listCharlsonQuestions"
 
 }
 
@@ -237,7 +236,7 @@ exports.listDailySpec = {
 		path : "/questions/daily",
 		method: "GET",
 		type : "Question",
-		nickname : "listDailyQuestions",
+		nickname : "listDailyQuestions"
 
 }
 
@@ -249,22 +248,22 @@ exports.models = {
 				"answerId":{
 					"type":"integer",
 					"format": "int32",
-					"description": "Unique Identifier",
+					"description": "Unique Identifier"
 				},
 				"questionId":{
 					"type":"integer",
 					"format": "int32",
-					"description": "Unique Identifier for the corresponding Question",
+					"description": "Unique Identifier for the corresponding Question"
 				},
 				"value":{
 					"type":"integer",
 					"format": "int32",
-					"description": "Numerical Value for this Answerpossibilty",
+					"description": "Numerical Value for this Answerpossibilty"
 				},
 				"text":{
 					"type":"string",
-					"description": "Optional Description",
-				},
+					"description": "Optional Description"
+				}
 
 			}
 		},
@@ -275,7 +274,7 @@ exports.models = {
 				"questionId":{
 					"type":"integer",
 					"format": "int64",
-					"description": "Unique Identifier",
+					"description": "Unique Identifier"
 				},
 				"type":{
 					"type":"string",

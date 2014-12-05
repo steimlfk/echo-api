@@ -346,7 +346,7 @@ exports.addSpec = {
 		method: "POST",
 		nickname : "addDeath",
 		parameters : [swagger.bodyParam("Death", "new Record", "Death"), 
-		              swagger.pathParam("id", "Patient where the records belong to", "string")],
+		              swagger.pathParam("id", "Patient where the records belong to", "string")]
 
 }
 
@@ -360,7 +360,7 @@ exports.delSpec = {
 		path : "/patients/{id}/death",
 		method: "DELETE",
 		nickname : "delDeath",
-		parameters : [swagger.pathParam("id", "ID of the Patient", "string")],
+		parameters : [swagger.pathParam("id", "ID of the Patient", "string")]
 
 }
 
@@ -376,7 +376,7 @@ exports.updateSpec = {
 		method: "PUT",
 		nickname : "updateDeath",
 		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), 
-		              swagger.bodyParam("Death", "updated Treatment Record", "Death")],
+		              swagger.bodyParam("Death", "updated Treatment Record", "Death")]
 };
 
 
@@ -391,7 +391,7 @@ exports.models = {
 				"respiratory":{"type":"boolean","description": "respiratory"},
 				"infectious_disease":{"type":"boolean","description": "infectious_disease"},
 				"malignancy":{"type":"boolean","description": "malignancy"},
-				"other":{"type":"string","description" : "other cause"},
+				"other":{"type":"string","description" : "other cause"}
 			}
 		}
 }

@@ -99,7 +99,7 @@ exports.list = function(req,res,next){
 						//			 rows[0][0].length > 0 if you execute a SP
 						if (rows.length > 0){
 							var host = ((ssl)?'https://':'http://')+req.headers.host;
-							var result = new Array();
+							var result = [];
 							// add "self" to all resources
 							for (var i = 0; i < rows.length; i++){
 								var o  = rows[i];
@@ -493,7 +493,7 @@ exports.listSpec = {
 		parameters : [
 		              swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
 		              swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20"),
-		              swagger.queryParam("role", "Rolefiltering", "string", false, ["admin","doctor", "patient"]),
+		              swagger.queryParam("role", "Rolefiltering", "string", false, ["admin","doctor", "patient"])
 		              ]
 
 }
@@ -508,7 +508,7 @@ exports.listOneSpec = {
 		method: "GET",
 		type : "Account",
 		nickname : "listOneAccount",
-		parameters : [swagger.pathParam("id", "ID of the Account which needs to be fetched", "string")],
+		parameters : [swagger.pathParam("id", "ID of the Account which needs to be fetched", "string")]
 
 }
 exports.addSpec = {
@@ -536,7 +536,7 @@ exports.delSpec = {
 		path : "/accounts/{id}",
 		method: "DELETE",
 		nickname : "delAccount",
-		parameters : [swagger.pathParam("id", "Account to delete", "string")],
+		parameters : [swagger.pathParam("id", "Account to delete", "string")]
 
 }
 
@@ -551,7 +551,7 @@ exports.updateSpec = {
 		path : "/accounts/{id}",
 		method: "PUT",
 		nickname : "updateAccount",
-		parameters : [swagger.pathParam("id", "Account to update", "string"),swagger.bodyParam("Account", "updated Account Record", "Account")],
+		parameters : [swagger.pathParam("id", "Account to update", "string"),swagger.bodyParam("Account", "updated Account Record", "Account")]
 };
 
 
@@ -566,11 +566,11 @@ exports.models = {
 				"accountId":{
 					"type":"integer",
 					"format": "int64",
-					"description": "Unique Identifier",
+					"description": "Unique Identifier"
 				},
 				"username":{
 					"type": "string",
-					"description" : "Unique Username",
+					"description" : "Unique Username"
 				},
 				"password":{
 					"type":"string",
@@ -583,23 +583,23 @@ exports.models = {
 				},
 				"email":{
 					"type": "string",
-					"description" : "E-Mail Address",
+					"description" : "E-Mail Address"
 				},
 				"username":{
 					"type": "string",
-					"description" : "Unique Username",
+					"description" : "Unique Username"
 				},
 				"enabled":{
 					"type": "boolean",
-					"description" : "can this account login?",
+					"description" : "can this account login?"
 				},
 				"reminderTime":{
 					"type": "string",
-					"description" : "Reminder Time (Format: 'HH:MM')",
+					"description" : "Reminder Time (Format: 'HH:MM')"
 				},
 				"notificationEnabled":{
 					"type": "boolean",
-					"description" : "Notifications enabled?",
+					"description" : "Notifications enabled?"
 				},
 				"notificationMode":{
 					"type":"string",
@@ -608,7 +608,7 @@ exports.models = {
 				},
 				"mobile":{
 					"type": "string",
-					"description" : "Mobile Number",
+					"description" : "Mobile Number"
 				}
 			}
 		},
@@ -618,7 +618,7 @@ exports.models = {
 			"properties":{
 				"username":{
 					"type": "string",
-					"description" : "Unique Username",
+					"description" : "Unique Username"
 				},
 				"password":{
 					"type":"string",
@@ -631,19 +631,19 @@ exports.models = {
 				},
 				"email":{
 					"type": "string",
-					"description" : "E-Mail Address",
+					"description" : "E-Mail Address"
 				},
 				"enabled":{
 					"type": "boolean",
-					"description" : "can this account login?",
+					"description" : "can this account login?"
 				},
 				"reminderTime":{
 					"type": "string",
-					"description" : "Reminder Time (Format: 'HH:MM')",
+					"description" : "Reminder Time (Format: 'HH:MM')"
 				},
 				"notificationEnabled":{
 					"type": "boolean",
-					"description" : "Notifications enabled?",
+					"description" : "Notifications enabled?"
 				},
 				"notificationMode":{
 					"type":"string",
@@ -652,7 +652,7 @@ exports.models = {
 				},
 				"mobile":{
 					"type": "string",
-					"description" : "Mobile Number",
+					"description" : "Mobile Number"
 				}
 			}
 		}

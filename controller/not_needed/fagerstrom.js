@@ -116,16 +116,16 @@ exports.models = {
 				"visit":{
 					"type": "integer",
 					"format": "int32",
-					"description" : "",
+					"description" : ""
 				},
 								"group":{
 					"type": "integer",
 					"format": "int32",
-					"description" : "",
+					"description" : ""
 				},
 				"optional":{
 					"type": "boolean",
-					"description" : "",
+					"description" : ""
 				}
 
 			}

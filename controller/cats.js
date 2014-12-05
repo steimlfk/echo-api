@@ -12,6 +12,7 @@ var db = mysql.db;
 var config = require('../config/config.js');
 var commons = require('./exam_commons.js');
 
+
 /*
  *  GET /patients/id/cats
  */
@@ -218,7 +219,7 @@ exports.listSpec = {
 		nickname : "listCatscale",
 		parameters : [swagger.pathParam("id", "Patient where the records belong to", "string"),
 		              swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
-		              swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")],
+		              swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")]
 }
 
 exports.listOneSpec = {
@@ -233,7 +234,7 @@ exports.listOneSpec = {
 		method: "GET",
 		type : "Catscale",
 		nickname : "listOneCatscale",
-		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")],
+		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")]
 }
 
 
@@ -248,7 +249,7 @@ exports.addSpec = {
 		path : "/patients/{id}/cats",
 		method: "POST",
 		nickname : "addCatscale",
-		parameters : [swagger.bodyParam("Catscale", "new Record", "NewCatscale"), swagger.pathParam("id", "Patient where the records belong to", "string")],
+		parameters : [swagger.bodyParam("Catscale", "new Record", "NewCatscale"), swagger.pathParam("id", "Patient where the records belong to", "string")]
 
 }
 
@@ -263,7 +264,7 @@ exports.delSpec = {
 		path : "/patients/{id}/cats/{rid}",
 		method: "DELETE",
 		nickname : "delCatscale",
-		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")],
+		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")]
 
 }
 
@@ -278,7 +279,7 @@ exports.updateSpec = {
 		path : "/patients/{id}/cats/{rid}",
 		method: "PUT",
 		nickname : "updateCatscale",
-		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string") ,swagger.bodyParam("Catscale", "updated Catscale Record", "Catscale")],
+		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string") ,swagger.bodyParam("Catscale", "updated Catscale Record", "Catscale")]
 };
 
 exports.models = {
@@ -289,12 +290,12 @@ exports.models = {
 				"patientId":{
 					"type":"integer",
 					"format": "int32",
-					"description": "Unique Identifier of the Patient",
+					"description": "Unique Identifier of the Patient"
 				},
 				"recordId":{
 					"type":"integer",
 					"format": "int32",
-					"description": "Unique Identifier of this Record",
+					"description": "Unique Identifier of this Record"
 				},
 				"totalCatscale":{
 					"type":"integer",
@@ -364,7 +365,7 @@ exports.models = {
 				"patientId":{
 					"type":"integer",
 					"format": "int32",
-					"description": "Unique Identifier of the Patient",
+					"description": "Unique Identifier of the Patient"
 				},
 				"q1":{
 					"type":"integer",

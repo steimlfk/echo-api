@@ -10,6 +10,7 @@ var swagger = require('swagger-node-express');
 var mysql = require('../config/mysql');
 var db = mysql.db;
 var config = require('../config/config.js');
+var ssl = require('../config/ssl.js').useSsl;
 
 
 /*
@@ -98,7 +99,7 @@ exports.list = function(req, res, next){
 							for (var i = 0; i < rows[0].length; i++){
 								var o  = rows[0][i];
 								// add "self" to all resources
-								o._links = new Object();
+								o._links = {};
 								o._links.self = new Object();
 								o._links.self.href = host+'/patients/'+req.params.id+'/'+exam+'/'+rows[0][i].recordId;
 								// create corresponding patients link
@@ -493,7 +494,7 @@ exports.listSpec = {
 		nickname : "listReport",
 		parameters : [swagger.pathParam("id", "Patient who answered the Questions", "string"),
 		              swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
-		              swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")],
+		              swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")]
 
 }
 

@@ -242,7 +242,7 @@ exports.addSpec = {
 		method: "POST",
 		nickname : "addTreatment",
 		parameters : [swagger.bodyParam("Treatment", "new Record", "NewTreatment"), 
-		              swagger.pathParam("id", "Patient where the records belong to", "string")],
+		              swagger.pathParam("id", "Patient where the records belong to", "string")]
 
 }
 
@@ -259,7 +259,7 @@ exports.listOneSpec = {
 		type : "Treatment",
 		nickname : "listOneTreatment",
 		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), 
-		              swagger.pathParam("rid", "ID of the Record", "string")],
+		              swagger.pathParam("rid", "ID of the Record", "string")]
 
 }
 
@@ -275,7 +275,7 @@ exports.delSpec = {
 		method: "DELETE",
 		nickname : "delTreatment",
 		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), 
-		              swagger.pathParam("rid", "ID of the Record", "string")],
+		              swagger.pathParam("rid", "ID of the Record", "string")]
 
 }
 
@@ -292,7 +292,7 @@ exports.updateSpec = {
 		nickname : "updateTreatment",
 		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), 
 		              swagger.pathParam("rid", "ID of the Record", "string") ,
-		              swagger.bodyParam("Treatment", "updated Treatment Record", "Treatment")],
+		              swagger.bodyParam("Treatment", "updated Treatment Record", "Treatment")]
 };
 
 

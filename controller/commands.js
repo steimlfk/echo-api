@@ -8,6 +8,7 @@ var config = require('../config/config.js');
 var async = require('async');
 var bcrypt = require('bcryptjs');
 
+
 exports.createPatientAndAccount = function(req,res,next) {
 	// 1) Validate Role!
 	if (req.user.role == 'patient'){
@@ -105,7 +106,7 @@ exports.createPatientAndAccount = function(req,res,next) {
 					});
 				}
 			});
-		};
+		}
 	}
 }
 
@@ -186,7 +187,7 @@ exports.createSpec = {
 		path : "/createPatientAndAccount",
 		method: "POST",
 		nickname : "addPatientWithAccount",
-		parameters : [swagger.bodyParam("PatientAndAccount", "new Patient with new Account", "PatientAndAccount")],
+		parameters : [swagger.bodyParam("PatientAndAccount", "new Patient with new Account", "PatientAndAccount")]
 
 }
 
@@ -199,7 +200,7 @@ exports.changeSpec = {
 		path : "/changeDoctor",
 		method: "POST",
 		nickname : "changeDoc",
-		parameters : [swagger.bodyParam("ChangeDoctor", "new Patient with new Account", "ChangeDoctor")],
+		parameters : [swagger.bodyParam("ChangeDoctor", "new Patient with new Account", "ChangeDoctor")]
 
 }
 
@@ -250,7 +251,7 @@ exports.models = {
 				"landline": {
 					"type":"string",
 					"description": "Patients phone number"
-				},
+				}
 			}
 		},
 		"PatientAndAccount":{

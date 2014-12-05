@@ -217,7 +217,7 @@ exports.listSpec = {
 		nickname : "listCCQ",
 		parameters : [swagger.pathParam("id", "Patient where the records belong to", "string"),
 		              swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
-		              swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")],
+		              swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")]
 
 }
 
@@ -233,7 +233,7 @@ exports.addSpec = {
 		path : "/patients/{id}/ccqs",
 		method: "POST",
 		nickname : "addCCQ",
-		parameters : [swagger.bodyParam("CCQ", "new Record", "NewCCQ"), swagger.pathParam("id", "Patient where the records belong to", "string")],
+		parameters : [swagger.bodyParam("CCQ", "new Record", "NewCCQ"), swagger.pathParam("id", "Patient where the records belong to", "string")]
 
 
 }
@@ -251,7 +251,7 @@ exports.listOneSpec = {
 		method: "GET",
 		type : "CCQ",
 		nickname : "listOneCCQ",
-		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")],
+		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")]
 
 }
 
@@ -266,7 +266,7 @@ exports.delSpec = {
 		path : "/patients/{id}/ccqs/{rid}",
 		method: "DELETE",
 		nickname : "delCCQ",
-		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")],
+		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")]
 
 }
 
@@ -281,7 +281,7 @@ exports.updateSpec = {
 		path : "/patients/{id}/ccqs/{rid}",
 		method: "PUT",
 		nickname : "updateCCQ",
-		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string") ,swagger.bodyParam("CCQ", "updated CCQ Record", "CCQ")],
+		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string") ,swagger.bodyParam("CCQ", "updated CCQ Record", "CCQ")]
 };
 
 
@@ -293,12 +293,12 @@ exports.models = {
 				"patientId":{
 					"type":"integer",
 					"format": "int32",
-					"description": "Unique Identifier of the Patient",
+					"description": "Unique Identifier of the Patient"
 				},
 				"recordId":{
 					"type":"integer",
 					"format": "int32",
-					"description": "Unique Identifier of this Record",
+					"description": "Unique Identifier of this Record"
 				},
 				"diagnoseDate":{
 					"type":"string",
@@ -366,22 +366,22 @@ exports.models = {
 				"totalCCQScore":{
 					"type":"number",
 					"format": "float",
-					"description": "Total CCQ Score",
+					"description": "Total CCQ Score"
 				},
 				"symptomScore":{
 					"type":"number",
 					"format": "float",
-					"description": "Symptom Score",
+					"description": "Symptom Score"
 				},
 				"mentalStateScore":{
 					"type":"number",
 					"format": "float",
-					"description": "Mental State Score",
+					"description": "Mental State Score"
 				},
 				"functionalStateScore":{
 					"type":"number",
 					"format": "float",
-					"description": "Functional State Score",
+					"description": "Functional State Score"
 				}
 
 			}
@@ -452,7 +452,7 @@ exports.models = {
 					"type":"integer",
 					"format": "int32",
 					"description": "Score for Q10"
-				},
+				}
 
 			}
 		}

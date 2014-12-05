@@ -93,7 +93,7 @@ exports.models = {
 				"patientId":{
 					"type":"integer",
 					"format": "int32",
-					"description": "Unique Identifier of the Patient",
+					"description": "Unique Identifier of the Patient"
 				},
 				"diagnoseDate":{
 					"type":"string",
@@ -111,46 +111,46 @@ exports.models = {
 				"BORG":{
 					"type":"integer",
 					"format": "int32",
-					"description": "Value for given Answer",
+					"description": "Value for given Answer"
 				},
 				"MRC":{
 					"type":"integer",
 					"format": "int32",
-					"description": "Value for given Answer",
+					"description": "Value for given Answer"
 				},
 				"VAS":{
 					"type":"integer",
 					"format": "int32",
-					"description": "Value for given Answer",
+					"description": "Value for given Answer"
 				},
 				"O2COST":{
 					"type":"integer",
 					"format": "int32",
-					"description": "Value for given Answer",
+					"description": "Value for given Answer"
 				},
 				"SixMWT":{
 					"type":"integer",
 					"format": "int32",
-					"description": "Value for given Answer",
+					"description": "Value for given Answer"
 				},
 				"SixMWTTIME":{
 					"type":"integer",
 					"format": "int32",
-					"description": "Value for given Answer",
+					"description": "Value for given Answer"
 				},
 				"Group":{
 					"type":"integer",
 					"format": "int32",
-					"description": "",
+					"description": ""
 				},
 				"Visit":{
 					"type": "integer",
 					"format": "int32",
-					"description" : "",
+					"description" : ""
 				},
 				"Optional":{
 					"type": "boolean",
-					"description" : "",
+					"description" : ""
 				}
 
 			}

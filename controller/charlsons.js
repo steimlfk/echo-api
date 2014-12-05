@@ -302,7 +302,7 @@ exports.models = {
 			            	 "patientId":{
 			            		 "type":"integer",
 			            		 "format": "int32",
-			            		 "description": "Unique Identifier of the Patient",
+			            		 "description": "Unique Identifier of the Patient"
 			            	 },
 			            	 "diagnoseDate":{
 			            		 "type":"string",
@@ -312,71 +312,71 @@ exports.models = {
 			            	 "recordId":{
 			            		 "type":"integer",
 			            		 "format": "int32",
-			            		 "description": "Unique Identifier of this Record",
+			            		 "description": "Unique Identifier of this Record"
 			            	 },
 			            	 "myocardialInfarction":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "congestiveHeartFailure":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "peripheralVascularDisease":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "cerebrovascularDisease":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "dementia":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "chronicPulmonaryDiasease":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "connectiveTissueDisease":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "ulcerDisease":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "liverDiseaseMild":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "diabetes":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "hemiplegia":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "renalDiseaseModerateOrSevere":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "diabetesWithEndOrganDamage":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "anyTumor":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "metastaticSolidMalignancy":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "leukemia":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "malignantLymphoma":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 
 			            	 },
 			            	 "liverDiseaseModerateOrSevere":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "aids":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "noConditionAvailable":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "totalCharlson":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 }
 			             }
 		},
@@ -393,64 +393,64 @@ exports.models = {
 			            		 "description": "Date of Diagnose"
 			            	 },
 			            	 "myocardialInfarction":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "congestiveHeartFailure":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "peripheralVascularDisease":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "cerebrovascularDisease":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "dementia":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "chronicPulmonaryDiasease":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "connectiveTissueDisease":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "ulcerDisease":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "liverDiseaseMild":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "diabetes":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "hemiplegia":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "renalDiseaseModerateOrSevere":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "diabetesWithEndOrganDamage":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "anyTumor":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "metastaticSolidMalignancy":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "leukemia":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "malignantLymphoma":{
-			            		 "type":"boolean", "description": "Value for given Answer",
+			            		 "type":"boolean", "description": "Value for given Answer"
 			            	 },
 			            	 "liverDiseaseModerateOrSevere":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "aids":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "noConditionAvailable":{
-			            		 "type":"boolean","description": "Value for given Answer",
+			            		 "type":"boolean","description": "Value for given Answer"
 			            	 }
 			             }
 		}

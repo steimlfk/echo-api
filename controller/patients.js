@@ -463,7 +463,7 @@ exports.listSpec = {
 		              swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
 		              swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20"),
 		              swagger.queryParam("sortBy", "Name of the Column to sort after", "string",false, ["patientId","email"]),
-		              swagger.queryParam("order", "ASCending or DESCending", "string", false, ["asc","desc"]),
+		              swagger.queryParam("order", "ASCending or DESCending", "string", false, ["asc","desc"])
 		              ]
 
 }
@@ -478,7 +478,7 @@ exports.listOneSpec = {
 		method: "GET",
 		type : "Patient",
 		nickname : "listOnePatient",
-		parameters : [swagger.pathParam("id", "ID of the patient which needs to be fetched", "string")],
+		parameters : [swagger.pathParam("id", "ID of the patient which needs to be fetched", "string")]
 
 }
 
@@ -492,7 +492,7 @@ exports.addSpec = {
 		path : "/patients",
 		method: "POST",
 		nickname : "addPatient",
-		parameters : [swagger.bodyParam("Patient", "new Patient Record", "NewPatient")],
+		parameters : [swagger.bodyParam("Patient", "new Patient Record", "NewPatient")]
 
 }
 
@@ -506,7 +506,7 @@ exports.delSpec = {
 		path : "/patients/{id}",
 		method: "DELETE",
 		nickname : "delPatient",
-		parameters : [swagger.pathParam("id", "Patient to delete", "string")],
+		parameters : [swagger.pathParam("id", "Patient to delete", "string")]
 
 }
 exports.updateSpec = {
@@ -520,7 +520,7 @@ exports.updateSpec = {
 		path : "/patients/{id}",
 		method: "PUT",
 		nickname : "updatePatient",    
-		parameters : [swagger.pathParam("id", "Patient to update", "string"),swagger.bodyParam("Patient", "updated Patient Record", "Patient")],
+		parameters : [swagger.pathParam("id", "Patient to update", "string"),swagger.bodyParam("Patient", "updated Patient Record", "Patient")]
 
 };
 
@@ -589,7 +589,7 @@ exports.models = {
 				"landline": {
 					"type":"string",
 					"description": "Patients phone number"
-				},
+				}
 			}
 		},
 		"NewPatient":{
@@ -648,8 +648,8 @@ exports.models = {
 				"landline": {
 					"type":"string",
 					"description": "Patients phone number"
-				},
+				}
 			}
-		},
+		}
 }
 

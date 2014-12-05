@@ -92,7 +92,7 @@ exports.models = {
 				"patientId":{
 					"type":"integer",
 					"format": "int32",
-					"description": "Unique Identifier of the Patient",
+					"description": "Unique Identifier of the Patient"
 				},
 				"diagnoseDate":{
 					"type":"string",
@@ -101,36 +101,36 @@ exports.models = {
 				},
 				"CurrentSmoking":{
 					"type":"boolean",
-					"description": "Value for given Answer",
+					"description": "Value for given Answer"
 				},
 				"Zyban":{
 					"type":"boolean",
-					"description": "Value for given Answer",
+					"description": "Value for given Answer"
 				},
 				"Champix":{
 					"type":"boolean",
-					"description": "Value for given Answer",
+					"description": "Value for given Answer"
 				},
 				"NicotineReplacement":{
 					"type":"boolean",
-					"description": "Value for given Answer",
+					"description": "Value for given Answer"
 				},
 				"NicotineKind":{
 					"type":"string",
-					"description": "Value for given Answer",
+					"description": "Value for given Answer"
 				},
 				"NicotineDose":{
 					"type":"string",
-					"description": "Value for given Answer",
+					"description": "Value for given Answer"
 				},
 				"Behavioural":{
 					"type":"boolean",
-					"description": "Value for given Answer",
+					"description": "Value for given Answer"
 				},
 
 				"optional":{
 					"type": "boolean",
-					"description" : "",
+					"description" : ""
 				}
 
 			}
