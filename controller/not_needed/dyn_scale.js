@@ -33,7 +33,7 @@ exports.list = function(req,res){
 			});
 		}
 	});
-}
+};
 
 
 exports.add = function(req,res){
@@ -59,7 +59,7 @@ exports.add = function(req,res){
 			});
 		}
 	});
-}
+};
 
 
 exports.listSpec = {
@@ -71,7 +71,7 @@ exports.listSpec = {
 		parameters : [swagger.pathParam("id", "Patient where the records belong to", "string")],
 		responseMessages : [swagger.errors.notFound('id')]
 
-}
+};
 
 
 exports.addSpec = {
@@ -82,7 +82,7 @@ exports.addSpec = {
 		parameters : [swagger.bodyParam("Dyspneascale", "new Record", "Dyspneascale"), swagger.pathParam("id", "Patient where the records belong to", "string")],
 		responseMessages : [swagger.errors.notFound('id')]
 
-}
+};
 
 
 exports.models = {
@@ -155,4 +155,4 @@ exports.models = {
 
 			}
 		}
-}
+};

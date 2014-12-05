@@ -17,21 +17,21 @@ var commons = require('./exam_commons.js');
  */
 exports.list = function(req,res,next){
 	commons.list(req,res,next,'readings');
-}
+};
 
 /*
  * GET /patients/id/readings/recordid
  */
 exports.listOne = function(req,res,next){
 	commons.listOne(req,res,next,'readings');
-}
+};
 
 /*
  *  DELETE /patients/id/readings/recordid
  */
 exports.del = function(req,res,next){
 	commons.del(req,res,next,'readings');
-}
+};
 
 
 /*
@@ -122,7 +122,7 @@ exports.add = function(req,res,next){
 			}	
 		});
 	}
-}
+};
 
 /*
  *  PUT /patients/id/readings/recordid
@@ -218,7 +218,7 @@ exports.update = function(req,res,next){
 			}	
 		});
 	}
-}
+};
 
 exports.listSpec = {
 		summary : "Get Readings Records of this Patient (Roles: doctor)",
@@ -245,7 +245,7 @@ exports.listSpec = {
 		              swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")],
 		              responseMessages : [swagger.errors.notFound('id')]
 
-}
+};
 
 
 exports.addSpec = {
@@ -263,7 +263,7 @@ exports.addSpec = {
 		              swagger.pathParam("id", "Patient where the records belong to", "string")],
 		              responseMessages : [swagger.errors.notFound('id')]
 
-}
+};
 
 exports.listOneSpec = {
 		summary : "Get specific Readings Record of this Patient (Roles: doctor)",
@@ -281,7 +281,7 @@ exports.listOneSpec = {
 		              swagger.pathParam("rid", "ID of the Record", "string")],
 		              responseMessages : [swagger.errors.notFound('rid')]
 
-}
+};
 
 
 exports.delSpec = {
@@ -298,7 +298,7 @@ exports.delSpec = {
 		              swagger.pathParam("rid", "ID of the Record", "string")],
 		              responseMessages : [swagger.errors.notFound('rid')]
 
-}
+};
 
 exports.updateSpec = {
 		summary : "Update specific Readings Record of this Patient (Roles: doctor)",
@@ -431,6 +431,6 @@ exports.models = {
 			            	 "weight": {"type":"integer", "format": "int32", "description": "weight"}
 			             }
 		}
-}
+};
 
 

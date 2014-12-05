@@ -108,7 +108,7 @@ exports.createPatientAndAccount = function(req,res,next) {
 			});
 		}
 	}
-}
+};
 
 
 exports.changeDoctor = function(req,res,next){
@@ -172,7 +172,7 @@ exports.changeDoctor = function(req,res,next){
 			}	
 		});
 	}
-}
+};
 
 
 
@@ -189,7 +189,7 @@ exports.createSpec = {
 		nickname : "addPatientWithAccount",
 		parameters : [swagger.bodyParam("PatientAndAccount", "new Patient with new Account", "PatientAndAccount")]
 
-}
+};
 
 exports.changeSpec = {
 		summary : "Changes Doctor of Given Patient (Roles: admin)",
@@ -202,7 +202,7 @@ exports.changeSpec = {
 		nickname : "changeDoc",
 		parameters : [swagger.bodyParam("ChangeDoctor", "new Patient with new Account", "ChangeDoctor")]
 
-}
+};
 
 exports.models = {
 		"ExtraPatient":{
@@ -278,4 +278,4 @@ exports.models = {
 				}
 			}
 		}
-}
+};

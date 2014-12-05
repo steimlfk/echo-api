@@ -74,12 +74,12 @@ exports.list = function(req, res, next){
 					else {
 						if (rows.length > 0){
 							var host = ((ssl)?'https://':'http://')+req.headers.host;
-							var result = new Array();
+							var result = [];
 							for (var i = 0; i < rows.length; i++){
 								var o  = rows[i];
-								o._links = new Object();
+								o._links = {};
 								// create link to patients account
-								o._links.patient = new Object();
+								o._links.patient = {};
 								o._links.patient.href = host+'/patients/'+rows[i].subjectsAccount;
 								delete o.subjectsAccount;
 								result.push(o);
@@ -87,7 +87,7 @@ exports.list = function(req, res, next){
 							var links;
 							// add pagination links to result set if pagination was used
 							if(page != 0){
-								links = new Object();
+								links = {};
 
 								//create first link
 								var first = host+'/notifications?page=1&pageSize='+pageSize;
@@ -104,7 +104,7 @@ exports.list = function(req, res, next){
 								}
 							}
 							// send result
-							var ret = new Object();
+							var ret = {};
 							ret.notifications = result;
 							if(page != 0) ret._links = links;
 							res.send(ret);
@@ -120,7 +120,7 @@ exports.list = function(req, res, next){
 			});
 		}
 	});
-}
+};
 
 
 /*
@@ -150,7 +150,7 @@ exports.add = function(req, res, next){
 			});
 		}
 	});
-}
+};
 
 exports.listSpec = {
 		summary : "Get All Notifications of the logged-in User",
@@ -184,7 +184,7 @@ exports.listSpec = {
 		              swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")
 		              ]
 
-}
+};
 
 exports.addSpec = {
 		summary : "Create Notification. DEBUG PURPOSES! (Roles: Any)",
@@ -198,7 +198,7 @@ exports.addSpec = {
 		nickname : "addNotification",
 		parameters : [swagger.bodyParam("NewNotification", "new Notification", "NewNotification")]
 
-}
+};
 
 exports.models = {
 		"NewNotification":{
@@ -222,4 +222,4 @@ exports.models = {
 				"message":{"type":"string"}
 			}
 		}
-}
+};

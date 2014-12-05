@@ -51,7 +51,7 @@ exports.add = function(req,res){
 
 			if (req.body.type == 'boolean'){
 				console.log(req.body);
-				var sql = 'Insert into questions (text, type, category) VALUES (' 
+				sql = 'Insert into questions (text, type, category) VALUES ('
 					+ question_text + ','
 					+ question_type + ','
 					+ question_category + ');';
@@ -69,7 +69,7 @@ exports.add = function(req,res){
 			}
 		}
 	});
-}
+};
 
 exports.list = function(req,res){
 	db.getConnection(function(err, connection) {
@@ -84,7 +84,7 @@ exports.list = function(req,res){
 					return res.send(500);
 				}
 				if (rows.length > 0){
-					var result_set = new Array();
+					var result_set = [];
 					async.eachSeries(rows, function(question, each_next){
 						async.waterfall([
 						                 function(wf1_next){
@@ -118,23 +118,23 @@ exports.list = function(req,res){
 			});
 		}
 	});
-}
+};
 
 exports.listCatscale = function(req, res, next){
 	getQuestions(req, res, next, 'cat');
-}
+};
 
 exports.listCCQ = function(req, res, next){
 	getQuestions(req, res, next, 'ccq');
-}
+};
 
 exports.listDaily = function(req, res, next){
 	getQuestions(req, res, next, 'daily');
-}
+};
 
 exports.listCharlson = function(req, res, next){
 	getQuestions(req, res, next, 'charlson');
-}
+};
 
 function getQuestions(req, res, next, cat){
 	db.getConnection(function(err, connection) {
@@ -149,7 +149,7 @@ function getQuestions(req, res, next, cat){
 					return res.send(500);
 				}
 				if (rows.length > 0){
-					var result_set = new Array();
+					var result_set = [];
 					async.eachSeries(rows, function(question, each_next){
 							async.waterfall([
 							                 function(wf1_next){
@@ -183,7 +183,7 @@ function getQuestions(req, res, next, cat){
 			});
 		}
 	});
-}
+};
 
 exports.listSpec = {
 		summary : "List all Questions",
@@ -192,7 +192,7 @@ exports.listSpec = {
 		type : "Question",
 		nickname : "listQuestions"
 
-}
+};
 
 
 exports.addSpec = {
@@ -202,7 +202,7 @@ exports.addSpec = {
 		nickname : "addQuestion",
 		parameters : [swagger.bodyParam("Question", "new Question with Answers", "Question")]
 
-}
+};
 
 exports.listCatscaleSpec = {
 		summary : "List all CAT Questions",
@@ -211,7 +211,7 @@ exports.listCatscaleSpec = {
 		type : "Question",
 		nickname : "listCatscaleQuestions"
 
-}
+};
 
 exports.listCCQSpec = {
 		summary : "List all CCQ Questions",
@@ -220,7 +220,7 @@ exports.listCCQSpec = {
 		type : "Question",
 		nickname : "listCCQQuestions"
 
-}
+};
 
 exports.listCharlsonSpec = {
 		summary : "List all Charlson Questions",
@@ -229,7 +229,7 @@ exports.listCharlsonSpec = {
 		type : "Question",
 		nickname : "listCharlsonQuestions"
 
-}
+};
 
 exports.listDailySpec = {
 		summary : "List all Daily Questions",
@@ -238,7 +238,7 @@ exports.listDailySpec = {
 		type : "Question",
 		nickname : "listDailyQuestions"
 
-}
+};
 
 exports.models = {
 		"Answer":{
@@ -312,4 +312,4 @@ exports.models = {
 			}
 		}
 
-}
+};

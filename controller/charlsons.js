@@ -17,19 +17,19 @@ var commons = require('./exam_commons.js');
  */
 exports.list = function(req,res,next){
 	commons.list(req,res,next,'charlsons');
-}
+};
 /*
  * GET /patients/id/charlsons/recordid
  */
 exports.listOne = function(req,res,next){
 	commons.listOne(req,res,next,'charlsons');
-}
+};
 /*
  *  DELETE /patients/id/charlsons/recordid
  */
 exports.del = function(req,res,next){
 	commons.del(req,res,next,'charlsons');
-}
+};
 
 /*
  *  POST /patients/id/charlsons
@@ -110,7 +110,7 @@ exports.add = function(req,res,next){
 			}	
 		});
 	}
-}
+};
 
 /*
  *  PUT /patients/id/charlsons/recordid
@@ -196,7 +196,7 @@ exports.update = function(req,res,next){
 			}	
 		});
 	}
-}
+};
 
 exports.listSpec = {
 		summary : "Get Charlson Records of this Patient (Roles: doctor)",
@@ -223,7 +223,7 @@ exports.listSpec = {
 		              swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")],
 		responseMessages : [swagger.errors.notFound('id')]
 
-}
+};
 
 
 exports.addSpec = {
@@ -240,7 +240,7 @@ exports.addSpec = {
 		parameters : [swagger.bodyParam("Charlson", "new Record", "NewCharlson"), swagger.pathParam("id", "Patient where the records belong to", "string")],
 		responseMessages : [swagger.errors.notFound('id')]
 
-}
+};
 
 exports.listOneSpec = {
 		summary : "Get specific Charlson Record of this Patient (Roles: doctor)",
@@ -257,7 +257,7 @@ exports.listOneSpec = {
 		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")],
 		responseMessages : [swagger.errors.notFound('rid')]
 
-}
+};
 
 
 exports.delSpec = {
@@ -273,7 +273,7 @@ exports.delSpec = {
 		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")],
 		responseMessages : [swagger.errors.notFound('rid')]
 
-}
+};
 
 exports.updateSpec = {
 		summary : "Update specific Charlson Record of this Patient (Roles: doctor)",
@@ -454,6 +454,6 @@ exports.models = {
 			            	 }
 			             }
 		}
-}
+};
 
 

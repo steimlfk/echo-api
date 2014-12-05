@@ -17,21 +17,21 @@ var commons = require('./exam_commons.js');
  */
 exports.list = function(req,res,next){
 	commons.list(req,res,next,'ccqs');
-}
+};
 
 /*
  * GET /patients/id/ccqs/recordid
  */
 exports.listOne = function(req,res,next){
 	commons.listOne(req,res,next,'ccqs');
-}
+};
 
 /*
  *  DELETE /patients/id/ccqs/recordid
  */
 exports.del = function(req,res,next){
 	commons.del(req,res,next,'ccqs');
-}
+};
 
 /*
  *  POST /patients/id/ccqs
@@ -109,7 +109,8 @@ exports.add = function(req,res,next){
 			}	
 		});
 	}
-}
+};
+
 /*
  *  PUT /patients/id/cats/recordid
  *  Steps: 
@@ -191,7 +192,7 @@ exports.update = function(req,res,next){
 			}	
 		});
 	}
-}
+};
 
 
 
@@ -219,7 +220,7 @@ exports.listSpec = {
 		              swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
 		              swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")]
 
-}
+};
 
 
 exports.addSpec = {
@@ -236,7 +237,7 @@ exports.addSpec = {
 		parameters : [swagger.bodyParam("CCQ", "new Record", "NewCCQ"), swagger.pathParam("id", "Patient where the records belong to", "string")]
 
 
-}
+};
 
 
 exports.listOneSpec = {
@@ -253,7 +254,7 @@ exports.listOneSpec = {
 		nickname : "listOneCCQ",
 		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")]
 
-}
+};
 
 
 exports.delSpec = {
@@ -268,7 +269,7 @@ exports.delSpec = {
 		nickname : "delCCQ",
 		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")]
 
-}
+};
 
 exports.updateSpec = {
 		summary : "Update specific CCQ Record of this Patient (Roles: doctor)",
@@ -456,6 +457,6 @@ exports.models = {
 
 			}
 		}
-}
+};
 
 

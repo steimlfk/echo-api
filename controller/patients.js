@@ -96,18 +96,18 @@ exports.list = function(req,res,next){
 						// is there any result?
 						if (rows.length > 0){
 							var host = ((ssl)?'https://':'http://')+req.headers.host;
-							var result = new Array();
+							var result = [];
 							for (var i = 0; i < rows.length; i++){
 								var o  = rows[i];
-								o._links = new Object();
+								o._links = {};
 								// create self link
-								o._links.self = new Object();
+								o._links.self = {};
 								o._links.self.href = host+'/patients/'+rows[i].patientId;
 								result.push(o);
 							}
 							// add pagination links to result set if pagination was used
 							if(req.query.page){
-								var links = new Object();
+								var links = {};
 								// create "first" link
 								var first = host+'/patients?page=1&pageSize='+pageSize;
 								// if sorting was used, add it to the link
@@ -153,7 +153,7 @@ exports.list = function(req,res,next){
 			}
 		});
 	}
-}
+};
 
 /*
  *  GET /patients/id
@@ -200,9 +200,9 @@ exports.listOne = function(req,res,next){
 						if (rows.length > 0){
 							var host = ((ssl)?'https://':'http://')+req.headers.host;
 							var o  = rows[0];
-							o._links = new Object();
+							o._links = {};
 							// add self link
-							o._links.self = new Object();
+							o._links.self = {};
 							o._links.self.href = host+'/patients/'+rows[0].patientId;
 							res.send(o);
 						} 
@@ -217,7 +217,7 @@ exports.listOne = function(req,res,next){
 			}
 		});
 	}
-}
+};
 
 /*
  *  POST /patients
@@ -295,7 +295,7 @@ exports.add = function(req,res,next){
 			}
 		});
 	}
-}
+};
 
 /*
  *  DELETE /patients/id
@@ -354,7 +354,7 @@ exports.del =   function(req,res,next){
 			}
 		});
 	}
-}
+};
 
 /*
  *  PUT /patients/id
@@ -436,7 +436,7 @@ exports.update = function(req,res,next){
 			}
 		});
 	}
-}
+};
 
 
 exports.listSpec = {
@@ -466,7 +466,7 @@ exports.listSpec = {
 		              swagger.queryParam("order", "ASCending or DESCending", "string", false, ["asc","desc"])
 		              ]
 
-}
+};
 exports.listOneSpec = {
 		summary : "Get specific Patient (Roles: doctor and admin)",
 		notes: "This Function returns the requested Patient, if it exists and is visible to the current user. <br>This function constructs a sql query from the parameters and executes it on patients_view. <br><br>" +
@@ -480,7 +480,7 @@ exports.listOneSpec = {
 		nickname : "listOnePatient",
 		parameters : [swagger.pathParam("id", "ID of the patient which needs to be fetched", "string")]
 
-}
+};
 
 exports.addSpec = {
 		summary : "Create Patient (Roles: doctor and admin)",
@@ -494,7 +494,7 @@ exports.addSpec = {
 		nickname : "addPatient",
 		parameters : [swagger.bodyParam("Patient", "new Patient Record", "NewPatient")]
 
-}
+};
 
 exports.delSpec = {
 		summary : "Delete specific Patient (Roles: doctor and admin)",
@@ -508,7 +508,7 @@ exports.delSpec = {
 		nickname : "delPatient",
 		parameters : [swagger.pathParam("id", "Patient to delete", "string")]
 
-}
+};
 exports.updateSpec = {
 		summary : "Update specific Patient (Roles: doctor and admin)",
 		notes: "This Function updates a Patients record, which is specified by the url. An accountId in the Message Body is ignored. <br>This function passes its parameters to the SP patientsUpdate <br><br>" +
@@ -651,5 +651,5 @@ exports.models = {
 				}
 			}
 		}
-}
+};
 

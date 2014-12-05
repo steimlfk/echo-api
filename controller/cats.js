@@ -18,21 +18,21 @@ var commons = require('./exam_commons.js');
  */
 exports.list = function(req,res,next){
 	commons.list(req,res,next,'cats');
-}
+};
 
 /*
  * GET /patients/id/cats/recordid
  */
 exports.listOne = function(req,res,next){
 	commons.listOne(req,res,next,'cats');
-}
+};
 
 /*
  *  DELETE /patients/id/cats/recordid
  */
 exports.del = function(req,res,next){
 	commons.del(req,res,next,'cats');
-}
+};
 
 /*
  *  POST /patients/id/cats
@@ -94,7 +94,6 @@ exports.add = function(req,res,next){
 							// Error Handling: Something else went wrong!
 							else {
 								console.error('Query error on POST cat: ',err);
-								return res.send(500);
 								res.send({error: 'Internal Server Error'});
 							}
 						} else {
@@ -110,7 +109,7 @@ exports.add = function(req,res,next){
 			}	
 		});
 	}
-}
+};
 
 /*
  *  PUT /patients/id/cats/recordid
@@ -194,7 +193,7 @@ exports.update = function(req,res,next){
 			}	
 		});
 	}
-}
+};
 
 
 exports.listSpec = {
@@ -220,7 +219,7 @@ exports.listSpec = {
 		parameters : [swagger.pathParam("id", "Patient where the records belong to", "string"),
 		              swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
 		              swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")]
-}
+};
 
 exports.listOneSpec = {
 		summary : "Get specific Catscale Record of this Patient (Roles: doctor)",
@@ -235,7 +234,7 @@ exports.listOneSpec = {
 		type : "Catscale",
 		nickname : "listOneCatscale",
 		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")]
-}
+};
 
 
 exports.addSpec = {
@@ -251,7 +250,7 @@ exports.addSpec = {
 		nickname : "addCatscale",
 		parameters : [swagger.bodyParam("Catscale", "new Record", "NewCatscale"), swagger.pathParam("id", "Patient where the records belong to", "string")]
 
-}
+};
 
 
 exports.delSpec = {
@@ -266,7 +265,7 @@ exports.delSpec = {
 		nickname : "delCatscale",
 		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")]
 
-}
+};
 
 exports.updateSpec = {
 		summary : "Update specific Catscale Record of this Patient (Roles: doctor)",
@@ -423,6 +422,6 @@ exports.models = {
 
 			}
 		}
-}
+};
 
 

@@ -95,22 +95,22 @@ exports.list = function(req, res, next){
 						
 						if (rows[0].length > 0){
 							var host = 'https://'+req.headers.host;
-							var result = new Array();
+							var result = [];
 							for (var i = 0; i < rows[0].length; i++){
 								var o  = rows[0][i];
 								// add "self" to all resources
 								o._links = {};
-								o._links.self = new Object();
+								o._links.self = {};
 								o._links.self.href = host+'/patients/'+req.params.id+'/'+exam+'/'+rows[0][i].recordId;
 								// create corresponding patients link
-								o._links.patient = new Object();
+								o._links.patient = {};
 								o._links.patient.href = host+'/patients/'+req.params.id;
 								result.push(o);
 							}
 							var links;
 							// add pagination links to result set if pagination was used
 							if(page != 0){
-								links = new Object();
+								links = {};
 								// create "first" link
 								var first = host+'/patients/'+req.params.id+'/'+exam+'?page=1&pageSize='+pageSize;
 								links.first = first;
@@ -126,7 +126,7 @@ exports.list = function(req, res, next){
 								}
 							}
 							// send complete result set with pagination links
-							var ret = new Object();
+							var ret = {};
 							ret[exam] = result;
 							if(page != 0) ret._links = links;
 							res.send(ret);
@@ -143,7 +143,7 @@ exports.list = function(req, res, next){
 		}
 	});
 	}
-}
+};
 
 /*
  *  GET /patients/id/daily_reports/recordid
@@ -208,15 +208,15 @@ exports.listOne = function(req,res,next){
 						// is there any result?
 						if (rows[0].length > 0){
 							var host = 'https://'+req.headers.host;
-							var result = new Array();
+							var result = [];
 							for (var i = 0; i < rows[0].length; i++){
 								var o  = rows[0][i];
-								o._links = new Object();
+								o._links = {};
 								// create self link
-								o._links.self = new Object();
+								o._links.self = {};
 								o._links.self.href = host+'/patients/'+req.params.id+'/'+exam+'/'+rows[0][i].recordId;
 								// create corresponding patients link
-								o._links.patient = new Object();
+								o._links.patient = {};
 								o._links.patient.href = host+'/patients/'+req.params.id;
 								result.push(o);
 							}
@@ -235,7 +235,7 @@ exports.listOne = function(req,res,next){
 		}
 	});
 	}
-}
+};
 
 /*
  *  DELETE /patients/id/daily_reports/recordid
@@ -247,7 +247,7 @@ exports.listOne = function(req,res,next){
  *  	5) add links to result 
  *  	6) send
  */
-exports.del = function(req, res, next, exam){
+exports.del = function(req, res, next){
 	//1) Validate Role
 	if (req.user.role == 'admin'){
 		res.statusCode = 403;
@@ -314,7 +314,7 @@ exports.del = function(req, res, next, exam){
 		}	
 	});
 	}
-}
+};
 /*
  *  PUT /patients/id/daily_reports/recordid
  *  Steps: 
@@ -396,7 +396,7 @@ exports.update = function(req,res,next){
 		}	
 	});
 	}
-}
+};
 /*
  *  POST /patients/id/daily_reports
  *  Steps: 
@@ -470,7 +470,7 @@ exports.add = function(req,res,next){
 		}	
 	});
 	}
-}
+};
 
 exports.listSpec = {
 		summary : "Get All Daily Reports By this Patient (Roles: doctor and patient)",
@@ -496,7 +496,7 @@ exports.listSpec = {
 		              swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
 		              swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")]
 
-}
+};
 
 
 exports.addSpec = {
@@ -513,7 +513,7 @@ exports.addSpec = {
 		parameters : [swagger.bodyParam("NewDailyReport", "new Set of Daily Answers", "NewDailyReport"), swagger.pathParam("id", "Patient who answered the Questions", "string")],
 		responseMessages : [swagger.errors.notFound('id')]
 
-}
+};
 
 exports.listOneSpec = {
 		summary : "Get specific Daily Report Record of this Patient (Roles: doctor and patient)",
@@ -531,7 +531,7 @@ exports.listOneSpec = {
 		              swagger.pathParam("rid", "ID of the Record", "string")],
 		responseMessages : [swagger.errors.notFound('rid')]
 
-}
+};
 
 
 exports.delSpec = {
@@ -548,7 +548,7 @@ exports.delSpec = {
 		              swagger.pathParam("rid", "ID of the Record", "string")],
 		responseMessages : [swagger.errors.notFound('rid')]
 
-}
+};
 
 exports.updateSpec = {
 		summary : "Update specific Daily Report Record of this Patient (Roles: doctor and patient)",		
@@ -616,4 +616,4 @@ exports.models = {
 				"heartRate": {"type":"number", "format": "float", "description": "heartRate"}
 			}
 		}
-}
+};

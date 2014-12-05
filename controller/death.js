@@ -69,14 +69,14 @@ exports.list = function(req, res, next){
 							// row found
 							if (rows[0].length > 0){
 								var host = ((ssl)?'https://':'http://')+req.headers.host;
-								var result = new Array();
+								var result = [];
 								var o  = rows[0][0];
-								o._links = new Object();
+								o._links = {};
 								// add self link
-								o._links.self = new Object();
+								o._links.self = {};
 								o._links.self.href = host+'/patients/'+req.params.id+'/death';
 								// add patients link
-								o._links.patient = new Object();
+								o._links.patient = {};
 								o._links.patient.href = host+'/patients/'+req.params.id;
 								result.push(o);
 								res.send(result);
@@ -93,7 +93,7 @@ exports.list = function(req, res, next){
 			}
 		});
 	}
-}
+};
 
 /*
  *  DELETE /patients/id/death
@@ -169,7 +169,7 @@ exports.del = function(req, res, next, exam){
 			}	
 		});
 	}
-}
+};
 /*
  *  PUT /patients/id/death
  *  Steps: 
@@ -245,7 +245,7 @@ exports.update = function(req,res,next){
 			}	
 		});
 	}
-}
+};
 /*
  *  POST /patients/id/death
  *  Steps: 
@@ -316,7 +316,7 @@ exports.add = function(req,res,next){
 			}	
 		});
 	}
-}
+};
 exports.listSpec = {
 		summary : "Get Death Record of this Patient (Roles: doctor)",
 		notes: "This Function returns the requested record, if it exists and is visible to the current user. <br>This function passes the parameters to the SP deathGet. <br><br>" +
@@ -331,7 +331,7 @@ exports.listSpec = {
 		nickname : "listDeath",
 		parameters : [swagger.pathParam("id", "Patient where the records belong to", "string")]
 
-}
+};
 
 
 exports.addSpec = {
@@ -348,7 +348,7 @@ exports.addSpec = {
 		parameters : [swagger.bodyParam("Death", "new Record", "Death"), 
 		              swagger.pathParam("id", "Patient where the records belong to", "string")]
 
-}
+};
 
 exports.delSpec = {
 		summary : "Delete Death Record of this Patient (Roles: doctor)",
@@ -362,7 +362,7 @@ exports.delSpec = {
 		nickname : "delDeath",
 		parameters : [swagger.pathParam("id", "ID of the Patient", "string")]
 
-}
+};
 
 exports.updateSpec = {
 		summary : "Update specific Treatment Record of this Patient (Roles: doctor)",
@@ -394,6 +394,6 @@ exports.models = {
 				"other":{"type":"string","description" : "other cause"}
 			}
 		}
-}
+};
 
 

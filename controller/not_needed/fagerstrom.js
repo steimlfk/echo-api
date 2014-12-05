@@ -33,7 +33,7 @@ exports.list = function(req,res){
 			});
 		}
 	});
-}
+};
 
 
 exports.add = function(req,res){
@@ -59,7 +59,7 @@ exports.add = function(req,res){
 			});
 		}
 	});
-}
+};
 
 
 exports.listSpec = {
@@ -71,7 +71,7 @@ exports.listSpec = {
 		parameters : [swagger.pathParam("id", "Patient where the records belong to", "string")],
 		responseMessages : [swagger.errors.notFound('id')]
 
-}
+};
 
 
 exports.addSpec = {
@@ -82,7 +82,7 @@ exports.addSpec = {
 		parameters : [swagger.bodyParam("Fagerstrom", "new Record", "Fagerstrom"), swagger.pathParam("id", "Patient where the records belong to", "string")],
 		responseMessages : [swagger.errors.notFound('id')]
 
-}
+};
 
 
 exports.models = {
@@ -93,7 +93,7 @@ exports.models = {
 				"patientId":{
 					"type":"integer",
 					"format": "int32",
-					"description": "Unique Identifier of the Patient",
+					"description": "Unique Identifier of the Patient"
 				},
 				"Fagerstrom_Score":{
 					"type":"integer",
@@ -130,4 +130,4 @@ exports.models = {
 
 			}
 		}
-}
+};

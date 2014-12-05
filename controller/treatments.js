@@ -17,21 +17,21 @@ var commons = require('./exam_commons.js');
  */
 exports.list = function(req,res,next){
 	commons.list(req,res,next,'treatments');
-}
+};
 
 /*
  * GET /patients/id/treatments/recordid
  */
 exports.listOne = function(req,res,next){
 	commons.listOne(req,res,next,'treatments');
-}
+};
 
 /*
  *  DELETE /patients/id/treatments/recordid
  */
 exports.del = function(req,res,next){
 	commons.del(req,res,next,'treatments');
-}
+};
 
 /*
  *  POST /patients/id/cats
@@ -113,7 +113,7 @@ exports.add = function(req,res,next){
 			}	
 		});
 	}
-}
+};
 
 /*
  *  PUT /patients/id/cats/recordid
@@ -200,7 +200,7 @@ exports.update = function(req,res,next){
 			}	
 		});
 	}
-}
+};
 
 exports.listSpec = {
 		summary : "Get Treatment Records of this Patient (Roles: doctor)",
@@ -227,7 +227,7 @@ exports.listSpec = {
 		              swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")],
 		responseMessages : [swagger.errors.notFound('id')]
 
-}
+};
 
 
 exports.addSpec = {
@@ -244,7 +244,7 @@ exports.addSpec = {
 		parameters : [swagger.bodyParam("Treatment", "new Record", "NewTreatment"), 
 		              swagger.pathParam("id", "Patient where the records belong to", "string")]
 
-}
+};
 
 exports.listOneSpec = {
 		summary : "Get specific Treatment Record of this Patient (Roles: doctor)",
@@ -261,7 +261,7 @@ exports.listOneSpec = {
 		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), 
 		              swagger.pathParam("rid", "ID of the Record", "string")]
 
-}
+};
 
 
 exports.delSpec = {
@@ -277,7 +277,7 @@ exports.delSpec = {
 		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), 
 		              swagger.pathParam("rid", "ID of the Record", "string")]
 
-}
+};
 
 exports.updateSpec = {
 		summary : "Update specific Treatment Record of this Patient (Roles: doctor)",
@@ -357,6 +357,6 @@ exports.models = {
 			            	 "ventilationStart":{"type":"string","format": "Date", "description": "Date of Ventilation Start"}
 			             }
 		}
-}
+};
 
 

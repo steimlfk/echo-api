@@ -103,14 +103,14 @@ exports.list = function(req,res,next){
 							// add "self" to all resources
 							for (var i = 0; i < rows.length; i++){
 								var o  = rows[i];
-								o._links = new Object();
-								o._links.self = new Object();
+								o._links = {};
+								o._links.self = {};
 								o._links.self.href = host+'/accounts/'+rows[i].accountId;
 								result.push(o);
 							}
 							// add pagination links to result set if pagination was used
 							if(req.query.page){
-								var links = new Object();
+								var links = {};
 								// create "first" link
 								var first = host+'/accounts?page=1&pageSize='+pageSize;
 								// if role-filtering was used, add it to the link
@@ -149,7 +149,7 @@ exports.list = function(req,res,next){
 			}	
 			)}
 	});
-}
+};
 
 
 /*
@@ -197,8 +197,8 @@ exports.listOne = function(req,res,next){
 					if (rows.length > 0){
 						// create self link
 						var o  = rows[0];
-						o._links = new Object();
-						o._links.self = new Object();
+						o._links = {};
+						o._links.self = {};
 						o._links.self.href = host+'/accounts/'+rows[0].accountId;
 
 						res.send(o);
@@ -213,7 +213,7 @@ exports.listOne = function(req,res,next){
 			});
 		}
 	});
-}
+};
 
 /*
  *  POST /accounts
@@ -315,7 +315,7 @@ exports.add = function(req,res,next){
 			}
 		});
 	}
-}
+};
 
 
 /*
@@ -379,7 +379,7 @@ exports.del =   function(req,res,next){
 			}
 		});
 	}
-}
+};
 
 /*
  *  PUT /accounts/id
@@ -465,7 +465,7 @@ exports.update = function(req,res,next){
 			});
 		}
 	});
-}
+};
 
 /**
  *  Swagger Specs used to describe the functions via swagger ui
@@ -496,7 +496,7 @@ exports.listSpec = {
 		              swagger.queryParam("role", "Rolefiltering", "string", false, ["admin","doctor", "patient"])
 		              ]
 
-}
+};
 exports.listOneSpec = {
 		summary : "Get specific Account (Roles: all)",
 		notes: "This Function returns the requested Account, if it exists and is visible to the current user. <br>This function constructs a sql query from the parameters and executes it on accounts_view. <br><br>" +
@@ -510,7 +510,7 @@ exports.listOneSpec = {
 		nickname : "listOneAccount",
 		parameters : [swagger.pathParam("id", "ID of the Account which needs to be fetched", "string")]
 
-}
+};
 exports.addSpec = {
 		summary : "Create Account (Roles: admin and doctor)",
 		path : "/accounts",
@@ -524,7 +524,7 @@ exports.addSpec = {
 		nickname : "addAccount",
 		parameters : [swagger.bodyParam("Account", "new Account", "NewAccount")]
 
-}
+};
 
 exports.delSpec = {
 		summary : "Delete specific Account (Roles: admin)",
@@ -538,7 +538,7 @@ exports.delSpec = {
 		nickname : "delAccount",
 		parameters : [swagger.pathParam("id", "Account to delete", "string")]
 
-}
+};
 
 exports.updateSpec = {
 		summary : "Update specific Account (Roles: all)",
@@ -584,10 +584,6 @@ exports.models = {
 				"email":{
 					"type": "string",
 					"description" : "E-Mail Address"
-				},
-				"username":{
-					"type": "string",
-					"description" : "Unique Username"
 				},
 				"enabled":{
 					"type": "boolean",
@@ -656,5 +652,5 @@ exports.models = {
 				}
 			}
 		}
-}
+};
 

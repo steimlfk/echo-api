@@ -95,14 +95,14 @@ exports.list = function(req, res, next, exam){
 							// is there any result?
 							if (rows[0].length > 0){
 								var host = ((ssl)?'https://':'http://')+req.headers.host;
-								var result = new Array();
+								var result = [];
 								for (var i = 0; i < rows[0].length; i++){
 									var o  = rows[0][i];
-									o._links = new Object();
+									o._links = {};
 									// create self link
-									o._links.self = new Object();
+									o._links.self = {};
 									o._links.self.href = host+'/patients/'+req.params.id+'/'+exam+'/'+rows[0][i].recordId;
-									o._links.patient = new Object();
+									o._links.patient = {};
 									// create link to patient
 									o._links.patient.href = host+'/patients/'+req.params.id;
 									result.push(o);
@@ -110,7 +110,7 @@ exports.list = function(req, res, next, exam){
 								var links;
 								// add pagination links to result set if pagination was used
 								if(page != 0){
-									links = new Object();
+									links = {};
 									// create first link
 									var first = host+'/patients/'+req.params.id+'/'+exam+'?page=1&pageSize='+pageSize;
 									links.first = first;
@@ -126,7 +126,7 @@ exports.list = function(req, res, next, exam){
 									}
 								}
 								// send result
-								var ret = new Object();
+								var ret = {};
 								ret[exam] = result;
 								if(page != 0) ret._links = links;
 								res.send(ret);
@@ -143,7 +143,7 @@ exports.list = function(req, res, next, exam){
 			}
 		});
 	}
-}
+};
 
 /*
  * GET single record from Catscales, CCQs, Charlsons, Treatments, Readings
@@ -211,14 +211,14 @@ exports.listOne = function(req,res,next, exam) {
 							// was there any result?
 							if (rows[0].length > 0) {
 								var host = ((ssl)?'https://':'http://')+req.headers.host;
-								var result = new Array();
+								var result = [];
 								for (var i = 0; i < rows[0].length; i++) {
 									var o = rows[0][i];
-									o._links = new Object();
-									o._links.self = new Object();
+									o._links = {};
+									o._links.self = {};
 									// create self link
 									o._links.self.href = host + '/patients/' + req.params.id + '/' + exam + '/' + rows[0][i].recordId;
-									o._links.patient = new Object();
+									o._links.patient = {};
 									// create link to corresponding patient
 									o._links.patient.href = host + '/patients/' + req.params.id;
 									result.push(o);
@@ -239,7 +239,7 @@ exports.listOne = function(req,res,next, exam) {
 			}
 		});
 	}
-}
+};
 /*
  * DELETE single record from Catscales, CCQs, Charlsons, Treatments, Readings
  * 
@@ -276,7 +276,6 @@ exports.del = function(req, res, next, exam){
 						res.send({err: 'Internal Server Error'}); 
 					}
 					// 3) create SQL Query from parameters
-					var i = req.body;
 					var id = parseInt(req.params.id);
 					var rid = parseInt(req.params.rid);
 					// query db
@@ -316,4 +315,4 @@ exports.del = function(req, res, next, exam){
 			}	
 		});
 	}
-}
+};

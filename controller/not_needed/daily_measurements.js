@@ -18,7 +18,7 @@ exports.add = function(req,res){
 			var sql = 'Insert into questions (text, type, category) VALUES (' 
 				+ question_text + ','
 				+ question_type + ','
-				+ question_category + ');'
+				+ question_category + ');';
 			connection.query(sql, function(err, result) {
 				if (err) {
 					console.error('Query error on POST /question: ',err);
@@ -46,7 +46,7 @@ exports.add = function(req,res){
 			});
 		}
 	});
-}
+};
 
 exports.list = function(req,res){
     db.getConnection(function(err, connection) {
@@ -76,7 +76,7 @@ exports.list = function(req,res){
             });
         }
     });
-}
+};
 
 exports.getMetaData = function(req,res){
     db.getConnection(function(err, connection) {
@@ -105,7 +105,7 @@ exports.getMetaData = function(req,res){
             });
         }
     });
-}
+};
 
 exports.getFile  = function(req,res){
     db.getConnection(function(err, connection) {
@@ -136,4 +136,4 @@ exports.getFile  = function(req,res){
             });
         }
     });
-}
+};
