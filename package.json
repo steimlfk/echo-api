@@ -25,5 +25,9 @@
     "serve-static": "^1.2.0",
     "swagger-node-express": "2.1.0",
     "swagger-ui": "^2.0.17"
+  },
+  "devDependencies": {
+    "should": "^4.3.0",
+    "supertest": "^0.15.0"
   }
 }
