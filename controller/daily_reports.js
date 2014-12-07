@@ -352,7 +352,7 @@ exports.update = function(req,res,next){
 				var id = parseInt(req.params.id);
 				var rid = parseInt(req.params.rid);
 				// set date to null if not set
-				var date = (i.date || i.date != "")? i.date : null;//TODO: (!A || B)
+				var date = i.date || null;
 				// query db
 				connection.query('call reportUpdate(?,?,?, ?,?,?,?,?, ?,?,?,?,?,?, ?,?,?,?,?)', 
 						[rid, id, date, 
@@ -431,7 +431,7 @@ exports.add = function(req,res,next){
 				var i = req.body;
 				var id = parseInt(req.params.id);
 				// set date to null if not set
-				var date = (i.date || i.date != "")? i.date : null; //TODO: (!A || B)
+				var date = i.date || null;
 				// query db
 				connection.query('call reportCreate(?,?, ?,?,?,?,?, ?,?,?, ?,?,?, ?,?,?,?,?)', 
 						[id, date, 
