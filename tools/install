@@ -17,5 +17,4 @@ done
 cd "$output/config"
 echo "Please configure your config files."
 mkdir "$output/ssl"
-echo "If you want to use SSL copy your private key and your certificate 
-into the ssl directory in the project root."
+echo "If you want to use SSL copy your private key and your certificate into the ssl directory in the project root."
