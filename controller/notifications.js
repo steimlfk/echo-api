@@ -122,7 +122,6 @@ exports.list = function(req, res, next){
 	});
 }
 
-//TODO: Remove Swagger Docu maybe?
 /**
  *  POST /notifications
  *  

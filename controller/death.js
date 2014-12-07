@@ -204,7 +204,7 @@ exports.update = function(req,res,next){
 					var i = req.body;
 					var id = parseInt(req.params.id);
 					// set date to null if date not set, so db can set it
-					var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null; //TODO: (!A || B)
+					var date = i.diagnoseDate || null;
 					connection.query('call deathUpdate(?,?,?, ?,?,?,?)', 
 							[id, date,i.cardiovascular,i.respiratory,i.infectious_disease,i.malignancy,i.other], function(err, result) {
 						if (err) {
@@ -280,8 +280,8 @@ exports.add = function(req,res,next){
 					var i = req.body;
 					var id = parseInt(req.params.id);
 					// set date to null if date not set, so db can set it
-					var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null; //TODO: (!A || B)
-					connection.query('call deathCreate(?,?,?, ?,?,?,?)', //TODO: Error when already dead
+					var date = i.diagnoseDate || null;
+					connection.query('call deathCreate(?,?,?, ?,?,?,?)',
 							[id, date, i.cardiovascular,i.respiratory,i.infectious_disease,i.malignancy,i.other], function(err, result) {
 						if (err) {
 							// Error Handling for sql signal statements for the triggers
