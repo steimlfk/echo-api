@@ -15,7 +15,7 @@ if [[ -z $crons ]]; then
 else
     echo $crons > mycron
 fi
-echo "*/2 * * * * ${path}/keepAliveScript" >> mycron
+echo "*/2 * * * * ${path}/keepAliveScript >&1" >> mycron
 crontab mycron
 rm mycron
 echo "If you want to use SSL copy your private key and your certificate
