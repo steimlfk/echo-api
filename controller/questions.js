@@ -282,8 +282,7 @@ exports.models = {
 					"description" : "Answertype",
 					"enum":[
 					        "radio",
-					        "check",
-					        "mixed"
+					        "check"
 					        ]
 				},
 				"category":{
