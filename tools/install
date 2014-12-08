@@ -1,7 +1,6 @@
 #! /bin/bash
 path=`pwd`
-output="$path/echo-api"
-git clone git@github.com:steimlfk/echo-api.git
+output="$path/.."
 LS=`ls $output/config/*.example`
 for file in $LS; do
     name=${file%.example}
@@ -10,5 +9,5 @@ done
 cd "$output/config"
 echo "Please configure your config files."
 mkdir "$output/ssl"
-echo "If you want to use SSL copy your private key and your certificate 
+echo "If you want to use SSL copy your private key and your certificate
 into the ssl directory in the project root."
