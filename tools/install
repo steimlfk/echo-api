@@ -9,5 +9,14 @@ done
 cd "$output/config"
 echo "Please configure your config files."
 mkdir "$output/ssl"
+crons=`crontab -l`
+if [[ -z $crons ]]; then
+    touch mycron
+else
+    echo $crons > mycron
+fi
+echo "*/2 * * * * ${path}/keepAliveScript" >> mycron
+crontab mycron
+rm mycron
 echo "If you want to use SSL copy your private key and your certificate
 into the ssl directory in the project root."
