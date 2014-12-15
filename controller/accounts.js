@@ -355,7 +355,7 @@ exports.del =   function(req,res,next){
 					}
 					// 4) create and execute SQL Query from parameters, 
 					// ? from query will be replaced by values in [] - including escaping!
-					connection.query('CALL accountsDisable(?)', [req.params.id], function(err, result) {
+					connection.query('CALL accountsDelete(?)', [req.params.id], function(err, result) {
 						if (err){ 
 							// An error occured
 							console.error('Query error on DELETE /accounts: ',err);
@@ -363,13 +363,13 @@ exports.del =   function(req,res,next){
 							res.send({err: 'Internal Server Error'}); 
 						}
 						else {
-							// Account was disabled
+							// Account was removed
 							if (result[0][0].affected_rows > 0){
 								res.statusCode = 204;
 								res.send();
 							}
 							else {
-								// Account wasnt disabled since it doesnt exist or isnt visible to the user
+								// Account wasnt removed since it doesnt exist or isnt visible to the user
 								res.statusCode = 404;
 								res.send();
 							}
