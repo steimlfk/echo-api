@@ -497,7 +497,7 @@ BEGIN
 	DECLARE new_acc INT DEFAULT 0;
 
 	if getRole() = 'doctor' and role <> 'patient' then
-		signal sqlstate '22403' set message_text = 'You are not allowed to create an account with another role than patient';
+		signal sqlstate '22400' set message_text = 'You are not allowed to create an account with another role than patient';
 	end if;
 
 
@@ -1952,7 +1952,7 @@ BEGIN
 	END;
 
 	if getRole() = 'doctor' and role <> 'patient' then
-		signal sqlstate '22403' set message_text = 'You are not allowed to create an account with another role than patient';
+		signal sqlstate '22400' set message_text = 'You are not allowed to create an account with another role than patient';
 	end if;
 
 	START TRANSACTION;
