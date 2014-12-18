@@ -28,6 +28,8 @@ notifications =         require('./controller/notifications'),
 commands =        		require('./controller/commands'),
 ccqweek =              	require('./controller/ccqs');
 
+var utils =				require('./controller/utils');
+
 /**
  * Config & Vars
  */
@@ -79,9 +81,12 @@ app.use('/changeDoctor',	 passport.authenticate(['bearer'], { session: false }))
 swagger.addPost({'spec': oauth2.loginSpec, 'action': oauth2.endpoint});
 
 app.use('/login', function(err,req,res,next){
+	next(err);
+	/*
 	if (err) console.log(err);
 	res.status(401);
 	res.send();
+	*/
 });
 swagger.addModels(accounts);
 swagger.addGet(		{'spec': accounts.listSpec,'action': accounts.list});
@@ -164,6 +169,8 @@ swagger.addGet(		{'spec': notifications.addSpec,'action': notifications.add});
 swagger.addModels(commands);
 swagger.addPost({'spec': commands.createSpec, 'action': commands.createPatientAndAccount});
 swagger.addPost({'spec': commands.changeSpec, 'action': commands.changeDoctor});
+
+app.use(utils.errorHandler);
 
 /**
  * Demo Web-App

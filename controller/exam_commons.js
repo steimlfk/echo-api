@@ -37,19 +37,16 @@ exports.list = function(req, res, next, exam){
 		//2) Get DB Connection
 		db.getConnection(function(err, connection) {
 			if (err) {
-				console.error('DB Connection error on GET '+exam+' list: ',err);
-				res.send(500);
+				next(err);
 			} else {
 				//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
 				//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
 				connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
 					if (err) {
-						// an error occured while changing user
-						console.error(err); res.statusCode = 500;
-						res.send({err: 'Internal Server Error'}); 
+						next(err);
 					}
 					// 3) create SQL Query from parameters 
-
+					var qry = "call listExams(?,?,?,?)";
 					//extending statement if pagination is required (/accounts?page=<page>&pageSize=<pageSize>)
 					// default value for page parameter - zero means no pagination
 					var page = 0;
@@ -71,24 +68,7 @@ exports.list = function(req, res, next, exam){
 					}
 					connection.query(qry, [exam, req.params.id, page, pageSize], function(err, rows) {
 						if (err) {
-							// Error Handling for sql signal statements for the triggers
-							// 22400 is equiv. to HTTP Error Code 400: Bad Request (has errors, should be altered and resend)
-							if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22400'){
-								res.statusCode = 400;
-								res.send({error: err.message});
-							}
-							// Error Handling for sql signal statements for the triggers
-							// 22403 is equiv. to HTTP Error Code 403: Forbidden
-							else if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22403'){
-								res.statusCode = 403;
-								res.send({error: err.message});
-							}
-							// Error Handling: Something else went wrong!
-							else{
-								console.error('Query error on GET '+exam+' list: ',err);
-								res.statusCode = 500;
-								res.send({error: 'Internal Server Error'});
-							}
+							next(err);
 
 						}
 						else {
@@ -169,8 +149,7 @@ exports.listOne = function(req,res,next, exam) {
 		// 2) Get DB Connection
 		db.getConnection(function (err, connection) {
 			if (err) {
-				console.error('DB Connection error on GET single ' + exam + ' record: ', err);
-				res.send(500);
+				next(err);
 			} else {
 				//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
 				//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
@@ -179,10 +158,7 @@ exports.listOne = function(req,res,next, exam) {
 					password: config.calculatePW(req.user.accountId)
 				}, function (err) {
 					if (err) {
-						// an error occured while changing user
-						console.error(err);
-						res.statusCode = 500;
-						res.send({err: 'Internal Server Error'});
+						next(err);
 					}
 					// 3) create SQL Query from parameters 
 					var id = req.params.id;
@@ -190,22 +166,7 @@ exports.listOne = function(req,res,next, exam) {
 					var qry = 'call listSingleExam(?,?,?)';
 					connection.query(qry, [exam, id, rid], function (err, rows) {
 						if (err) {
-							// Error Handling for sql signal statements for the triggers
-							// 22400 is equiv. to HTTP Error Code 400: Bad Request (has errors, should be altered and resend)
-							if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22400') {
-								res.statusCode = 400;
-								res.send({error: err.message});
-							}
-							// Error Handling for sql signal statements for the triggers
-							// 22403 is equiv. to HTTP Error Code 403: Forbidden
-							else if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22403') {
-								res.statusCode = 403;
-								res.send({error: err.message});
-							}
-							// Error Handling: Something else went wrong!
-							console.error('Query error on GET ' + exam + ': ', err);
-							res.statusCode = 500;
-							res.send({error: 'Internal Server Error'});
+							next(err);
 						}
 						else {
 							// was there any result?
@@ -264,16 +225,13 @@ exports.del = function(req, res, next, exam){
 		// 2) Get DB Connection
 		db.getConnection(function(err, connection) {
 			if (err) {
-				console.error('DB Connection error on DEL '+exam+' record: ',err);
-				res.send(500);
+				next(err);
 			} else {
 				//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
 				//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
 				connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
 					if (err) {
-						// an error occured while changing user
-						console.error(err); res.statusCode = 500;
-						res.send({err: 'Internal Server Error'}); 
+						next(err);
 					}
 					// 3) create SQL Query from parameters
 					var id = parseInt(req.params.id);
@@ -281,22 +239,7 @@ exports.del = function(req, res, next, exam){
 					// query db
 					connection.query('call deleteExamRecord(?, ?, ?)', [exam, id, rid], function(err, result) {
 						if (err) {
-							// Error Handling for sql signal statements for the triggers
-							// 22400 is equiv. to HTTP Error Code 400: Bad Request (has errors, should be altered and resend)
-							if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22400'){
-								res.statusCode = 400;
-								res.send({error: err.message});
-							}
-							// Error Handling for sql signal statements for the triggers
-							// 22403 is equiv. to HTTP Error Code 403: Forbidden
-							else if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22403'){
-								res.statusCode = 403;
-								res.send({error: err.message});
-							}
-							// Error Handling: Something else went wrong!
-								console.error('Query error on DEL '+exam+': ',err);
-								res.statusCode = 500;
-								res.send({error: 'Internal Server Error'});
+							next(err);
 							}
 						 	else {
 							// was there any row to delete?

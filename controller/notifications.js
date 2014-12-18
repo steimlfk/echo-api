@@ -25,16 +25,13 @@ exports.list = function(req, res, next){
 	// 1) Get DB Connection
 	db.getConnection(function(err, connection) {
 		if (err) {
-			console.error('DB Connection error on GET '+exam+' list: ',err);
-			res.send(500);
+			next(err);
 		} else {
 			//2) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
 			//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
 			connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
 				if (err) {
-					// an error occured while changing user
-					console.error(err); res.statusCode = 500;
-					res.send({err: 'Internal Server Error'}); 
+					next(err);
 				}
 				// 3) create SQL Query from parameters 
 				// set base statement
@@ -67,9 +64,7 @@ exports.list = function(req, res, next){
 				//query db
 				connection.query(qry, function(err, rows) {
 					if (err) {
-						console.error('Query error on GET notifications list: ',err);
-						res.statusCode = 500;
-						res.send({error: 'Internal Server Error'});
+						next(err);
 					}
 					else {
 						if (rows.length > 0){
@@ -132,15 +127,12 @@ exports.list = function(req, res, next){
 exports.add = function(req, res, next){
 	db.getConnection(function(err, connection) {
 		if (err) {
-			console.error('DB Connection error on POST notification: ',err);
-			res.send(500);
+			next(err);
 		} else {
 			var qry = 'INSERT INTO notifications SET ?';
 			connection.query(qry, [req.body], function(err, rows) {
 				if (err) {
-					console.error('Query error on POST notifications list: ',err);
-					res.statusCode = 500;
-					res.send({error: 'Internal Server Error'});
+					next(err);
 				}
 				else {
 						res.statusCode = 201;

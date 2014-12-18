@@ -5,6 +5,8 @@
  * And Methodes to GET, PUT and DELETE /accounts/id (listOne, update and del)
  * 
  * Contains swagger specs and models
+ *
+ * TODO CATCH DELETE ACCOUNT (patients table references accounts table...)
  */
 var swagger = require('swagger-node-express');
 var mysql = require('../config/mysql');
@@ -27,18 +29,13 @@ exports.list = function(req,res,next){
 	// 1) Get DB Connection
 	db.getConnection(function(err, connection) {
 		if (err) {
-			// an error occured while querying the db
-			console.error('DB Connection error on GET /accounts: ',err);
-			res.statusCode = 500;
-			res.send({err: 'Internal Server Error'});
+			next(err);
 		} else {
 			//2) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
 			//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
 			connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
 				if (err) {
-					// an error occured while changing user
-					console.error(err); res.statusCode = 500;
-					res.send({err: 'Internal Server Error'}); 
+					next(err);
 				}
 				// 3) create SQL Query from parameters 
 				// set base statement
@@ -88,10 +85,7 @@ exports.list = function(req,res,next){
 				// execute query
 				connection.query(qry, function(err, rows) {
 					if (err) {
-						// error while querying the db
-						console.error('Query error on GET /accounts: ',err);
-						res.statusCode = 500;
-						res.send({err: 'Internal Server Error'});
+						next(err);
 					}
 					else {
 						// is there any result?
@@ -165,18 +159,13 @@ exports.listOne = function(req,res,next){
 	// 1) Get DB Connection from pool
 	db.getConnection(function(err, connection) {
 		if (err) {
-			// an error occured while querying the db
-			console.error('DB Connection error on GET single accounts: ',err);
-			res.statusCode = 500;
-			res.send({err: 'Internal Server Error'});
+			next(err);
 		} else {
 			//2) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
 			//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
 			connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
 				if (err) {
-					// an error occured while changing user
-					console.error(err); res.statusCode = 500;
-					res.send({err: 'Internal Server Error'}); 
+					next(err);
 				}
 				// 3) create SQL Query from parameters 
 				var qry = 'SELECT accountId, username, role, email, enabled, reminderTime, notificationEnabled, notificationMode, mobile FROM accounts_view where accountId = ?';
@@ -237,18 +226,13 @@ exports.add = function(req,res,next){
 		// 2) Get DB Connection
 		db.getConnection(function(err, connection) {
 			if (err) {
-				// an error occured while querying the db
-				console.error('DB Connection error on POST new accounts: ',err);
-				res.statusCode = 500;
-				res.send({err: 'Internal Server Error'});
+				next(err);
 			} else {
 				//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
 				//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
 				connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
 					if (err) {
-						// an error occured while changing user
-						console.error(err); res.statusCode = 500;
-						res.send({err: 'Internal Server Error'}); 
+						next(err);
 					}
 					// 4) create SQL Query from parameters 
 					var i = req.body;
@@ -263,35 +247,9 @@ exports.add = function(req,res,next){
 					connection.query('CALL accountsCreate(?,?,?,?,?,?, ?,?,?,?)' , 
 							[config.db_pw_prefix, i.username,pwd, i.email, role, i.enabled, i.reminderTime, i.notificationEnabled, 
 							 mode, i.mobile], function(err, result) {
-						
 						if (err) {
-							// Error Handling
-							console.error('Query error on POST /accounts: ',err);
-							// Error Handling for duplicate values
-							if (err.code === 'ER_DUP_ENTRY'){
-								res.statusCode = 400;
-								res.send({error: err.message});
-							}
-							// Error Handling for sql signal statements for the triggers
-							// 22403 is equiv. to HTTP Error Code 403: Forbidden
-							else if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22403')
-							{
-								res.statusCode = 403;
-								res.send({error: err.message});
-							}
-							// Error Handling for sql signal statements for the triggers
-							// 22400 is equiv. to HTTP Error Code 400: Bad Request (has errors, should be altered and resend)
-							else if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22400')
-							{
-								res.statusCode = 400;
-								res.send({error: err.message});
-							}
-							// Error Handling: Something else went wrong!
-							else{
-								res.statusCode = 500;
-								res.send({err: 'Internal Server Error'});
-							}
 							connection.release();
+							next(err);
 						} else {
 							// Since the SP accountsCreate created a new db user, rights have to be set for this new user
 							connection.query('CALL grantRolePermissions(?, ?)' , [parseInt(result[0][0].location), i.role], function(err, resu) {
@@ -340,18 +298,13 @@ exports.del =   function(req,res,next){
 		// 2) Get DB Connection
 		db.getConnection(function(err, connection) {
 			if (err) {
-				// an error occured while querying the db
-				console.error('DB Connection error on DELETE accounts: ',err);
-				res.statusCode = 500;
-				res.send(err);
+				next(err);
 			} else {
 				//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
 				//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
 				connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
 					if (err) {
-						// an error occured while changing user
-						console.error(err); res.statusCode = 500;
-						res.send({err: 'Internal Server Error'}); 
+						next(err);
 					}
 					// 4) create and execute SQL Query from parameters, 
 					// ? from query will be replaced by values in [] - including escaping!
@@ -396,18 +349,13 @@ exports.update = function(req,res,next){
 	// 1) Get DB Connection
 	db.getConnection(function(err, connection) {
 		if (err) {
-			// an error occured while querying the db
-			console.error('DB Connection error on PUT accounts: ',err);
-			res.statusCode = 500;
-			res.send(err);
+			next(err);
 		} else {
 			//2) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
 			//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
 			connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
 				if (err) {
-					// an error occured while changing user
-					console.error(err); res.statusCode = 500;
-					res.send({err: 'Internal Server Error'}); 
+					next(err);
 				}
 				// 3) create SQL Query from parameters 
 				var i = req.body;
@@ -424,31 +372,7 @@ exports.update = function(req,res,next){
 				// any value for accountId given in the body will be ignored!
 				connection.query('CALL accountsUpdate(?,?,?,?, ?,?,?,?)' , [req.params.id, i.username, pwd, i.email, i.reminderTime, i.notificationEnabled, mode, i.mobile], function(err, result) {
 					if (err) {
-						console.error('Query error on PUT /accounts: ',err);
-						// Error Handling for duplicate values
-						if (err.code === 'ER_DUP_ENTRY'){
-							res.statusCode = 400;
-							res.send({error: err.message});
-						}
-						// Error Handling for sql signal statements for the triggers
-						// 22403 is equiv. to HTTP Error Code 403: Forbidden
-						else if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22403')
-						{
-							res.statusCode = 403;
-							res.send({error: err.message});
-						}
-						// Error Handling for sql signal statements for the triggers
-						// 22400 is equiv. to HTTP Error Code 400: Bad Request (has errors, should be altered and resend)
-						else if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22400')
-						{
-							res.statusCode = 400;
-							res.send({error: err.message});
-						}
-						// Error Handling: Something else went wrong!
-						else{
-							res.statusCode = 500;
-							res.send({err: 'Internal Server Error'});
-						}
+						next(err);
 					} else {
 						// Account was updated
 						if (result[0][0].affected_rows > 0){

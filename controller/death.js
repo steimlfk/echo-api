@@ -31,39 +31,19 @@ exports.list = function(req, res, next){
 		// 2) Get DB Connection
 		db.getConnection(function(err, connection) {
 			if (err) {
-				console.error('DB Connection error on GET '+exam+' list: ',err);
-				res.send(500);
+				next(err);
 			} else {
 				//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
 				//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
 				connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
 					if (err) {
-						// an error occured while changing user
-						console.error(err); res.statusCode = 500;
-						res.send({err: 'Internal Server Error'}); 
+						next(err);
 					}
 					// query
 					var qry = 'call deathGet(?)';
 					connection.query(qry, [req.params.id], function(err, rows) {
 						if (err) {
-							// Error Handling for sql signal statements for the triggers
-							// 22400 is equiv. to HTTP Error Code 400: Bad Request (has errors, should be altered and resend)
-							if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22400'){
-								res.statusCode = 400;
-								res.send({error: err.message});
-							}
-							// Error Handling for sql signal statements for the triggers
-							// 22403 is equiv. to HTTP Error Code 403: Forbidden
-							else if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22403'){
-								res.statusCode = 403;
-								res.send({error: err.message});
-							}
-							// Error Handling: Something else went wrong!
-							else {
-								console.error('Query error on GET death : ',err);
-								res.statusCode = 500;
-								res.send({error: 'Internal Server Error'});
-							}
+							next(err);
 						}
 						else {
 							// row found
@@ -116,40 +96,20 @@ exports.del = function(req, res, next, exam){
 		//2) Get DB Connection
 		db.getConnection(function(err, connection) {
 			if (err) {
-				console.error('DB Connection error on DEL death record: ',err);
-				res.send(500);
+				next(err);
 			} else {
 				//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
 				//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
 				connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
 					if (err) {
-						// an error occured while changing user
-						console.error(err); res.statusCode = 500;
-						res.send({err: 'Internal Server Error'}); 
+						next(err);
 					}
 					// query
 					var i = req.body;
 					var id = parseInt(req.params.id);
 					connection.query('call deathDelete(?)', [id], function(err, result) {
 						if (err) {
-							// Error Handling for sql signal statements for the triggers
-							// 22400 is equiv. to HTTP Error Code 400: Bad Request (has errors, should be altered and resend)
-							if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22400'){
-								res.statusCode = 400;
-								res.send({error: err.message});
-							}
-							// Error Handling for sql signal statements for the triggers
-							// 22403 is equiv. to HTTP Error Code 403: Forbidden
-							else if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22403'){
-								res.statusCode = 403;
-								res.send({error: err.message});
-							}
-							// Error Handling: Something else went wrong!
-							else {
-								console.error('Query error on DEL '+exam+': ',err);
-								res.statusCode = 500;
-								res.send({error: 'Internal Server Error'});
-							}
+							next(err);
 
 						} else {
 							// death event deleted
@@ -190,16 +150,13 @@ exports.update = function(req,res,next){
 		// 2) Get DB Connection
 		db.getConnection(function(err, connection) {
 			if (err) {
-				console.error('DB Connection error on PUT /report record: ',err);
-				res.send(500);
+				next(err);
 			} else {
 				//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
 				//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
 				connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
 					if (err) {
-						// an error occured while changing user
-						console.error(err); res.statusCode = 500;
-						res.send({err: 'Internal Server Error'}); 
+						next(err);
 					}
 					// query
 					var i = req.body;
@@ -209,24 +166,7 @@ exports.update = function(req,res,next){
 					connection.query('call deathUpdate(?,?,?, ?,?,?,?)', 
 							[id, date,i.cardiovascular,i.respiratory,i.infectious_disease,i.malignancy,i.other], function(err, result) {
 						if (err) {
-							// Error Handling for sql signal statements for the triggers
-							// 22400 is equiv. to HTTP Error Code 400: Bad Request (has errors, should be altered and resend)
-							if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22400'){
-								res.statusCode = 400;
-								res.send({error: err.message});
-							}
-							// Error Handling for sql signal statements for the triggers
-							// 22403 is equiv. to HTTP Error Code 403: Forbidden
-							else if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22403'){
-								res.statusCode = 403;
-								res.send({error: err.message});
-							}
-							// Error Handling: Something else went wrong!
-							else {
-								console.error('Query error on PUT death: ',err);
-								res.statusCode = 500;
-								res.send({error: 'Internal Server Error'});
-							}
+							next(err);
 						} else {
 							// record updated
 							if (result[0][0].affected_rows > 0){
@@ -266,16 +206,13 @@ exports.add = function(req,res,next){
 		//2) Get DB Connection
 		db.getConnection(function(err, connection) {
 			if (err) {
-				console.error('DB Connection error on POST /cats record: ',err);
-				res.send(500);
+				next(err);
 			} else {
 				//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
 				//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
 				connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
 					if (err) {
-						// an error occured while changing user
-						console.error(err); res.statusCode = 500;
-						res.send({err: 'Internal Server Error'}); 
+						next(err);
 					}
 					// query
 					var i = req.body;
@@ -285,24 +222,7 @@ exports.add = function(req,res,next){
 					connection.query('call deathCreate(?,?,?, ?,?,?,?)', 
 							[id, date, i.cardiovascular,i.respiratory,i.infectious_disease,i.malignancy,i.other], function(err, result) {
 						if (err) {
-							// Error Handling for sql signal statements for the triggers
-							// 22400 is equiv. to HTTP Error Code 400: Bad Request (has errors, should be altered and resend)
-							if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22400'){
-								res.statusCode = 400;
-								res.send({error: err.message});
-							}
-							// Error Handling for sql signal statements for the triggers
-							// 22403 is equiv. to HTTP Error Code 403: Forbidden
-							else if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22403'){
-								res.statusCode = 403;
-								res.send({error: err.message});
-							}
-							// Error Handling: Something else went wrong!
-							else {
-								console.error('Query error on del death: ',err);
-								res.statusCode = 500;
-								res.send({error: 'Internal Server Error'});
-							}
+							next(err);
 							
 						} else {
 							// resource creted 
