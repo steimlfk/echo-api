@@ -93,7 +93,11 @@ exports.accessControl = function (req, res, next){
 exports.errorHandler = function (err, req, res, next) {
     if (err) {
         // Error Handling
-        console.error('Error on ' + req.method + ' ' + req.url + ': ', err);
+        var msg = err.message;
+        var user = req.body.user || 'none';
+        console.error('Error on ' + req.method + ' ' + req.url + ': ', msg);
+        console.error('User: ' + user);
+        console.error('Body: ' + req.body);
 
         /*
          *  Access Control: Invalid Role!
@@ -109,25 +113,25 @@ exports.errorHandler = function (err, req, res, next) {
         // Error Handling for duplicate values
         else if (err.code === 'ER_DUP_ENTRY') {
             res.statusCode = 400;
-            res.send({error: err.message});
+            res.send({error: msg});
         }
         // Error handling for values which must not be null
         else if (err.code == 'ER_BAD_NULL_ERROR'){
             res.statusCode = 400;
-            res.send({error: err.message});
+            res.send({error: msg});
         }
         // Error Handling for sql signal statements for the triggers
         else if (err.code === 'ER_SIGNAL_EXCEPTION') {
             // 22403 is equiv. to HTTP Error Code 403: Forbidden
             if (err.sqlState == '22403'){
                 res.statusCode = 403;
-                res.send({error: err.message});
+                res.send({error: msg});
             }
             // If Code is 22400 or something else
             // 22400 is equiv. to HTTP Error Code 400: Bad Request (has errors, should be altered and resend)
             else {
                 res.statusCode = 400;
-                res.send({error: err.message});
+                res.send({error: msg});
             }
         }
 
