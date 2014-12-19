@@ -44,12 +44,7 @@ exports.del = function(req,res,next){
  *  	6) send
  */
 exports.add = function(req,res,next){
-	// 1) Validate Role!
-	if (req.user.role != 'doctor'){
-		res.statusCode = 403;
-		res.send({error: 'Forbidden. Invalid Role.'});
-	}
-	else{
+
 		// 2) Get DB Connection
 		db.getConnection(function(err, connection) {
 			if (err) {
@@ -91,7 +86,6 @@ exports.add = function(req,res,next){
 				});
 			}	
 		});
-	}
 };
 
 /*
@@ -105,12 +99,7 @@ exports.add = function(req,res,next){
  *  	6) send
  */
 exports.update = function(req,res,next){
-	// 1) Validate Role!
-	if (req.user.role != 'doctor'){
-		res.statusCode = 403;
-		res.send({error: 'Forbidden. Invalid Role.'});
-	}
-	else{
+
 		// 2) Get DB Connection
 		db.getConnection(function(err, connection) {
 			if (err) {
@@ -178,7 +167,6 @@ exports.update = function(req,res,next){
 				});
 			}	
 		});
-	}
 };
 
 exports.listSpec = {

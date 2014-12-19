@@ -24,130 +24,123 @@ var ssl = require('../config/ssl.js').useSsl;
  *  	6) send
  */
 exports.list = function(req,res,next){
-	// 1) Role Check 
-	if (req.user.role == 'patient'){
-		res.statusCode = 403;
-		res.send({error: 'Forbidden. Invalid Role.'});
-	}
-	else{
-		//2) Get DB Connection
-		db.getConnection(function(err, connection) {
-			if (err) {
-				next(err);
-			} else {
-				//2) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
-				//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
-				connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
+	//2) Get DB Connection
+	db.getConnection(function(err, connection) {
+		if (err) {
+			next(err);
+		} else {
+			//2) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
+			//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id
+			connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
+				if (err) {
+					next(err);
+				}
+				// 3) create SQL Query from parameters
+				// set base statement
+				var qry = 'SELECT * FROM patients_view';
+				// extending statement if req.query.sortBy (/accounts?sortBy=<sort>) contains a vaild value
+				// if its not valid: set it to primary key
+				var sort = 'patientId';
+				var order = 'ASC';
+				if (req.query.sortBy){
+					switch (req.query.sortBy){
+						case 'email': sort = 'email'; break;
+					}
+					qry += ' ORDER BY ' + sort + ' ';
+					if (req.query.order){
+						if (req.query.order.toLowerCase() == 'desc') order = 'DESC';
+					}
+					qry += order;
+				}
+
+				//extending statement if pagination is required (/accounts?page=<page>&pageSize=<pageSize>)
+				// default value for page parameter - zero means no pagination
+				var page = 0;
+				// if no pageSize is given, use default which is 20
+				var pageSize = 20;
+				// is page parameter present in url? if not ignore pageSize!
+				if (req.query.page){
+					// parsing given parameter to int to avoid sql injection
+					page = parseInt(req.query.page);
+					// if parsing failed assume pagination is wanted anyway - use 1
+					if (isNaN(page)) page = 1;
+					// pageSize given?
+					if (req.query.pageSize){
+						// parsing given parameter to int to avoid sql injection
+						pageSize = parseInt(req.query.pageSize);
+						// if parsing failed assume pagination is wanted anyway - use 20
+						if (isNaN(pageSize)) pageSize = 20;
+					}
+					// calculate offset parameter for sql stmt
+					var offset = (page*pageSize)-pageSize;
+					// extend statement
+					qry += ' LIMIT ' + pageSize + ' OFFSET ' + offset;
+
+				}
+				// execute query
+				connection.query(qry, function(err, rows) {
 					if (err) {
 						next(err);
 					}
-					// 3) create SQL Query from parameters 
-					// set base statement
-					var qry = 'SELECT * FROM patients_view';
-					// extending statement if req.query.sortBy (/accounts?sortBy=<sort>) contains a vaild value
-					// if its not valid: set it to primary key
-					var sort = 'patientId';
-					var order = 'ASC';
-					if (req.query.sortBy){
-						switch (req.query.sortBy){
-							case 'email': sort = 'email'; break;
+					// is there any result?
+					if (rows.length > 0){
+						var host = ((ssl)?'https://':'http://')+req.headers.host;
+						var result = [];
+						for (var i = 0; i < rows.length; i++){
+							var o  = rows[i];
+							o._links = {};
+							// create self link
+							o._links.self = {};
+							o._links.self.href = host+'/patients/'+rows[i].patientId;
+							result.push(o);
 						}
-						qry += ' ORDER BY ' + sort + ' ';
-						if (req.query.order){
-							if (req.query.order.toLowerCase() == 'desc') order = 'DESC';
-						}
-						qry += order;
-					}
-
-					//extending statement if pagination is required (/accounts?page=<page>&pageSize=<pageSize>)
-					// default value for page parameter - zero means no pagination
-					var page = 0;
-					// if no pageSize is given, use default which is 20 
-					var pageSize = 20;
-					// is page parameter present in url? if not ignore pageSize!
-					if (req.query.page){
-						// parsing given parameter to int to avoid sql injection
-						page = parseInt(req.query.page);
-						// if parsing failed assume pagination is wanted anyway - use 1
-						if (isNaN(page)) page = 1;
-						// pageSize given?
-						if (req.query.pageSize){
-							// parsing given parameter to int to avoid sql injection
-							pageSize = parseInt(req.query.pageSize);
-							// if parsing failed assume pagination is wanted anyway - use 20
-							if (isNaN(pageSize)) pageSize = 20;
-						}
-						// calculate offset parameter for sql stmt
-						var offset = (page*pageSize)-pageSize;
-						// extend statement
-						qry += ' LIMIT ' + pageSize + ' OFFSET ' + offset;
-
-					}
-					// execute query
-					connection.query(qry, function(err, rows) {
-						if (err) {
-							next(err);
-						}
-						// is there any result?
-						if (rows.length > 0){
-							var host = ((ssl)?'https://':'http://')+req.headers.host;
-							var result = [];
-							for (var i = 0; i < rows.length; i++){
-								var o  = rows[i];
-								o._links = {};
-								// create self link
-								o._links.self = {};
-								o._links.self.href = host+'/patients/'+rows[i].patientId;
-								result.push(o);
+						// add pagination links to result set if pagination was used
+						if(req.query.page){
+							var links = {};
+							// create "first" link
+							var first = host+'/patients?page=1&pageSize='+pageSize;
+							// if sorting was used, add it to the link
+							if (req.query.sortBy) {
+								first += '&sortBy='+ sort;
+								if (req.query.order) first += '&order='+ order;
 							}
-							// add pagination links to result set if pagination was used
-							if(req.query.page){
-								var links = {};
-								// create "first" link
-								var first = host+'/patients?page=1&pageSize='+pageSize;
+							links.first = first;
+							// create "next" link if length of result set was pagesize
+							if (rows.length == pageSize) {
+								var next = host+'/patients?page='+(page+1)+'&pageSize='+pageSize;
 								// if sorting was used, add it to the link
 								if (req.query.sortBy) {
-									first += '&sortBy='+ sort;
-									if (req.query.order) first += '&order='+ order;
+									next += '&sortBy='+ sort;
+									if (req.query.order) next += '&order='+ order;
 								}
-								links.first = first;
-								// create "next" link if length of result set was pagesize
-								if (rows.length == pageSize) {
-									var next = host+'/patients?page='+(page+1)+'&pageSize='+pageSize;
-									// if sorting was used, add it to the link
-									if (req.query.sortBy) {
-										next += '&sortBy='+ sort;
-										if (req.query.order) next += '&order='+ order;
-									}
-									links.next = next
-								}
-								// create back link
-								if (page != 1){
-									var back = host+'/patients?page='+(page-1)+'&pageSize='+pageSize;
-									// if sorting was used, add it to the link
-									if (req.query.sortBy) {
-										back += '&sortBy='+ sort;
-										if (req.query.order) back += '&order='+ order;
-									}
-									links.back = back
-								}
-								// send result with pagination links
-								res.send({'patients' : result, '_links' : links});
+								links.next = next
 							}
-							// send plain results
-							else res.send({'patients' : result});
+							// create back link
+							if (page != 1){
+								var back = host+'/patients?page='+(page-1)+'&pageSize='+pageSize;
+								// if sorting was used, add it to the link
+								if (req.query.sortBy) {
+									back += '&sortBy='+ sort;
+									if (req.query.order) back += '&order='+ order;
+								}
+								links.back = back
+							}
+							// send result with pagination links
+							res.send({'patients' : result, '_links' : links});
 						}
-						else{
-							// there are no patients atm
-							res.statusCode = 204;
-							res.send();
-						}
-						connection.release();
-					});
+						// send plain results
+						else res.send({'patients' : result});
+					}
+					else{
+						// there are no patients atm
+						res.statusCode = 204;
+						res.send();
+					}
+					connection.release();
 				});
-			}
-		});
-	}
+			});
+		}
+	});
 };
 
 /*
@@ -161,52 +154,47 @@ exports.list = function(req,res,next){
  *  	6) send
  */
 exports.listOne = function(req,res,next){
-	// 1) Role Check
-	if (req.user.role == 'patient'){
-		res.statusCode = 403;
-		res.send({error: 'Forbidden. Invalid Role.'});
-	}
-	else{
-		// 2) Get DB Connection
-		db.getConnection(function(err, connection) {
-			if (err) {
-				next(err);
-			} else {
-				//2) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
-				//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
-				connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
+
+	// 2) Get DB Connection
+	db.getConnection(function(err, connection) {
+		if (err) {
+			next(err);
+		} else {
+			//2) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
+			//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id
+			connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
+				if (err) {
+					next(err);
+				}
+				// 3) create SQL Query from parameters
+				var qry =  'SELECT * FROM patients_view where patientId=?';
+				// query db
+				// ? from query will be replaced by values in [] - including escaping!
+				connection.query(qry, [req.params.id], function(err, rows, fields) {
 					if (err) {
 						next(err);
 					}
-					// 3) create SQL Query from parameters 
-					var qry =  'SELECT * FROM patients_view where patientId=?';
-					// query db 
-					// ? from query will be replaced by values in [] - including escaping!
-					connection.query(qry, [req.params.id], function(err, rows, fields) {
-						if (err) {
-							next(err);
-						}
-						// there was a matching patient
-						if (rows.length > 0){
-							var host = ((ssl)?'https://':'http://')+req.headers.host;
-							var o  = rows[0];
-							o._links = {};
-							// add self link
-							o._links.self = {};
-							o._links.self.href = host+'/patients/'+rows[0].patientId;
-							res.send(o);
-						}
-						else{
-							// no result
-							res.statusCode = 404;
-							res.send();
-						}
-						connection.release();
-					});
+					// there was a matching patient
+					if (rows.length > 0){
+						var host = ((ssl)?'https://':'http://')+req.headers.host;
+						var o  = rows[0];
+						o._links = {};
+						// add self link
+						o._links.self = {};
+						o._links.self.href = host+'/patients/'+rows[0].patientId;
+						res.send(o);
+					}
+					else{
+						// no result
+						res.statusCode = 404;
+						res.send();
+					}
+					connection.release();
 				});
-			}
-		});
-	}
+			});
+		}
+	});
+
 };
 
 /*
@@ -220,43 +208,38 @@ exports.listOne = function(req,res,next){
  *  	6) send
  */
 exports.add = function(req,res,next){
-	// 1) Validate Role!
-	if (req.user.role == 'patient'){
-		res.statusCode = 403;
-		res.send({error: 'Forbidden. Invalid Role.'});
-	}
-	else{
-		// 2) Get DB Connection
-		db.getConnection(function(err, connection) {
-			if (err) {
-				next(err);
-			} else {
-				//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
-				//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
-				connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
+
+	// 2) Get DB Connection
+	db.getConnection(function(err, connection) {
+		if (err) {
+			next(err);
+		} else {
+			//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
+			//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id
+			connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
+				if (err) {
+					next(err);
+				}
+				// 4) create SQL Query from parameters
+				var i = req.body;
+				// set doctor id to current user if current user is doctor
+				var doc_id = i.doctorId;
+				if (req.user.role == 'doctor') doc_id = req.user.accountId;
+				connection.query('CALL patientsCreate(?,?,?,?,?,?,?,?,?,?,?,?)', [i.accountId, doc_id, i.firstName, i.lastName, i.secondName, i.socialId, i.sex, i.dateOfBirth, i.firstDiagnoseDate, i.fileId, i.fullAddress, i.landline], function(err, result) {
 					if (err) {
 						next(err);
+					} else {
+						// resource created
+						res.statusCode = 201;
+						res.location('/patients/' + i.accountId);
+						res.send();
 					}
-					// 4) create SQL Query from parameters 
-					var i = req.body;
-					// set doctor id to current user if current user is doctor
-					var doc_id = i.doctorId;
-					if (req.user.role == 'doctor') doc_id = req.user.accountId;
-					connection.query('CALL patientsCreate(?,?,?,?,?,?,?,?,?,?,?,?)', [i.accountId, doc_id, i.firstName, i.lastName, i.secondName, i.socialId, i.sex, i.dateOfBirth, i.firstDiagnoseDate, i.fileId, i.fullAddress, i.landline], function(err, result) {
-						if (err) {
-							next(err);
-						} else {
-							// resource created
-							res.statusCode = 201;
-							res.location('/patients/' + i.accountId);
-							res.send();
-						}
-						connection.release();
-					});
+					connection.release();
 				});
-			}
-		});
-	}
+			});
+		}
+	});
+
 };
 
 /*
@@ -270,47 +253,42 @@ exports.add = function(req,res,next){
  *  	6) send
  */
 exports.del =   function(req,res,next){
-	// 1) Validate Role!
-	if (req.user.role == 'patient'){
-		res.statusCode = 403;
-		res.send({error: 'Forbidden. Invalid Role.'});
-	}
-	else{
-		// 2) Get DB Connection
-		db.getConnection(function(err, connection) {
-			if (err) {
-				next(err);
-			} else {
-				//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
-				//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
-				connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
-					if (err) {
+
+	// 2) Get DB Connection
+	db.getConnection(function(err, connection) {
+		if (err) {
+			next(err);
+		} else {
+			//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
+			//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id
+			connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
+				if (err) {
+					next(err);
+				}
+				// 4) create and execute SQL Query from parameters,
+				// ? from query will be replaced by values in [] - including escaping!
+				connection.query('CALL patientsDelete(?)', req.params.id, function(err, result) {
+					if (err){
 						next(err);
 					}
-					// 4) create and execute SQL Query from parameters, 
-					// ? from query will be replaced by values in [] - including escaping!
-					connection.query('CALL patientsDelete(?)', req.params.id, function(err, result) {
-						if (err){
-							next(err);
+					else {
+						// patient was deleted
+						if (result[0][0].affected_rows > 0){
+							res.statusCode = 204;
+							res.send();
 						}
 						else {
-							// patient was deleted
-							if (result[0][0].affected_rows > 0){
-								res.statusCode = 204;
-								res.send();
-							}
-							else {
-								// patient was not deleted since it was not found
-								res.statusCode = 404;
-								res.send();
-							}
+							// patient was not deleted since it was not found
+							res.statusCode = 404;
+							res.send();
 						}
-						connection.release();
-					});
+					}
+					connection.release();
 				});
-			}
-		});
-	}
+			});
+		}
+	});
+
 };
 
 /*
@@ -324,48 +302,41 @@ exports.del =   function(req,res,next){
  *  	6) send
  */
 exports.update = function(req,res,next){
-	// 1) Validate Role 
-	if (req.user.role == 'patient'){
-		res.statusCode = 403;
-		res.send({error: 'Forbidden. Invalid Role.'});
-	}
-	else{
-		// 2) Get DB Connection
-		db.getConnection(function(err, connection) {
-			if (err) {
-				next(err);
-			} else {
-				//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
-				//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
-				connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
-					if (err) {
-						next(err);
-					}
-					// 4) create SQL Query from parameters 
-					var i = req.body;
-					connection.query('Call patientsRessourceUpdate(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-						[req.params.id, i.doctorId, i.firstName, i.lastName, i.secondName, i.socialId, i.sex, i.dateOfBirth,
-							i.firstDiagnoseDate, i.fileId, i.fullAddress, i.landline, i.email, i.mobile], function(err, result) {
-							if (err) {
-								next(err);
-							} else {
-								// patient was updated
-								if (result[0][0].affected_rows > 0){
-									res.statusCode = 204;
-									res.send();
-								}
-								// patient wasnt updated
-								else {
-									res.statusCode = 404;
-									res.send();
-								}
+	// 2) Get DB Connection
+	db.getConnection(function(err, connection) {
+		if (err) {
+			next(err);
+		} else {
+			//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
+			//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id
+			connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
+				if (err) {
+					next(err);
+				}
+				// 4) create SQL Query from parameters
+				var i = req.body;
+				connection.query('Call patientsRessourceUpdate(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+					[req.params.id, i.doctorId, i.firstName, i.lastName, i.secondName, i.socialId, i.sex, i.dateOfBirth,
+						i.firstDiagnoseDate, i.fileId, i.fullAddress, i.landline, i.email, i.mobile], function(err, result) {
+						if (err) {
+							next(err);
+						} else {
+							// patient was updated
+							if (result[0][0].affected_rows > 0){
+								res.statusCode = 204;
+								res.send();
 							}
-							connection.release();
-						});
-				});
-			}
-		});
-	}
+							// patient wasnt updated
+							else {
+								res.statusCode = 404;
+								res.send();
+							}
+						}
+						connection.release();
+					});
+			});
+		}
+	});
 };
 
 

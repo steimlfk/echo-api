@@ -78,16 +78,10 @@ app.use('/notifications', 	passport.authenticate(['bearer'], { session: false })
 app.use('/createPatientAndAccount', passport.authenticate(['bearer'], { session: false }));
 app.use('/changeDoctor',	 passport.authenticate(['bearer'], { session: false }));
 
+app.use(utils.accessControl);
+
 swagger.addPost({'spec': oauth2.loginSpec, 'action': oauth2.endpoint});
 
-app.use('/login', function(err,req,res,next){
-	next(err);
-	/*
-	if (err) console.log(err);
-	res.status(401);
-	res.send();
-	*/
-});
 swagger.addModels(accounts);
 swagger.addGet(		{'spec': accounts.listSpec,'action': accounts.list});
 swagger.addPost(	{'spec': accounts.addSpec,'action': accounts.add});
