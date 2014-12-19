@@ -162,21 +162,16 @@ exports.listOne = function(req,res,next, exam) {
 						// was there any result?
 						if (rows[0].length > 0) {
 							var host = ((ssl)?'https://':'http://')+req.headers.host;
-							var result = [];
-							for (var i = 0; i < rows[0].length; i++) {
-								var o = rows[0][i];
-								o._links = {};
-								o._links.self = {};
-								// create self link
-								o._links.self.href = host + '/patients/' + req.params.id + '/' + exam + '/' + rows[0][i].recordId;
-								o._links.patient = {};
-								// create link to corresponding patient
-								o._links.patient.href = host + '/patients/' + req.params.id;
-								result.push(o);
-							}
+							var o = rows[0][0];
+							o._links = {};
+							o._links.self = {};
+							// create self link
+							o._links.self.href = host + '/patients/' + req.params.id + '/' + exam + '/' + rows[0][0].recordId;
+							o._links.patient = {};
+							// create link to corresponding patient
+							o._links.patient.href = host + '/patients/' + req.params.id;
 							// send result
-							res.send(result);
-							console.log(result);
+							res.send(o);
 						}
 						// there was no result
 						else {
