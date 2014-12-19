@@ -562,6 +562,11 @@ IF getRole() = 'admin' OR 'echo_db_usr' = substring_index(user(), '@', 1) then
 	EXECUTE s using @id;
 	SELECT row_count() as affected_rows;
 	DEALLOCATE PREPARE s;
+    SET @stmt = CONCAT("DROP USER '",@id,"'@'localhost'");
+	PREPARE s FROM @stmt;
+	EXECUTE s;
+    DEALLOCATE PREPARE s;
+
 else
 	signal sqlstate '22403' set message_text = 'You are not authorized to disable an account';
 end if;
