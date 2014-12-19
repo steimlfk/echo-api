@@ -1,6 +1,8 @@
 /**
  * Mocha Tests for Accounts...
  * Created by steimlfk on 05.12.14.
+ *
+ * TODO activate/deactivate
  */
 
 
