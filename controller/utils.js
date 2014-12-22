@@ -96,8 +96,10 @@ exports.errorHandler = function (err, req, res, next) {
         var msg = err.message;
         var user = req.body.user || 'none';
         console.error('Error on ' + req.method + ' ' + req.url + ': ', msg);
-        console.error('User: ' + user);
-        console.error('Body: ' + req.body);
+        console.error('User: ');
+        console.error(user);
+        console.error('Body: ');
+        console.error(req.body);
 
         /*
          *  Access Control: Invalid Role!
