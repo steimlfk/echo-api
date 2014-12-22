@@ -434,6 +434,21 @@ CREATE TABLE IF NOT EXISTS `echo`.`notifications` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
+-- -----------------------------------------------------
+-- Table `echo`.`devices`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `echo`.`devices` (
+  `accountId` int(11) NOT NULL,
+  `deviceId` varchar(255) NOT NULL,
+  PRIMARY KEY (`accountId`,`deviceId`),
+  UNIQUE KEY `deviceId_UNIQUE` (`deviceId`),
+  CONSTRAINT `devicesFKacc` FOREIGN KEY (`accountId`)
+  REFERENCES `accounts` (`accountId`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION
+)
+ENGINE=InnoDB;
+
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

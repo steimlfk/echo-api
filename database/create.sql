@@ -289,7 +289,7 @@ COLLATE = utf8_general_ci;
 
 
 -- -----------------------------------------------------
--- Table `echo`.`perm_roles_procedures`
+-- Table `echo`.`echo`.`perm_roles_procedures`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `echo`.`perm_roles_procedures` (
   `role` VARCHAR(45) NOT NULL,
@@ -420,6 +420,22 @@ CREATE TABLE IF NOT EXISTS `echo`.`notifications` (
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
+
+-- -----------------------------------------------------
+-- Table `echo`.`devices`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `echo`.`devices` (
+  `accountId` int(11) NOT NULL,
+  `deviceId` varchar(255) NOT NULL,
+  PRIMARY KEY (`accountId`,`deviceId`),
+  UNIQUE KEY `deviceId_UNIQUE` (`deviceId`),
+  CONSTRAINT `devicesFKacc` FOREIGN KEY (`accountId`)
+  REFERENCES `accounts` (`accountId`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION
+)
+ENGINE=InnoDB;
+
 
 USE `echo` ;
 
@@ -2351,6 +2367,43 @@ END$$
 DELIMITER ;
 
 -- -----------------------------------------------------
+-- procedure deviceAdd
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `deviceAdd`(in deviceId varchar(255))
+BEGIN
+	SET @id = substring_index(user(), '@', 1);
+	set @deviceId = deviceId;
+	SET @test_stmt = 'INSERT INTO devices(accountId, deviceId) VALUES (?,?)';
+	PREPARE statement FROM @test_stmt;
+	EXECUTE statement using @id, @deviceId;
+	DEALLOCATE PREPARE statement;		
+END$$
+
+DELIMITER ;
+
+
+-- -----------------------------------------------------
+-- procedure deviceRemove 
+-- -----------------------------------------------------
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `deviceRemove`(in deviceId varchar(255))
+BEGIN
+	SET @id = substring_index(user(), '@', 1);
+	set @deviceId = deviceId;
+	SET @test_stmt = 'DELETE FROM devices WHERE accountId = ? and deviceId = ?';
+	PREPARE statement FROM @test_stmt;
+	EXECUTE statement using @id, @deviceId;
+    SELECT ROW_COUNT() as affected_rows; 
+	DEALLOCATE PREPARE statement;		
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
 -- View `echo`.`accounts_view`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`accounts_view`;
@@ -2524,6 +2577,8 @@ GRANT EXECUTE ON procedure `echo`.`patientsAndAccountCreate` TO 'echo_db_usr'@'l
 GRANT EXECUTE ON procedure `echo`.`patientsChangeDoctor` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`login` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`loginRefresh` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`deviceAdd` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`deviceRemove` TO 'echo_db_usr'@'localhost';
 GRANT DELETE, INSERT, SELECT, UPDATE, TRIGGER, CREATE, GRANT OPTION ON TABLE echo.* TO 'echo_db_usr'@'localhost';
 
 SET SQL_MODE=@OLD_SQL_MODE;
@@ -2994,6 +3049,8 @@ INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('adm
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','accountsDelete');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','accountsDisable');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','accountsUpdate');
+INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','deviceAdd');
+INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','deviceRemove');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsAndAccountCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsChangeDoctor');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsCreate');
@@ -3012,6 +3069,8 @@ INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doc
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','deathGet');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','deathUpdate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','deleteExamRecord');
+INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','deviceAdd');
+INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','deviceRemove');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','listExams');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','listSingleExam');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','patientsAndAccountCreate');
@@ -3028,11 +3087,14 @@ INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doc
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','treatmentCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','treatmentUpdate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','accountsUpdate');
+INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','deviceAdd');
+INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','deviceRemove');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','reportCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','reportDelete');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','reportList');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','reportListOne');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','reportUpdate');
+
 
 CALL `echo`.`accountsCreate`('secret_', 'nimda', '$2a$10$5f3gnmB/Cbe1TjrJhaUvNe6MTT6w87Ckiqyr0j4VxLChMtZFIMHka', 'admin@hospital.de', 'admin', 1, '18:00', 1, 'email', '1337');
 

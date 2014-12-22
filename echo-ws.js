@@ -26,6 +26,7 @@ readings =           	require('./controller/readings'),
 treatments =           	require('./controller/treatments'),
 notifications =         require('./controller/notifications'),
 commands =        		require('./controller/commands'),
+devices =        		require('./controller/devices'),
 ccqweek =              	require('./controller/ccqs');
 
 var utils =				require('./controller/utils');
@@ -76,7 +77,8 @@ app.use('/patients',  		passport.authenticate(['bearer'], { session: false }));
 app.use('/questions', 		passport.authenticate(['bearer'], { session: false }));
 app.use('/notifications', 	passport.authenticate(['bearer'], { session: false }));
 app.use('/createPatientAndAccount', passport.authenticate(['bearer'], { session: false }));
-app.use('/changeDoctor',	 passport.authenticate(['bearer'], { session: false }));
+app.use('/changeDoctor',	passport.authenticate(['bearer'], { session: false }));
+app.use('/devices',	 		passport.authenticate(['bearer'], { session: false }));
 
 app.use(utils.accessControl);
 
@@ -163,6 +165,10 @@ swagger.addGet(		{'spec': notifications.addSpec,'action': notifications.add});
 swagger.addModels(commands);
 swagger.addPost({'spec': commands.createSpec, 'action': commands.createPatientAndAccount});
 swagger.addPost({'spec': commands.changeSpec, 'action': commands.changeDoctor});
+
+swagger.addModels(devices);
+swagger.addPost({'spec': devices.addSpec, 'action': devices.add});
+swagger.addDelete({'spec': devices.delSpec, 'action': devices.del});
 
 app.use(utils.errorHandler);
 
