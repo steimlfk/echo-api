@@ -107,6 +107,8 @@ exports.accessControl = function (req, res, next){
 
             perm = perm[next_step];
 
+            //TODO Null Check!
+
             if (i < path.length-1) i++;
             else not_finished = false;
         }
@@ -124,7 +126,7 @@ exports.errorHandler = function (err, req, res, next) {
     if (err) {
         // Error Handling
         var msg = err.message;
-        var user = req.body.user || 'none';
+        var user = req.user || 'none';
         console.error('Error on ' + req.method + ' ' + req.url + ': ', msg);
         console.error('User: ');
         console.error(user);
