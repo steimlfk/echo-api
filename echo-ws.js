@@ -160,15 +160,15 @@ swagger.addGet(		{'spec': questions.listDailySpec,'action': questions.listDaily}
 
 swagger.addModels(notifications);
 swagger.addGet(		{'spec': notifications.listSpec,'action': notifications.list});
-swagger.addGet(		{'spec': notifications.addSpec,'action': notifications.add});
+swagger.addPost(	{'spec': notifications.addSpec,'action': notifications.add});
 
 swagger.addModels(commands);
-swagger.addPost({'spec': commands.createSpec, 'action': commands.createPatientAndAccount});
-swagger.addPost({'spec': commands.changeSpec, 'action': commands.changeDoctor});
+swagger.addPost(	{'spec': commands.createSpec, 'action': commands.createPatientAndAccount});
+swagger.addPost(	{'spec': commands.changeSpec, 'action': commands.changeDoctor});
 
 swagger.addModels(devices);
-swagger.addPost({'spec': devices.addSpec, 'action': devices.add});
-swagger.addDelete({'spec': devices.delSpec, 'action': devices.del});
+swagger.addPost(	{'spec': devices.addSpec, 'action': devices.add});
+swagger.addDelete(	{'spec': devices.delSpec, 'action': devices.del});
 
 app.use(utils.errorHandler);
 
