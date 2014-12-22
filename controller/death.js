@@ -43,7 +43,6 @@ exports.list = function(req, res, next){
 						// row found
 						if (rows[0].length > 0){
 							var host = ((ssl)?'https://':'http://')+req.headers.host;
-							var result = [];
 							var o  = rows[0][0];
 							o._links = {};
 							// add self link
@@ -52,8 +51,7 @@ exports.list = function(req, res, next){
 							// add patients link
 							o._links.patient = {};
 							o._links.patient.href = host+'/patients/'+req.params.id;
-							result.push(o);
-							res.send(result);
+							res.send(o);
 						}
 						// row doesnt exist
 						else{

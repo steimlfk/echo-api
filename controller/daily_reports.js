@@ -153,20 +153,15 @@ exports.listOne = function(req,res,next){
 						// is there any result?
 						if (rows[0].length > 0){
 							var host = 'https://'+req.headers.host;
-							var result = [];
-							for (var i = 0; i < rows[0].length; i++){
-								var o  = rows[0][i];
-								o._links = {};
-								// create self link
-								o._links.self = {};
-								o._links.self.href = host+'/patients/'+req.params.id+'/'+exam+'/'+rows[0][i].recordId;
-								// create corresponding patients link
-								o._links.patient = {};
-								o._links.patient.href = host+'/patients/'+req.params.id;
-								result.push(o);
-							}
-							res.send(result);
-
+							var o  = rows[0][0];
+							o._links = {};
+							// create self link
+							o._links.self = {};
+							o._links.self.href = host+'/patients/'+req.params.id+'/'+exam+'/'+rows[0][0].recordId;
+							// create corresponding patients link
+							o._links.patient = {};
+							o._links.patient.href = host+'/patients/'+req.params.id;
+							res.send(o);
 						}
 						// there was no result from db
 						else{
