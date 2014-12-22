@@ -175,8 +175,7 @@ exports.listOne = function(req,res,next){
 				connection.query(qry, [id], function(err, rows) {
 					// error while querying db
 					if (err) {
-						res.statusCode = 500;
-						res.send({err: 'Internal Server Error'});
+						next(err);
 					}
 
 					var host = ((ssl)?'https://':'http://')+req.headers.host;
@@ -249,9 +248,7 @@ exports.add = function(req,res,next){
 								if (err) {
 									// Something went wrong - shouldnt happen
 									// future TODO: implement rollback which deletes the created account and the created db user
-									console.error('Query error on grant rights POST /accounts: ',err);
-									res.statusCode = 500;
-									res.send({err: 'Internal Server Error'});
+									next(err);
 								}
 								else {
 									// account and db user created. 
@@ -299,9 +296,7 @@ exports.del =   function(req,res,next){
 				connection.query('CALL accountsDelete(?)', [req.params.id], function(err, result) {
 					if (err){
 						// An error occured
-						console.error('Query error on DELETE /accounts: ',err);
-						res.statusCode = 500;
-						res.send({err: 'Internal Server Error'});
+						next(err);
 					}
 					else {
 						// Account was removed
@@ -320,7 +315,6 @@ exports.del =   function(req,res,next){
 			});
 		}
 	});
-
 };
 
 /*
