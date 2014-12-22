@@ -98,13 +98,13 @@ exports.accessControl = function (req, res, next){
         var not_finished = true;
         var i = 1;
         while (not_finished){
-            var next_step ="";
-            //next part of url is a number
-            if (!isNaN(parseInt(path[i]))){
-                next_step = 'instance';
+            var next_step ='';
+
+            if (perm.hasOwnProperty(path[i])) {
+                next_step = path[i];
             }
-            // next part is a term (hopefully referenced in permissions...TODO Check)
-            else next_step = path[i];
+            else next_step = 'instance';
+
             perm = perm[next_step];
 
             if (i < path.length-1) i++;
