@@ -15,6 +15,9 @@ var exam_commons = {
     }
 };
 
+// notifications dont appear in this structure because the resource /notifications can be accessed by everyone who has
+// an account. (Opposed to /accounts where some functions are only allowed to be used by an admin. Because of this
+// fact, accounts has to be specified in this structure)
 var permissions= {
     patients : {
         methods: {
@@ -28,15 +31,32 @@ var permissions= {
                 put: ['doctor', 'admin'],
                 delete: ['doctor', 'admin']
             },
+            daily_reports: {
+                methods: {
+                    get: ['patient', 'doctor'],
+                    post: ['patient','doctor']
+
+                },
+                instance: {
+                    methods: {
+                        get: ['patient','doctor'],
+                        put: ['patient','doctor'],
+                        delete: ['patient','doctor']
+                    }
+                }
+            },
+            death : {
+                post: ['doctor'],
+                get: ['doctor'],
+                put: ['doctor'],
+                delete: ['doctor']
+            },
             cats : exam_commons,
             ccqs : exam_commons,
             charlsons : exam_commons,
             readings : exam_commons,
             treatments : exam_commons
         }
-
-
-
     },
     accounts : {
         methods: {
@@ -50,6 +70,16 @@ var permissions= {
                 put: ['doctor', 'admin', 'patient'],
                 delete: ['admin']
             }
+        }
+    },
+    createPatientAndAccount: {
+        methods: {
+            post : ['doctor']
+        }
+    },
+    changeDoctor: {
+        methods: {
+            post: ['admin']
         }
     }
 

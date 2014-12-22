@@ -1,9 +1,9 @@
 /**
  * Controller: Daily Reports
- * 
+ *
  * Contains Methods to GET and POST to /patients/id/daily_reports (list and add)
  * And Methodes to GET, PUT and DELETE  /patients/id/daily_reports/recordid (listOne, update and del)
- * 
+ *
  * Contains swagger specs and models
  */
 var swagger = require('swagger-node-express');
@@ -24,12 +24,6 @@ var ssl = require('../config/ssl.js').useSsl;
  *  	6) send
  */
 exports.list = function(req, res, next){
-	// 1) Validate Role!
-	if (req.user.role == 'admin'){
-		res.statusCode = 403;
-		res.send({error: 'Forbidden. Invalid Role.'});
-	}
-	else{
 	var exam = 'daily_reports';
 	// 2) Get DB Connection
 	db.getConnection(function(err, connection) {
@@ -72,7 +66,6 @@ exports.list = function(req, res, next){
 					}
 					else {
 						// is there any result?
-						
 						if (rows[0].length > 0){
 							var host = 'https://'+req.headers.host;
 							var result = [];
@@ -122,7 +115,6 @@ exports.list = function(req, res, next){
 			});
 		}
 	});
-	}
 };
 
 /*
@@ -136,12 +128,6 @@ exports.list = function(req, res, next){
  *  	6) send
  */
 exports.listOne = function(req,res,next){
-	// 1) Validate Role
-	if (req.user.role == 'admin'){
-		res.statusCode = 403;
-		res.send({error: 'Forbidden. Invalid Role.'});
-	}
-	else{
 	var exam = 'daily_reports';
 	//2) Get DB Connection
 	db.getConnection(function(err, connection) {
@@ -154,7 +140,6 @@ exports.listOne = function(req,res,next){
 				if (err) {
 					next(err);
 				}
-				
 				var id = req.params.id;
 				var rid = req.params.rid;
 				var qry = 'call reportListOne(?,?)';
@@ -194,7 +179,6 @@ exports.listOne = function(req,res,next){
 			});
 		}
 	});
-	}
 };
 
 /*
@@ -208,12 +192,6 @@ exports.listOne = function(req,res,next){
  *  	6) send
  */
 exports.del = function(req, res, next){
-	//1) Validate Role
-	if (req.user.role == 'admin'){
-		res.statusCode = 403;
-		res.send({error: 'Forbidden. Invalid Role.'});
-	}
-	else{
 	var exam = 'daily_reports';
 	//2) Get DB Connection
 	db.getConnection(function(err, connection) {
@@ -249,9 +227,8 @@ exports.del = function(req, res, next){
 					connection.release();
 				});
 			});
-		}	
+		}
 	});
-	}
 };
 /*
  *  PUT /patients/id/daily_reports/recordid
@@ -264,14 +241,7 @@ exports.del = function(req, res, next){
  *  	6) send
  */
 exports.update = function(req,res,next){
-	// 1) Validate Role!
-	if (req.user.role == 'admin'){
-		res.statusCode = 403;
-		res.send({error: 'Forbidden. Invalid Role.'});
-	}
-	
-	else{
-		// 2) Get DB Connection
+	// 2) Get DB Connection
 	db.getConnection(function(err, connection) {
 		if (err) {
 			next(err);
@@ -290,30 +260,29 @@ exports.update = function(req,res,next){
 				// set date to null if not set
 				var date = (i.date || i.date != "")? i.date : null;
 				// query db
-				connection.query('call reportUpdate(?,?,?, ?,?,?,?,?, ?,?,?,?,?,?, ?,?,?,?,?)', 
-						[rid, id, date, 
-								i.q1, i.q2, i.q3, i.q4, i.q5, i.q1a, i.q1b, i.q1c,i.q3a, i.q3b, i.q3c, i.satO2, 
-								i.walkingDist, i.temperature, i.pefr, i.heartRate], function(err, result) {
-					if (err) {
-						next(err);
-					} else {
-						// record  was updated
-						if (result[0][0].affected_rows > 0){
-							res.statusCode = 204;
-							res.send();
+				connection.query('call reportUpdate(?,?,?, ?,?,?,?,?, ?,?,?,?,?,?, ?,?,?,?,?)',
+					[rid, id, date,
+						i.q1, i.q2, i.q3, i.q4, i.q5, i.q1a, i.q1b, i.q1c,i.q3a, i.q3b, i.q3c, i.satO2,
+						i.walkingDist, i.temperature, i.pefr, i.heartRate], function(err, result) {
+						if (err) {
+							next(err);
+						} else {
+							// record  was updated
+							if (result[0][0].affected_rows > 0){
+								res.statusCode = 204;
+								res.send();
+							}
+							// record was not found
+							else {
+								res.statusCode = 404;
+								res.send();
+							}
 						}
-						// record was not found
-						else {
-							res.statusCode = 404;
-							res.send();
-						}
-					}
-					connection.release();
-				});
+						connection.release();
+					});
 			});
-		}	
+		}
 	});
-	}
 };
 /*
  *  POST /patients/id/daily_reports
@@ -326,13 +295,7 @@ exports.update = function(req,res,next){
  *  	6) send
  */
 exports.add = function(req,res,next){
-	// 1) Validate Role!
-	if (req.user.role == 'admin'){
-		res.statusCode = 403;
-		res.send({error: 'Forbidden. Invalid Role.'});
-	}
-	else{
-		//2) Get DB Connection
+	//2) Get DB Connection
 	db.getConnection(function(err, connection) {
 		if (err) {
 			next(err);
@@ -343,31 +306,30 @@ exports.add = function(req,res,next){
 				if (err) {
 					next(err);
 				}
-				
+
 				var i = req.body;
 				var id = parseInt(req.params.id);
 				// set date to null if not set
 				var date = (i.date || i.date != "")? i.date : null;
 				// query db
-				connection.query('call reportCreate(?,?, ?,?,?,?,?, ?,?,?, ?,?,?, ?,?,?,?,?)', 
-						[id, date, 
-								i.q1, i.q2, i.q3, i.q4, i.q5, i.q1a, i.q1b, i.q1c, i.q3a, i.q3b, i.q3c, i.satO2, 
-								i.walkingDist, i.temperature, i.pefr, i.heartRate], function(err, result) {
-					if (err) {
-						next(err);
+				connection.query('call reportCreate(?,?, ?,?,?,?,?, ?,?,?, ?,?,?, ?,?,?,?,?)',
+					[id, date,
+						i.q1, i.q2, i.q3, i.q4, i.q5, i.q1a, i.q1b, i.q1c, i.q3a, i.q3b, i.q3c, i.satO2,
+						i.walkingDist, i.temperature, i.pefr, i.heartRate], function(err, result) {
+						if (err) {
+							next(err);
 
-					} else {
-						// new ressource created
-						res.statusCode = 201;
-						res.location('/patients/'+ id + '/daily_reports/' + result[0][0].insertId);
-						res.send();
-					}
-					connection.release();
-				});
+						} else {
+							// new ressource created
+							res.statusCode = 201;
+							res.location('/patients/'+ id + '/daily_reports/' + result[0][0].insertId);
+							res.send();
+						}
+						connection.release();
+					});
 			});
-		}	
+		}
 	});
-	}
 };
 
 exports.listSpec = {
@@ -425,7 +387,7 @@ exports.listOneSpec = {
 		method: "GET",
 		type : "DailyReport",
 		nickname : "listOneReport",
-		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), 
+		parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
 		              swagger.pathParam("rid", "ID of the Record", "string")],
 		responseMessages : [swagger.errors.notFound('rid')]
 
@@ -442,14 +404,14 @@ exports.delSpec = {
 		path : "/patients/{id}/daily_reports/{rid}",
 		method: "DELETE",
 		nickname : "delReport",
-		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), 
+		parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
 		              swagger.pathParam("rid", "ID of the Record", "string")],
 		responseMessages : [swagger.errors.notFound('rid')]
 
 };
 
 exports.updateSpec = {
-		summary : "Update specific Daily Report Record of this Patient (Roles: doctor and patient)",		
+		summary : "Update specific Daily Report Record of this Patient (Roles: doctor and patient)",
 		notes: "This Function updates a Daily Report, which is specified by the url. Any ids in the Message Body are ignored. <br>This function passes its parameters to the SP reportUpdate. <br><br>" +
 		"<b>Possible Results</b>: <br>" +
 		" <b>204</b>  Record was updated. <br>" +
@@ -459,7 +421,7 @@ exports.updateSpec = {
 		path : "/patients/{id}/daily_reports/{rid}",
 		method: "PUT",
 		nickname : "updateReport",
-		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), 
+		parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
 		              swagger.pathParam("rid", "ID of the Record", "string") ,
 		              swagger.bodyParam("DailyReport", "updated Readings Record", "DailyReport")],
 		responseMessages : [swagger.errors.notFound('rid')]

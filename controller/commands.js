@@ -10,122 +10,108 @@ var bcrypt = require('bcryptjs');
 
 
 exports.createPatientAndAccount = function(req,res,next) {
-	// 1) Validate Role!
-	if (req.user.role == 'patient'){
-		res.statusCode = 403;
-		res.send({error: 'Forbidden. Invalid Role.'});
-	}
-	else {
-		// check if account and patient data was submitted
-		if (req.body.account && req.body.patient) {
-			// 2) Get DB Connection
-			db.getConnection(function(err, connection) {
-				if (err) {
-					next(err);
-				} else {
-					//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
-					//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
-					connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
-						if (err) {
-							next(err);
-						}
-						// since its not possible to "really" delete a created account
-						// it was necessary to write a new SP to create a patient and an account
-						async.waterfall([
-								function(cb){
-									// shorter vars
-									var i = req.body.account;
-									var j = req.body.patient;
-									// hash pw
-									var salt = bcrypt.genSaltSync(10);
-									var pwd = bcrypt.hashSync(i.password, salt);
-									// set doctorid if current role is doctor
-									var doc_id = i.doctorId;
-									if (req.user.role == 'doctor') doc_id = req.user.accountId;
-									// query db
-									connection.query('CALL patientsAndAccountCreate(?,?,? ,?,?,? ,?,?,? ,?, ?,?,?, ?,?,?, ?,?,?, ?,?)' ,
-										[ config.db_pw_prefix, i.username, pwd,
-											i.email, i.role, i.enabled,
-											i.reminderTime, i.notificationEnabled, i.notificationMode,
-											i.mobile,
-											doc_id, j.firstName, j.lastName,
-											j.secondName, j.socialId, j.sex,
-											j.dateOfBirth, j.firstDiagnoseDate, j.fileId,
-											j.fullAddress, j.landline],
-										cb);
-								},
-								function(arg1, fields, ccb){
-									// grant rights if create was successfull
-									var i = req.body.account;
-									connection.query('CALL grantRolePermissions(?, ?)' , [parseInt(arg1[0][0].location), i.role], function (err, result){
-										if (err) ccb(err);
-										else ccb (null, arg1[0][0].location);
-									});
-								}
-							],
-							// optional callback
-							function(err, re1){
-								if (err) {
-									next(err);
-								} else {
-									// resource was created
-									// link will be provided in location header
-									res.statusCode = 201;
-									res.location('/patients/' + re1);
-									res.send();
-								}
-								connection.release();
-							}
-						);
-					});
-				}
-			});
-		}
-	}
-};
-
-
-exports.changeDoctor = function(req,res,next){
-	// 1) Validate Role!
-	if (req.user.role != 'admin'){
-		res.statusCode = 403;
-		res.send({error: 'Forbidden. Invalid Role.'});
-	}
-	else{
+	// check if account and patient data was submitted
+	if (req.body.account && req.body.patient) {
 		// 2) Get DB Connection
 		db.getConnection(function(err, connection) {
 			if (err) {
 				next(err);
 			} else {
 				//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
-				//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
+				//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id
 				connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
 					if (err) {
 						next(err);
 					}
-					var pid = req.body.patientId;
-					var did = req.body.newDoctorId;
-					connection.query('call patientsChangeDoctor(?,?)',	[pid, did], function(err, result) {
-						if (err) {
-							next(err);
-						} else {
-							// doctor was changed
-							if (result[0][0].affected_rows > 0){
-								res.statusCode = 204;
+					// since its not possible to "really" delete a created account
+					// it was necessary to write a new SP to create a patient and an account
+					async.waterfall([
+							function(cb){
+								// shorter vars
+								var i = req.body.account;
+								var j = req.body.patient;
+								// hash pw
+								var salt = bcrypt.genSaltSync(10);
+								var pwd = bcrypt.hashSync(i.password, salt);
+								// set doctorid if current role is doctor
+								var doc_id = i.doctorId;
+								if (req.user.role == 'doctor') doc_id = req.user.accountId;
+								// query db
+								connection.query('CALL patientsAndAccountCreate(?,?,? ,?,?,? ,?,?,? ,?, ?,?,?, ?,?,?, ?,?,?, ?,?)' ,
+									[ config.db_pw_prefix, i.username, pwd,
+										i.email, i.role, i.enabled,
+										i.reminderTime, i.notificationEnabled, i.notificationMode,
+										i.mobile,
+										doc_id, j.firstName, j.lastName,
+										j.secondName, j.socialId, j.sex,
+										j.dateOfBirth, j.firstDiagnoseDate, j.fileId,
+										j.fullAddress, j.landline],
+									cb);
+							},
+							function(arg1, fields, ccb){
+								// grant rights if create was successfull
+								var i = req.body.account;
+								connection.query('CALL grantRolePermissions(?, ?)' , [parseInt(arg1[0][0].location), i.role], function (err, result){
+									if (err) ccb(err);
+									else ccb (null, arg1[0][0].location);
+								});
+							}
+						],
+						// optional callback
+						function(err, re1){
+							if (err) {
+								next(err);
+							} else {
+								// resource was created
+								// link will be provided in location header
+								res.statusCode = 201;
+								res.location('/patients/' + re1);
 								res.send();
 							}
-							// patient wasnt found
-							else {
-								res.statusCode = 404;
-								res.send();
-							}
+							connection.release();
 						}
-						connection.release();
-					});
+					);
 				});
 			}
 		});
 	}
+};
+
+
+exports.changeDoctor = function(req,res,next){
+	// 2) Get DB Connection
+	db.getConnection(function(err, connection) {
+		if (err) {
+			next(err);
+		} else {
+			//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
+			//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id
+			connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
+				if (err) {
+					next(err);
+				}
+				var pid = req.body.patientId;
+				var did = req.body.newDoctorId;
+				connection.query('call patientsChangeDoctor(?,?)',	[pid, did], function(err, result) {
+					if (err) {
+						next(err);
+					} else {
+						// doctor was changed
+						if (result[0][0].affected_rows > 0){
+							res.statusCode = 204;
+							res.send();
+						}
+						// patient wasnt found
+						else {
+							res.statusCode = 404;
+							res.send();
+						}
+					}
+					connection.release();
+				});
+			});
+		}
+	});
 };
 
 
