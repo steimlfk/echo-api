@@ -34,7 +34,7 @@ GRANT EXECUTE ON function  `echo`.`getRole` TO 'echo_db_usr'@'localhost';
 -- Table `echo`.`accounts`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `echo`.`accounts` (
-  `accountId` INT NOT NULL AUTO_INCREMENT,
+  `accountId` INT NOT NULL,
   `username` VARCHAR(255) NOT NULL,
   `password` VARCHAR(255) NOT NULL,
   `role` VARCHAR(20) NOT NULL,
@@ -44,9 +44,9 @@ CREATE TABLE IF NOT EXISTS `echo`.`accounts` (
   `notificationEnabled` TINYINT(1) NOT NULL DEFAULT 1,
   `notificationMode` VARCHAR(10) NOT NULL DEFAULT 'email',
   `mobile` VARCHAR(45) NULL,
-  PRIMARY KEY (`accountId`),
   UNIQUE INDEX `email_UNIQUE` (`email` ASC),
-  UNIQUE INDEX `username_UNIQUE` (`username` ASC))
+  UNIQUE INDEX `username_UNIQUE` (`username` ASC),
+  PRIMARY KEY (`accountId`))
 ENGINE = InnoDB;
 
 
@@ -70,15 +70,15 @@ CREATE TABLE IF NOT EXISTS `echo`.`patients` (
   UNIQUE INDEX `socialId_UNIQUE` (`socialId` ASC),
   UNIQUE INDEX `fileId_UNIQUE` (`fileId` ASC),
   INDEX `fkDoctor_idx` (`doctorId` ASC),
-  CONSTRAINT `fkPatient`
-    FOREIGN KEY (`patientId`)
-    REFERENCES `echo`.`accounts` (`accountId`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
   CONSTRAINT `fkDoctor`
     FOREIGN KEY (`doctorId`)
     REFERENCES `echo`.`accounts` (`accountId`)
-    ON DELETE NO ACTION
+    ON DELETE RESTRICT
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fkPatient`
+    FOREIGN KEY (`patientId`)
+    REFERENCES `echo`.`accounts` (`accountId`)
+    ON DELETE RESTRICT
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`ccqs` (
   CONSTRAINT `ccqFKpat`
     FOREIGN KEY (`patientId`)
     REFERENCES `echo`.`patients` (`patientId`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8
@@ -139,7 +139,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`cats` (
   CONSTRAINT `catsFKpat`
     FOREIGN KEY (`patientId`)
     REFERENCES `echo`.`patients` (`patientId`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8
@@ -179,7 +179,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`charlsons` (
   CONSTRAINT `charFKpat`
     FOREIGN KEY (`patientId`)
     REFERENCES `echo`.`patients` (`patientId`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8
@@ -218,7 +218,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`treatments` (
   CONSTRAINT `treatFKpat`
     FOREIGN KEY (`patientId`)
     REFERENCES `echo`.`patients` (`patientId`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8
@@ -281,7 +281,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`readings` (
   CONSTRAINT `readFKpat`
     FOREIGN KEY (`patientId`)
     REFERENCES `echo`.`patients` (`patientId`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8
@@ -289,7 +289,7 @@ COLLATE = utf8_general_ci;
 
 
 -- -----------------------------------------------------
--- Table `echo`.`echo`.`perm_roles_procedures`
+-- Table `echo`.`perm_roles_procedures`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `echo`.`perm_roles_procedures` (
   `role` VARCHAR(45) NOT NULL,
@@ -345,9 +345,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `echo`.`dailyreports`
+-- Table `echo`.`dailyReports`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`dailyreports` (
+CREATE TABLE IF NOT EXISTS `echo`.`dailyReports` (
   `recordId` INT NOT NULL AUTO_INCREMENT,
   `patientId` INT NOT NULL,
   `date` DATE NULL,
@@ -372,9 +372,44 @@ CREATE TABLE IF NOT EXISTS `echo`.`dailyreports` (
   CONSTRAINT `repFKpat`
     FOREIGN KEY (`patientId`)
     REFERENCES `echo`.`patients` (`patientId`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `echo`.`dailyreports`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `echo`.`dailyreports` (
+  `recordId` INT(11) NOT NULL AUTO_INCREMENT,
+  `patientId` INT(11) NOT NULL,
+  `date` DATE NULL DEFAULT NULL,
+  `q1` TINYINT(1) NOT NULL,
+  `q2` TINYINT(1) NOT NULL,
+  `q3` TINYINT(1) NOT NULL,
+  `q4` TINYINT(1) NOT NULL,
+  `q5` TINYINT(1) NOT NULL,
+  `q1a` TINYINT(1) NULL DEFAULT '0',
+  `q1b` TINYINT(1) NULL DEFAULT '0',
+  `q1c` TINYINT(1) NULL DEFAULT '0',
+  `q3a` TINYINT(1) NULL DEFAULT '0',
+  `q3b` TINYINT(1) NULL DEFAULT '0',
+  `q3c` TINYINT(1) NULL DEFAULT '0',
+  `satO2` FLOAT(11) NULL DEFAULT '0',
+  `walkingDist` FLOAT(11) NULL DEFAULT '0',
+  `temperature` FLOAT(11) NULL DEFAULT '0',
+  `pefr` FLOAT(11) NULL DEFAULT '0',
+  `heartRate` FLOAT(11) NULL DEFAULT '0',
+  PRIMARY KEY (`recordId`),
+  INDEX `repFKpat_idx` (`patientId` ASC),
+  CONSTRAINT `repFKpat`
+    FOREIGN KEY (`patientId`)
+    REFERENCES `echo`.`patients` (`patientId`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8
+COLLATE = utf8_general_ci;
 
 
 -- -----------------------------------------------------
@@ -392,7 +427,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`deaths` (
   CONSTRAINT `deathFKpat`
     FOREIGN KEY (`patientId`)
     REFERENCES `echo`.`patients` (`patientId`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
@@ -412,12 +447,12 @@ CREATE TABLE IF NOT EXISTS `echo`.`notifications` (
   CONSTRAINT `notFKpatient`
     FOREIGN KEY (`accountId`)
     REFERENCES `echo`.`accounts` (`accountId`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION,
   CONSTRAINT `notFKsubject`
     FOREIGN KEY (`subjectsAccount`)
     REFERENCES `echo`.`accounts` (`accountId`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
@@ -425,17 +460,26 @@ ENGINE = InnoDB;
 -- Table `echo`.`devices`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `echo`.`devices` (
-  `accountId` int(11) NOT NULL,
-  `deviceId` varchar(255) NOT NULL,
-  PRIMARY KEY (`accountId`,`deviceId`),
-  UNIQUE KEY `deviceId_UNIQUE` (`deviceId`),
-  CONSTRAINT `devicesFKacc` FOREIGN KEY (`accountId`)
-  REFERENCES `accounts` (`accountId`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION
-)
-ENGINE=InnoDB;
+  `accountId` INT NOT NULL,
+  `deviceId` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`accountId`, `deviceId`),
+  UNIQUE INDEX `deviceId_UNIQUE` (`deviceId` ASC),
+  CONSTRAINT `devicesFKacc`
+    FOREIGN KEY (`accountId`)
+    REFERENCES `echo`.`accounts` (`accountId`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
 
+
+-- -----------------------------------------------------
+-- Table `echo`.`settings`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `echo`.`settings` (
+  `setting` VARCHAR(45) NOT NULL,
+  `val` INT NOT NULL,
+  PRIMARY KEY (`setting`))
+ENGINE = InnoDB;
 
 USE `echo` ;
 
@@ -516,8 +560,12 @@ BEGIN
 		signal sqlstate '22400' set message_text = 'You are not allowed to create an account with another role than patient';
 	end if;
 
+	START TRANSACTION;
+	SELECT val into @nextId FROM settings WHERE setting = 'nextId' FOR UPDATE;
+	UPDATE settings SET val = @nextId +1 WHERE setting = 'nextId';
+    COMMIT;
 
-	SET @stmt = "INSERT INTO accounts(`username`,`password`,`role`,`email`, `enabled`, `reminderTime`, `notificationEnabled`, `mobile`, `notificationMode`) VALUES(?,?, ?,?, ?,?, ?,?, ?);";
+	SET @stmt = "INSERT INTO accounts(`accountId`, `username`,`password`,`role`,`email`, `enabled`, `reminderTime`, `notificationEnabled`, `mobile`, `notificationMode`) VALUES(?,?,?, ?,?, ?,?, ?,?, ?);";
 	set @username = username;
 	SET @pwd = pwd;
 	SET @email = email;
@@ -529,35 +577,10 @@ BEGIN
 	SET @mobile = mobile;
 
 	PREPARE s FROM @stmt;
-	EXECUTE s using @username, @pwd, @role, @email, @en, @reTime, @notEn, @mobile, @notMode;
+	EXECUTE s using @nextId, @username, @pwd, @role, @email, @en, @reTime, @notEn, @mobile, @notMode;
 	DEALLOCATE PREPARE s;
-	SELECT LAST_INSERT_ID() into new_acc;
-	CALL createDbUser(new_acc, pw_prefix);
-	SELECT new_acc as location;
-
-
-END$$
-
-DELIMITER ;
-
--- -----------------------------------------------------
--- procedure accountsDisable
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `accountsDisable`(IN accountId INT)
-begin
-IF getRole() = 'admin' then
-	set @id = accountId;
-	SET @stmt = "UPDATE accounts SET enabled = 0 WHERE accountId = ?";
-	PREPARE s FROM @stmt;
-	EXECUTE s using @id;
-	SELECT row_count() as affected_rows;
-	DEALLOCATE PREPARE s;
-else
-	signal sqlstate '22403' set message_text = 'You are not authorized to disable an account';
-end if;
+	CALL createDbUser(@nextId, pw_prefix);
+	SELECT @nextId as location;
 
 END$$
 
@@ -582,7 +605,30 @@ IF getRole() = 'admin' OR 'echo_db_usr' = substring_index(user(), '@', 1) then
 	PREPARE s FROM @stmt;
 	EXECUTE s;
     DEALLOCATE PREPARE s;
+    
+else
+	signal sqlstate '22403' set message_text = 'You are not authorized to disable an account';
+end if;
 
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure accountsDisable
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `accountsDisable`(IN accountId INT)
+begin
+IF getRole() = 'admin' then
+	set @id = accountId;
+	SET @stmt = "UPDATE accounts SET enabled = 0 WHERE accountId = ?";
+	PREPARE s FROM @stmt;
+	EXECUTE s using @id;
+	SELECT row_count() as affected_rows;
+	DEALLOCATE PREPARE s;
 else
 	signal sqlstate '22403' set message_text = 'You are not authorized to disable an account';
 end if;
@@ -1275,7 +1321,42 @@ END$$
 
 DELIMITER ;
 
+-- -----------------------------------------------------
+-- procedure deviceAdd
+-- -----------------------------------------------------
 
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `deviceAdd`(in deviceId varchar(255))
+BEGIN
+	SET @id = substring_index(user(), '@', 1);
+	set @deviceId = deviceId;
+	SET @test_stmt = 'INSERT INTO devices(accountId, deviceId) VALUES (?,?)';
+	PREPARE statement FROM @test_stmt;
+	EXECUTE statement using @id, @deviceId;
+	DEALLOCATE PREPARE statement;		
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure deviceRemove
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `deviceRemove`(in deviceId varchar(255))
+BEGIN
+	SET @id = substring_index(user(), '@', 1);
+	set @deviceId = deviceId;
+	SET @test_stmt = 'DELETE FROM devices WHERE accountId = ? and deviceId = ?';
+	PREPARE statement FROM @test_stmt;
+	EXECUTE statement using @id, @deviceId;
+    SELECT ROW_COUNT() as affected_rows; 
+	DEALLOCATE PREPARE statement;		
+END$$
+
+DELIMITER ;
 
 -- -----------------------------------------------------
 -- procedure reportCreate
@@ -1823,8 +1904,6 @@ DELIMITER ;
 
 DELIMITER $$
 USE `echo`$$
-
-
 CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `login`(IN usr VARCHAR(255))
 begin
 
@@ -1857,89 +1936,11 @@ END$$
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure patientsChangeDoctor
+-- procedure patientsAndAccountCreate
 -- -----------------------------------------------------
 
 DELIMITER $$
 USE `echo`$$
-CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `patientsChangeDoctor`(
-	IN patientId INT, 
-	in doctorId int
-)
-begin
-
-	set @pid = patientId;
-	set @did = doctorId;
-	SET @stmt = "UPDATE patients SET doctorId=? where patientId = ?";	
-	PREPARE s FROM @stmt;
-	EXECUTE s using @did, @pid;
-	select row_count() into @pat_affected;
-	DEALLOCATE PREPARE s;
-
-	SELECT @pat_affected as affected_rows;
-
-END$$
-
-DELIMITER ;
-
--- -----------------------------------------------------
--- procedure patientsCreate
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `patientsCreate`(
-in accountId int ,
-in doctorId int ,
-in firstName VARCHAR(50) ,
-in lastName VARCHAR(50) ,
-in secondName VARCHAR(50) ,
-in socialId VARCHAR(20) ,
-in sex BOOLEAN ,
-in dateOfBirth DATE ,
-
-in firstDiagnoseDate DATE ,
-in fileId varchar(20) ,
-in fullAddress VARCHAR(255) ,
-in landline VARCHAR(50) 
-)
-BEGIN
-	SET @self = substring_index(user(), '@', 1);
-	SET @doctorId = doctorId;
-	if getRole() = 'doctor' and @self <> @doctorId then
-		signal sqlstate '22403' set message_text = 'You cannot assign a patient to another doctor than yourself';
-	end if;
-
-	SET @stmt = "INSERT INTO patients(patientId, doctorId, firstName, lastName, secondName, socialId, sex, dateOfBirth, firstDiagnoseDate, fullAddress, landline, fileId) VALUES(?,?,?,?,?,?,?,?,?,?,?,?);";
-	SET @patientId = accountId;
-	SET @firstName = firstName;
-	SET @lastName = lastName;
-	SET @secondName = secondName;
-	SET @socialId = socialId;
-	SET @sex = sex;
-	SET @dateOfBirth = dateOfBirth;
-	SET @firstDiagnoseDate = firstDiagnoseDate;
-	SET @fileId = fileId;
-	SET @fullAddress = fullAddress;
-	SET @landline = landline;
-	PREPARE s FROM @stmt;
-	EXECUTE s using @patientId, @doctorId, @firstName, @lastName, @secondName, @socialId, @sex, @dateOfBirth,  @firstDiagnoseDate, @fullAddress, @landline, @fileId;
-	SELECt last_insert_id() as insertId;
-	DEALLOCATE PREPARE s;
-
-
-END$$
-
-DELIMITER ;
-
--- -----------------------------------------------------
--- procedure patientsandAccountCreate
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-
-
 CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `patientsAndAccountCreate`(
 	IN pw_prefix varchar(100),
 	IN username varchar(255),
@@ -2024,6 +2025,81 @@ END$$
 
 DELIMITER ;
 
+-- -----------------------------------------------------
+-- procedure patientsChangeDoctor
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `patientsChangeDoctor`(
+	IN patientId INT, 
+	in doctorId int
+)
+begin
+
+	set @pid = patientId;
+	set @did = doctorId;
+	SET @stmt = "UPDATE patients SET doctorId=? where patientId = ?";	
+	PREPARE s FROM @stmt;
+	EXECUTE s using @did, @pid;
+	select row_count() into @pat_affected;
+	DEALLOCATE PREPARE s;
+
+	SELECT @pat_affected as affected_rows;
+
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure patientsCreate
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `patientsCreate`(
+in accountId int ,
+in doctorId int ,
+in firstName VARCHAR(50) ,
+in lastName VARCHAR(50) ,
+in secondName VARCHAR(50) ,
+in socialId VARCHAR(20) ,
+in sex BOOLEAN ,
+in dateOfBirth DATE ,
+
+in firstDiagnoseDate DATE ,
+in fileId varchar(20) ,
+in fullAddress VARCHAR(255) ,
+in landline VARCHAR(50) 
+)
+BEGIN
+	SET @self = substring_index(user(), '@', 1);
+	SET @doctorId = doctorId;
+	if getRole() = 'doctor' and @self <> @doctorId then
+		signal sqlstate '22403' set message_text = 'You cannot assign a patient to another doctor than yourself';
+	end if;
+
+	SET @stmt = "INSERT INTO patients(patientId, doctorId, firstName, lastName, secondName, socialId, sex, dateOfBirth, firstDiagnoseDate, fullAddress, landline, fileId) VALUES(?,?,?,?,?,?,?,?,?,?,?,?);";
+	SET @patientId = accountId;
+	SET @firstName = firstName;
+	SET @lastName = lastName;
+	SET @secondName = secondName;
+	SET @socialId = socialId;
+	SET @sex = sex;
+	SET @dateOfBirth = dateOfBirth;
+	SET @firstDiagnoseDate = firstDiagnoseDate;
+	SET @fileId = fileId;
+	SET @fullAddress = fullAddress;
+	SET @landline = landline;
+	PREPARE s FROM @stmt;
+	EXECUTE s using @patientId, @doctorId, @firstName, @lastName, @secondName, @socialId, @sex, @dateOfBirth,  @firstDiagnoseDate, @fullAddress, @landline, @fileId;
+	SELECt last_insert_id() as insertId;
+	DEALLOCATE PREPARE s;
+
+
+END$$
+
+DELIMITER ;
 
 -- -----------------------------------------------------
 -- procedure patientsDelete
@@ -2367,43 +2443,6 @@ END$$
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure deviceAdd
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `deviceAdd`(in deviceId varchar(255))
-BEGIN
-	SET @id = substring_index(user(), '@', 1);
-	set @deviceId = deviceId;
-	SET @test_stmt = 'INSERT INTO devices(accountId, deviceId) VALUES (?,?)';
-	PREPARE statement FROM @test_stmt;
-	EXECUTE statement using @id, @deviceId;
-	DEALLOCATE PREPARE statement;		
-END$$
-
-DELIMITER ;
-
-
--- -----------------------------------------------------
--- procedure deviceRemove 
--- -----------------------------------------------------
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `deviceRemove`(in deviceId varchar(255))
-BEGIN
-	SET @id = substring_index(user(), '@', 1);
-	set @deviceId = deviceId;
-	SET @test_stmt = 'DELETE FROM devices WHERE accountId = ? and deviceId = ?';
-	PREPARE statement FROM @test_stmt;
-	EXECUTE statement using @id, @deviceId;
-    SELECT ROW_COUNT() as affected_rows; 
-	DEALLOCATE PREPARE statement;		
-END$$
-
-DELIMITER ;
-
--- -----------------------------------------------------
 -- View `echo`.`accounts_view`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`accounts_view`;
@@ -2538,52 +2577,6 @@ VIEW `notifications_view` AS
         left join `patients` `p` ON ((`n`.`subjectsAccount` = `p`.`patientId`)))
     where
         (`n`.`accountId` = substring_index(user(), '@', 1));
-
-
-GRANT EXECUTE ON procedure `echo`.`accountsCreate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`charlsonUpdate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`createDbUser` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`accountsDisable` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`accountsDelete` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`deleteExamRecord` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`accountsList` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`accountsListOne` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`grantRolePermissions` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`patientsCreate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`patientsRessourceUpdate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`patientsDelete` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`accountsUpdate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`catCreate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`readingsCreate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`catUpdate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`readingsUpdate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`ccqCreate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`treatmentCreate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`ccqUpdate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`treatmentUpdate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`charlsonCreate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`listExams` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`listSingleExam` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`reportList` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`reportListOne` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`reportCreate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`reportUpdate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`reportDelete` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`deathGet` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`deathCreate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`deathUpdate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`deathDelete` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`patientsAndAccountCreate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`patientsChangeDoctor` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`login` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`loginRefresh` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`deviceAdd` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`deviceRemove` TO 'echo_db_usr'@'localhost';
-GRANT DELETE, INSERT, SELECT, UPDATE, TRIGGER, CREATE, GRANT OPTION ON TABLE echo.* TO 'echo_db_usr'@'localhost';
-
-SET SQL_MODE=@OLD_SQL_MODE;
-SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
-SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 USE `echo`;
 
 DELIMITER $$
@@ -2656,30 +2649,6 @@ end if;
 end;$$
 
 USE `echo`$$
-CREATE TRIGGER `ccqs_BUPD` BEFORE UPDATE ON `ccqs` FOR EACH ROW
-begin
-if (new.status != 'exacerbation') then
-if (new.status != 'baseline') then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid Status (MUST be Baseline or Exacerbation)';
-end if;
-end if;
-
-if (new.q1 < 0 OR new.q2 < 0 OR new.q3 < 0 OR new.q4 < 0 OR new.q5 < 0 OR new.q6 < 0 OR new.q7 < 0 OR new.q8 < 0 OR new.q9 < 0 OR new.q10 < 0) then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid answer. Answer values have to be in range [0; 6]';
-end if;
-if (new.q1 > 6 OR new.q2 > 6 OR new.q3 > 6 OR new.q4 > 6 OR new.q5 > 6 OR new.q6 > 6 OR new.q7 > 6 OR new.q8 > 6 OR new.q9 > 6 OR new.q10 > 6) then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid answer. Answer values have to be in range [0; 6]';
-end if;
-
-if (new.diagnoseDate is null) then set new.diagnoseDate = CURDATE(); end if;
-
-	set new.totalCCQScore = (new.q1 + new.q2 + new.q3 + new.q4 + new.q5 + new.q6 + new.q7 + new.q8 + new.q9 + new.q10)/10;
-	set new.symptomScore = (new.q1 + new.q2 + new.q5 + new.q6)/4;
-	set new.mentalStateScore = (new.q3 + new.q4 )/2;
-	set new.functionalStateScore = (new.q7 + new.q8 + new.q9 + new.q10)/4;
-end;$$
-
-USE `echo`$$
 CREATE TRIGGER `ccqs_BINS` BEFORE INSERT ON `ccqs` FOR EACH ROW
 BEGIN
 if (new.status != 'exacerbation') then
@@ -2695,6 +2664,29 @@ SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid answer. Answer values have t
 end if;
 
 	if (new.diagnoseDate is null) then set new.diagnoseDate = CURDATE(); end if;
+	set new.totalCCQScore = (new.q1 + new.q2 + new.q3 + new.q4 + new.q5 + new.q6 + new.q7 + new.q8 + new.q9 + new.q10)/10;
+	set new.symptomScore = (new.q1 + new.q2 + new.q5 + new.q6)/4;
+	set new.mentalStateScore = (new.q3 + new.q4 )/2;
+	set new.functionalStateScore = (new.q7 + new.q8 + new.q9 + new.q10)/4;
+end;$$
+
+USE `echo`$$
+CREATE TRIGGER `ccqs_BUPD` BEFORE UPDATE ON `ccqs` FOR EACH ROW
+begin
+if (new.status != 'exacerbation') then
+if (new.status != 'baseline') then
+SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid Status (MUST be Baseline or Exacerbation)';
+end if;
+end if;
+if (new.q1 < 0 OR new.q2 < 0 OR new.q3 < 0 OR new.q4 < 0 OR new.q5 < 0 OR new.q6 < 0 OR new.q7 < 0 OR new.q8 < 0 OR new.q9 < 0 OR new.q10 < 0) then
+SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid answer. Answer values have to be in range [0; 6]';
+end if;
+if (new.q1 > 6 OR new.q2 > 6 OR new.q3 > 6 OR new.q4 > 6 OR new.q5 > 6 OR new.q6 > 6 OR new.q7 > 6 OR new.q8 > 6 OR new.q9 > 6 OR new.q10 > 6) then
+SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid answer. Answer values have to be in range [0; 6]';
+end if;
+
+if (new.diagnoseDate is null) then set new.diagnoseDate = CURDATE(); end if;
+
 	set new.totalCCQScore = (new.q1 + new.q2 + new.q3 + new.q4 + new.q5 + new.q6 + new.q7 + new.q8 + new.q9 + new.q10)/10;
 	set new.symptomScore = (new.q1 + new.q2 + new.q5 + new.q6)/4;
 	set new.mentalStateScore = (new.q3 + new.q4 )/2;
@@ -3012,10 +3004,10 @@ CREATE TRIGGER `dailyReport_BINS` BEFORE INSERT ON `dailyreports` FOR EACH ROW
 Begin
 
 if (new.date is null) then set new.date = CURDATE(); end if;
-end;$$
+end$$
 
 USE `echo`$$
-CREATE TRIGGER `dailyreports_BUPD` BEFORE UPDATE ON `dailyreports` FOR EACH ROW
+CREATE TRIGGER `dailyReports_BUPD` BEFORE UPDATE ON `dailyReports` FOR EACH ROW
 begin
 if (new.date is null) then set new.date = CURDATE(); end if;
 end;$$
@@ -3032,8 +3024,62 @@ begin
 if (new.date is null) then set new.date = CURDATE(); end if;
 end;$$
 
+USE `echo`$$
+CREATE TRIGGER `accounts_BEFORE_DELETE` BEFORE DELETE ON `accounts` FOR EACH ROW
+begin
+
+if old.role = 'admin' then
+	SELECT count(*) into @count from accounts where role = 'admin';
+    if (@count = 1) then
+		signal sqlstate '22400' set message_text = 'You are not allowed to delete the last remaining admin account!';
+	end if;
+end if;
+
+end;$$
 
 DELIMITER ;
+
+
+GRANT EXECUTE ON procedure `echo`.`accountsCreate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`charlsonUpdate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`createDbUser` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`accountsDisable` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`accountsDelete` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`deleteExamRecord` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`accountsList` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`accountsListOne` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`grantRolePermissions` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`patientsCreate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`patientsRessourceUpdate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`patientsDelete` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`accountsUpdate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`catCreate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`readingsCreate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`catUpdate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`readingsUpdate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`ccqCreate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`treatmentCreate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`ccqUpdate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`treatmentUpdate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`charlsonCreate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`listExams` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`listSingleExam` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`reportList` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`reportListOne` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`reportCreate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`reportUpdate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`reportDelete` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`deathGet` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`deathCreate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`deathUpdate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`deathDelete` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`patientsAndAccountCreate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`patientsChangeDoctor` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`login` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`loginRefresh` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`deviceAdd` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`deviceRemove` TO 'echo_db_usr'@'localhost';
+GRANT DELETE, INSERT, SELECT, UPDATE, TRIGGER, CREATE, GRANT OPTION ON TABLE echo.* TO 'echo_db_usr'@'localhost';
 
 
 INSERT INTO `echo`.`perm_roles_views` (`role`, `view_obj`) VALUES ('admin', 'notifications_view');
@@ -3095,8 +3141,12 @@ INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('pat
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','reportListOne');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','reportUpdate');
 
+INSERT INTO `echo`.`settings` (`setting`,`val`) VALUES ('nextId', 1);
 
 CALL `echo`.`accountsCreate`('secret_', 'nimda', '$2a$10$5f3gnmB/Cbe1TjrJhaUvNe6MTT6w87Ckiqyr0j4VxLChMtZFIMHka', 'admin@hospital.de', 'admin', 1, '18:00', 1, 'email', '1337');
 
 CALL `echo`.`grantRolePermissions`(1, 'admin');
 
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;

@@ -168,6 +168,15 @@ exports.errorHandler = function (err, req, res, next) {
                 res.send({error: msg});
             }
         }
+        // Error Handling Account Deletion
+        else if (err.code == 'ER_ROW_IS_REFERENCED_'){
+            var me = 'Reference Error. Please Contact Admin!';
+            if (msg.indexOf('fkDoctor') >1)   me = 'The doctor you are trying to delete has still some patients assigned to him. Reassign the patients first!';
+            if (msg.indexOf('fkPatient') >1)  me = 'The patient you are trying to delete has still medical records. Delete patients data first!';
+
+            res.statusCode = 400;
+            res.send({error: me});
+        }
 
         /*
          *  LOGIN ERROR
