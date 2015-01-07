@@ -25,17 +25,17 @@ var ssl = require('../config/ssl.js').useSsl;
  *  	4) add links to result 
  *  	5) send
  */
-exports.list = function(req,res,next){
+exports.list = function(req,res,nextOp){
 	// 1) Get DB Connection
 	db.getConnection(function(err, connection) {
 		if (err) {
-			next(err);
+			nextOp(err);
 		} else {
 			//2) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
 			//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
 			connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
 					if (err) {
-						next(err);
+						nextOp(err);
 					}
 					// 3) create SQL Query from parameters
 					// set base statement
@@ -85,7 +85,8 @@ exports.list = function(req,res,next){
 					// execute query
 					connection.query(qry, function(err, rows) {
 						if (err) {
-							next(err);
+							// renamed next to nextOp since next wasnt visible here...
+							nextOp(err);
 						}
 						else {
 							// is there any result?
@@ -110,7 +111,7 @@ exports.list = function(req,res,next){
 									// if role-filtering was used, add it to the link
 									if  (role != 'none') first += '&role='+role;
 									links.first = first;
-									// create "next" link
+									// create "nextOp" link
 									if (rows.length == pageSize) {
 										var next = host+'/accounts?page='+(page+1)+'&pageSize='+pageSize;
 										// if role-filtering was used, add it to the link
