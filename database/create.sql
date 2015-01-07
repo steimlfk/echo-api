@@ -2975,7 +2975,7 @@ end if;
 if (new.mmrc < 0 or new.mmrc > 4) then 
 SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid value for mmrc. Value has to be in [0:4]';
 end if;
-if (new.smoker < 0 or new.mmrc > 2) then 
+if (new.smoker < 0 or new.smoker > 2) then 
 SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid value for smoker. Use 0 for nonsmoker, 1 for smoker and 2 for ex-smoker.';
 end if;
 if (new.diagnoseDate is null) then set new.diagnoseDate = CURDATE(); end if;
@@ -2992,7 +2992,7 @@ end if;
 if (new.mmrc < 0 or new.mmrc > 4) then 
 SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid value for mmrc. Value has to be in [0:4]';
 end if;
-if (new.smoker < 0 or new.mmrc > 2) then 
+if (new.smoker < 0 or new.smoker > 2) then 
 SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid value for smoker. Use 0 for nonsmoker, 1 for smoker and 2 for ex-smoker.';
 end if;
 if (new.diagnoseDate is null) then set new.diagnoseDate = CURDATE(); end if;
