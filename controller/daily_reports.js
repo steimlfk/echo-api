@@ -23,18 +23,18 @@ var ssl = require('../config/ssl.js').useSsl;
  *  	5) add links to result 
  *  	6) send
  */
-exports.list = function(req, res, next){
+exports.list = function(req, res, next1){
 	var exam = 'daily_reports';
 	// 2) Get DB Connection
 	db.getConnection(function(err, connection) {
 		if (err) {
-			next(err);
+			next1(err);
 		} else {
 			//3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
 			//   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id 
 			connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
 				if (err) {
-					next(err);
+					next1(err);
 				}
 				// query
 				var qry = 'call reportList(?, ?, ?)';
@@ -62,7 +62,7 @@ exports.list = function(req, res, next){
 				// ? from query will be replaced by values in [] - including escaping!
 				connection.query(qry, [req.params.id, page, pageSize], function(err, rows) {
 					if (err) {
-						next(err);
+						next1(err);
 					}
 					else {
 						// is there any result?
@@ -255,10 +255,10 @@ exports.update = function(req,res,next){
 				// set date to null if not set
 				var date = (i.date || i.date != "")? i.date : null;
 				// query db
-				connection.query('call reportUpdate(?,?,?, ?,?,?,?,?, ?,?,?,?,?,?, ?,?,?,?,?)',
+				connection.query('call reportUpdate(?,?,?, ?,?,?,?,?, ?,?,?,?,?,?, ?,?,?,?,?,?,?)',
 					[rid, id, date,
 						i.q1, i.q2, i.q3, i.q4, i.q5, i.q1a, i.q1b, i.q1c,i.q3a, i.q3b, i.q3c, i.satO2,
-						i.walkingDist, i.temperature, i.pefr, i.heartRate], function(err, result) {
+						i.walkingDist, i.temperature, i.pefr, i.heartRate, i.x, i.y], function(err, result) {
 						if (err) {
 							next(err);
 						} else {
@@ -307,10 +307,10 @@ exports.add = function(req,res,next){
 				// set date to null if not set
 				var date = (i.date || i.date != "")? i.date : null;
 				// query db
-				connection.query('call reportCreate(?,?, ?,?,?,?,?, ?,?,?, ?,?,?, ?,?,?,?,?)',
+				connection.query('call reportCreate(?,?, ?,?,?,?,?, ?,?,?, ?,?,?, ?,?,?,?,?,?,?)',
 					[id, date,
 						i.q1, i.q2, i.q3, i.q4, i.q5, i.q1a, i.q1b, i.q1c, i.q3a, i.q3b, i.q3c, i.satO2,
-						i.walkingDist, i.temperature, i.pefr, i.heartRate], function(err, result) {
+						i.walkingDist, i.temperature, i.pefr, i.heartRate, i.x, i.y], function(err, result) {
 						if (err) {
 							next(err);
 
@@ -445,7 +445,9 @@ exports.models = {
 				"walkingDist": {"type":"number", "format": "float", "description": "walkingDist"},
 				"temperature": {"type":"number", "format": "float", "description": "temperature"},
 				"pefr": {"type":"number", "format": "float", "description": "pefr"},
-				"heartRate": {"type":"number", "format": "float", "description": "heartRate"}
+				"heartRate": {"type":"number", "format": "float", "description": "heartRate"},
+				"x":{"type":"string", "description": "X Coordinate of GPS Location. Type is String to avoid rounding."},
+				"y":{"type":"string", "description": "Y Coordinate of GPS Location. Type is String to avoid rounding."}
 			}
 		},
 		"NewDailyReport":{
@@ -468,7 +470,9 @@ exports.models = {
 				"walkingDist": {"type":"number", "format": "float", "description": "walkingDist"},
 				"temperature": {"type":"number", "format": "float", "description": "temperature"},
 				"pefr": {"type":"number", "format": "float", "description": "pefr"},
-				"heartRate": {"type":"number", "format": "float", "description": "heartRate"}
+				"heartRate": {"type":"number", "format": "float", "description": "heartRate"},
+				"x":{"type":"string", "description": "X Coordinate of GPS Location. Type is String to avoid rounding."},
+				"y":{"type":"string", "description": "Y Coordinate of GPS Location. Type is String to avoid rounding."}
 			}
 		}
 };
