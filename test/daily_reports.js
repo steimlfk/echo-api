@@ -1,6 +1,6 @@
 /**
- * Mocha Tests for CAT records...
- * Created by steimlfk on 17.12.14.
+ * Mocha Tests for Daily Reports...
+ * Created by steimlfk on 7.1.15.
  */
 
 
@@ -11,9 +11,9 @@ var async = require('async');
 
 
 var config = require('./config.js');
-var data = require('./testdata/cats.js');
+var data = require('./testdata/daily_reports.js');
 
-describe('CAT Record Tests:', function() {
+describe('Daily Reports Tests:', function() {
     // Config Vars
     var url = config.url;
     var admin_username = config.admin_username;
@@ -180,9 +180,9 @@ describe('CAT Record Tests:', function() {
          };
          */
 
-        it('Admin cant get List of CAT Records of a certain Patient', function (done){
+        it('Admin cant get List of daily Reports of a certain Patient', function (done){
             request(url)
-                .get(patData_url + '/cats')
+                .get(patData_url + '/daily_reports')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(403)
                 .end(function (err, res){
@@ -191,9 +191,9 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Admin cant create new CAT Record', function (done){
+        it('Admin cant create new daily Report', function (done){
             request(url)
-                .post(patData_url + '/cats')
+                .post(patData_url + '/daily_reports')
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (data.admin.newCat)
                 .expect(403)
@@ -203,9 +203,9 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Admin cant get a certain CAT Records of a certain Patient', function (done){
+        it('Admin cant get a certain daily Report of a certain Patient', function (done){
             request(url)
-                .get(patData_url + '/cats/42')
+                .get(patData_url + '/daily_reports/42')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(403)
                 .end(function (err, res){
@@ -215,9 +215,9 @@ describe('CAT Record Tests:', function() {
         });
 
 
-        it('Admin cant delete CAT Record', function (done){
+        it('Admin cant delete daily Report', function (done){
             request(url)
-                .del(patData_url + '/cats/42')
+                .del(patData_url + '/daily_reports/42')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(403)
                 .end(function (err, res){
@@ -226,9 +226,9 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Admin cant update a CAT Record', function (done){
+        it('Admin cant update a daily Report', function (done){
             request(url)
-                .put(patData_url + '/cats/42')
+                .put(patData_url + '/daily_reports/42')
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (data.admin.newCat)
                 .expect(403)
@@ -245,7 +245,7 @@ describe('CAT Record Tests:', function() {
     describe('Testing Functions as Doctor:', function() {
         var access_token = null;
         var list_length = 0;
-        var exam_url, exam2_url;
+        var exam_url;
         var creds = {
             username: data.init.newDAcc.username,
             password: data.init.newDAcc.password,
@@ -279,89 +279,52 @@ describe('CAT Record Tests:', function() {
 
         };
 
-        it('Doctor can get CAT Records of his patients', function (done){
+        it('Doctor can get daily Reports of his patients', function (done){
             request(url)
-                .get(patData_url+'/cats')
+                .get(patData_url+'/daily_reports')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(validStatusCodeForListOrEmptyList)
                 .end(function (err, res){
                     if (err) throw err;
                     if (res.statusCode == 200) {
-                        res.body.should.have.property('cats');
-                        for (var i = 0; i < res.body.cats; i++) {
-                            res.body.cats[i].should.have.property('totalCatscale');
-                        }
-                        list_length = res.body.cats.length;
+                        res.body.should.have.property('daily_reports');
+                        list_length = res.body.daily_reports.length;
                     }
                     else list_length = 0;
                     done();
                 });
         });
 
-        it('Doctor can create new CAT Records Data (baseline)', function (done){
-            var tmp = data.doctor.newCat;
-            tmp.status = "baseline";
+        it('Doctor can create new daily Report Data', function (done){
+            var tmp = data.doctor.newDaily;
             request(url)
-                .post(patData_url+'/cats')
+                .post(patData_url+'/daily_reports')
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (tmp)
                 .expect(201)
                 .end(function (err, res){
                     if (err) throw err;
-
                     exam_url = res.headers.location;
                     done();
                 });
         });
 
-        it('Doctor can create new CAT Records Data (exacerbation)', function (done){
-            var tmp = data.doctor.newCat;
-            tmp.status = "exacerbation";
+
+        it('Recordslists Length should be N+1', function (done){
             request(url)
-                .post(patData_url+'/cats')
-                .set('Authorization', 'Bearer ' + access_token)
-                .send (tmp)
-                .expect(201)
-                .end(function (err, res){
-                    if (err) throw err;
-
-                    exam2_url = res.headers.location;
-                    done();
-                });
-        });
-
-
-        it('Doctor cant create new CAT Records Data with status any other than baseline or exacerbation', function (done){
-            var tmp = data.doctor.newCat;
-            tmp.status = "fine";
-            request(url)
-                .post(patData_url+'/cats')
-                .set('Authorization', 'Bearer ' + access_token)
-                .send (tmp)
-                .expect(400)
-                .end(function (err, res){
-                    if (err) throw err;
-
-                    done();
-                });
-        });
-
-        it('Recordslists Length should be N+2', function (done){
-            request(url)
-                .get(patData_url+'/cats')
+                .get(patData_url+'/daily_reports')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(200)
                 .end(function (err, res){
                     if (err) throw err;
-                    res.body.should.have.property('cats');
-                    res.body.cats.length.should.equal(list_length+2);
+                    res.body.should.have.property('daily_reports');
+                    res.body.daily_reports.length.should.equal(list_length+1);
 
                     done();
                 });
         });
 
-        it('Doctor can get created Data (totalCatscale should be set)', function (done){
-            var c = data.doctor.newCat;
+        it('Doctor can get created Data', function (done){
             request(url)
                 .get(exam_url)
                 .set('Authorization', 'Bearer ' + access_token)
@@ -369,19 +332,15 @@ describe('CAT Record Tests:', function() {
                 .end(function (err, res){
                     if (err) throw err;
 
-                    res.body.should.have.property('totalCatscale');
-                    res.body.totalCatscale.should.equal(c.q1+ c.q2+ c.q3+c.q4+ c.q5+ c.q6+c.q7+ c.q8);
-
                     done();
                 });
         });
 
-        it('Doctor can update CAT Records Data', function (done){
-            var tmp = data.doctor.newCat;
-            tmp.status = "exacerbation";
-            tmp.q1 = 5;
+        it('Doctor can update daily Report Data', function (done){
+            var tmp = data.doctor.newDaily;
+            tmp.q1 = true;
             request(url)
-                .put(exam2_url)
+                .put(exam_url)
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (tmp)
                 .expect(204)
@@ -392,7 +351,7 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Doctor can delete certain CAT Records', function (done){
+        it('Doctor can delete certain daily Reports', function (done){
             async.series
             ([
                 function (cb) {
@@ -407,25 +366,14 @@ describe('CAT Record Tests:', function() {
                 },
                 function (cb) {
                     request(url)
-                        .del(exam2_url)
-                        .set('Authorization', 'Bearer ' + access_token)
-                        .expect(204)
-                        .end(function (err, res){
-                            if (err) throw cb(err);
-                            cb(null, res);
-
-                        });
-                },
-                function (cb) {
-                    request(url)
-                        .get(patData_url+'/cats')
+                        .get(patData_url+'/daily_reports')
                         .set('Authorization', 'Bearer ' + access_token)
                         .expect(validStatusCodeForListOrEmptyList)
                         .end(function (err, res){
                             if (err) throw err;
                             if (res.statusCode == 200) {
-                                res.body.should.have.property('cats');
-                                res.body.cats.length.should.equal(list_length);
+                                res.body.should.have.property('daily_reports');
+                                res.body.daily_reports.length.should.equal(list_length);
                             }
                             if (err) throw cb(err);
                             cb(null, res);
@@ -443,6 +391,7 @@ describe('CAT Record Tests:', function() {
 
     describe('Testing Functions as Patient:', function() {
         var access_token = null;
+        var exam_url;
         var creds = {
             username: data.init.newPAcc.username,
             password: data.init.newPAcc.password,
@@ -470,85 +419,117 @@ describe('CAT Record Tests:', function() {
                     done();
                 });
         });
+        var validStatusCodeForListOrEmptyList = function(res){
+            return !(res.statusCode == 200 || res.statusCode == 204);
 
-        it('Patient cant get his List of CAT Records', function (done){
+        };
+        it('Patient can get his List of daily Reports', function (done){
             request(url)
-                .get(patData_url + '/cats')
+                .get(patData_url + '/daily_reports')
                 .set('Authorization', 'Bearer ' + access_token)
-                .expect(403)
+                .expect(validStatusCodeForListOrEmptyList)
                 .end(function (err, res){
                     if (err) throw err;
                     done();
                 });
         });
 
-        it('Patient cant create new CAT Record', function (done){
+        it('Patient can create new daily Report', function (done){
             request(url)
-                .post(patData_url + '/cats')
+                .post(patData_url + '/daily_reports')
                 .set('Authorization', 'Bearer ' + access_token)
-                .send (data.admin.newCat)
-                .expect(403)
+                .send (data.patient.newDaily)
+                .expect(201)
+                .end(function (err, res){
+                    if (err) throw err;
+                    exam_url = res.headers.location;
+
+                    done();
+                });
+        });
+
+        it('Patient can get a certain daily Report', function (done){
+            request(url)
+                .get(exam_url)
+                .set('Authorization', 'Bearer ' + access_token)
+                .expect(200)
+                .end(function (err, res){
+                    if (err) throw err;
+
+
+                    done();
+                });
+        });
+
+        it('Patient can update a daily Report', function (done){
+            var tmp = data.doctor.newDaily;
+            tmp.q1 = true;
+            request(url)
+                .put(exam_url)
+                .set('Authorization', 'Bearer ' + access_token)
+                .send (tmp)
+                .expect(204)
+                .end(function (err, res){
+                    if (err) throw err;
+                    done();
+                });
+        });
+        it('Patient can delete daily Report', function (done){
+            request(url)
+                .del( exam_url)
+                .set('Authorization', 'Bearer ' + access_token)
+                .expect(204)
                 .end(function (err, res){
                     if (err) throw err;
                     done();
                 });
         });
 
-        it('Patient cant get a certain CAT Record', function (done){
-            request(url)
-                .get(patData_url + '/cats/42')
-                .set('Authorization', 'Bearer ' + access_token)
-                .expect(403)
-                .end(function (err, res){
-                    if (err) throw err;
-                    done();
-                });
-        });
+        it('Patient can create new daily Report only by providing the basic answers q1-q5', function (done){
+            var tmp;
+            async.series
+            ([
+                function (cb) {
+                    request(url)
+                    request(url)
+                        .post(patData_url + '/daily_reports')
+                        .set('Authorization', 'Bearer ' + access_token)
+                        .send (data.patient.newDaily)
+                        .expect(201)
+                        .end(function (err, res){
+                            if (err) cb(err);
+                            tmp = res.headers.location;
+                            cb(null, res);
+                        });
+                },
+                function (cb) {
+                    request(url)
+                        .del(tmp)
+                        .set('Authorization', 'Bearer ' + access_token)
+                        .expect(204)
+                        .end(function (err, res) {
+                            if (err) {
+                                cb(err);
+                            }
+                            cb(null, res);
+                        });
+                }
+            ], function (err, res) {
+                if (err) throw err;
+                done();
+            });
 
 
-        it('Patient cant delete CAT Record', function (done){
-            request(url)
-                .del(patData_url + '/cats/42')
-                .set('Authorization', 'Bearer ' + access_token)
-                .expect(403)
-                .end(function (err, res){
-                    if (err) throw err;
-                    done();
-                });
-        });
-
-        it('Patient cant update a CAT Record', function (done){
-            request(url)
-                .put(patData_url + '/cats/42')
-                .set('Authorization', 'Bearer ' + access_token)
-                .send (data.admin.newCat)
-                .expect(403)
-                .end(function (err, res){
-                    if (err) throw err;
-                    done();
-                });
         });
 
     });
-
+/*
     after('Cleaning Up...', function(done) {
-        async.parallel
+        async.series
         ([
             function (cb) {
                 request(url)
                     .del(patData_url)
-                    .set('Authorization', 'Bearer ' + access_token_admin)
-                    .expect(204)
-                    .end(function (err, res) {
-                        if (err) {
-                            cb(err);
-                        }
-                        cb(null, res);
-                    });
-            },
-            function (cb) {
-                request(url)
-                    .del(doc_url)
                     .set('Authorization', 'Bearer ' + access_token_admin)
                     .expect(204)
                     .end(function (err, res) {
@@ -569,6 +550,18 @@ describe('CAT Record Tests:', function() {
                         }
                         cb(null, res);
                     });
+            },
+            function (cb) {
+                request(url)
+                    .del(doc_url)
+                    .set('Authorization', 'Bearer ' + access_token_admin)
+                    .expect(204)
+                    .end(function (err, res) {
+                        if (err) {
+                            cb(err);
+                        }
+                        cb(null, res);
+                    });
             }
 
         ], function (err, res) {
@@ -576,5 +569,5 @@ describe('CAT Record Tests:', function() {
             done();
         });
     });
-
+*/
 });

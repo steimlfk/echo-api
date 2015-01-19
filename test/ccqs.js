@@ -1,5 +1,5 @@
 /**
- * Mocha Tests for CAT records...
+ * Mocha Tests for CCQ records...
  * Created by steimlfk on 17.12.14.
  */
 
@@ -11,9 +11,9 @@ var async = require('async');
 
 
 var config = require('./config.js');
-var data = require('./testdata/cats.js');
+var data = require('./testdata/ccqs.js');
 
-describe('CAT Record Tests:', function() {
+describe('CCQ Record Tests:', function() {
     // Config Vars
     var url = config.url;
     var admin_username = config.admin_username;
@@ -180,9 +180,9 @@ describe('CAT Record Tests:', function() {
          };
          */
 
-        it('Admin cant get List of CAT Records of a certain Patient', function (done){
+        it('Admin cant get List of CCQ Records of a certain Patient', function (done){
             request(url)
-                .get(patData_url + '/cats')
+                .get(patData_url + '/ccqs')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(403)
                 .end(function (err, res){
@@ -191,11 +191,11 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Admin cant create new CAT Record', function (done){
+        it('Admin cant create new CCQ Record', function (done){
             request(url)
-                .post(patData_url + '/cats')
+                .post(patData_url + '/ccqs')
                 .set('Authorization', 'Bearer ' + access_token)
-                .send (data.admin.newCat)
+                .send (data.admin.newCCQ)
                 .expect(403)
                 .end(function (err, res){
                     if (err) throw err;
@@ -203,21 +203,9 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Admin cant get a certain CAT Records of a certain Patient', function (done){
+        it('Admin cant get a certain CCQ Records of a certain Patient', function (done){
             request(url)
-                .get(patData_url + '/cats/42')
-                .set('Authorization', 'Bearer ' + access_token)
-                .expect(403)
-                .end(function (err, res){
-                    if (err) throw err;
-                    done();
-                });
-        });
-
-
-        it('Admin cant delete CAT Record', function (done){
-            request(url)
-                .del(patData_url + '/cats/42')
+                .get(patData_url + '/ccqs/42')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(403)
                 .end(function (err, res){
@@ -226,11 +214,23 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Admin cant update a CAT Record', function (done){
+
+        it('Admin cant delete CCQ Record', function (done){
             request(url)
-                .put(patData_url + '/cats/42')
+                .del(patData_url + '/ccqs/42')
                 .set('Authorization', 'Bearer ' + access_token)
-                .send (data.admin.newCat)
+                .expect(403)
+                .end(function (err, res){
+                    if (err) throw err;
+                    done();
+                });
+        });
+
+        it('Admin cant update a CCQ Record', function (done){
+            request(url)
+                .put(patData_url + '/ccqs/42')
+                .set('Authorization', 'Bearer ' + access_token)
+                .send (data.admin.newCCQ)
                 .expect(403)
                 .end(function (err, res){
                     if (err) throw err;
@@ -279,30 +279,33 @@ describe('CAT Record Tests:', function() {
 
         };
 
-        it('Doctor can get CAT Records of his patients', function (done){
+        it('Doctor can get CCQ Records of his patients', function (done){
             request(url)
-                .get(patData_url+'/cats')
+                .get(patData_url+'/ccqs')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(validStatusCodeForListOrEmptyList)
                 .end(function (err, res){
                     if (err) throw err;
                     if (res.statusCode == 200) {
-                        res.body.should.have.property('cats');
-                        for (var i = 0; i < res.body.cats; i++) {
-                            res.body.cats[i].should.have.property('totalCatscale');
+                        res.body.should.have.property('ccqs');
+                        for (var i = 0; i < res.body.ccqs; i++) {
+                            res.body.ccqs[i].should.have.property('totalCCQScore');
+                            res.body.ccqs[i].should.have.property('symptomScore');
+                            res.body.ccqs[i].should.have.property('mentalStateScore');
+                            res.body.ccqs[i].should.have.property('functionalStateScore');
                         }
-                        list_length = res.body.cats.length;
+                        list_length = res.body.ccqs.length;
                     }
                     else list_length = 0;
                     done();
                 });
         });
 
-        it('Doctor can create new CAT Records Data (baseline)', function (done){
-            var tmp = data.doctor.newCat;
+        it('Doctor can create new CCQ Records Data (baseline)', function (done){
+            var tmp = data.doctor.newCCQ;
             tmp.status = "baseline";
             request(url)
-                .post(patData_url+'/cats')
+                .post(patData_url+'/ccqs')
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (tmp)
                 .expect(201)
@@ -314,11 +317,11 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Doctor can create new CAT Records Data (exacerbation)', function (done){
-            var tmp = data.doctor.newCat;
+        it('Doctor can create new CCQ Records Data (exacerbation)', function (done){
+            var tmp = data.doctor.newCCQ;
             tmp.status = "exacerbation";
             request(url)
-                .post(patData_url+'/cats')
+                .post(patData_url+'/ccqs')
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (tmp)
                 .expect(201)
@@ -331,11 +334,11 @@ describe('CAT Record Tests:', function() {
         });
 
 
-        it('Doctor cant create new CAT Records Data with status any other than baseline or exacerbation', function (done){
-            var tmp = data.doctor.newCat;
+        it('Doctor cant create new CCQ Records Data with status any other than baseline or exacerbation', function (done){
+            var tmp = data.doctor.newCCQ;
             tmp.status = "fine";
             request(url)
-                .post(patData_url+'/cats')
+                .post(patData_url+'/ccqs')
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (tmp)
                 .expect(400)
@@ -348,20 +351,20 @@ describe('CAT Record Tests:', function() {
 
         it('Recordslists Length should be N+2', function (done){
             request(url)
-                .get(patData_url+'/cats')
+                .get(patData_url+'/ccqs')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(200)
                 .end(function (err, res){
                     if (err) throw err;
-                    res.body.should.have.property('cats');
-                    res.body.cats.length.should.equal(list_length+2);
+                    res.body.should.have.property('ccqs');
+                    res.body.ccqs.length.should.equal(list_length+2);
 
                     done();
                 });
         });
 
         it('Doctor can get created Data (totalCatscale should be set)', function (done){
-            var c = data.doctor.newCat;
+            var c = data.doctor.newCCQ;
             request(url)
                 .get(exam_url)
                 .set('Authorization', 'Bearer ' + access_token)
@@ -369,15 +372,21 @@ describe('CAT Record Tests:', function() {
                 .end(function (err, res){
                     if (err) throw err;
 
-                    res.body.should.have.property('totalCatscale');
-                    res.body.totalCatscale.should.equal(c.q1+ c.q2+ c.q3+c.q4+ c.q5+ c.q6+c.q7+ c.q8);
+                    res.body.should.have.property('totalCCQScore');
+                    res.body.should.have.property('symptomScore');
+                    res.body.should.have.property('mentalStateScore');
+                    res.body.should.have.property('functionalStateScore');
+                    res.body.totalCCQScore.should.equal((c.q1 + c.q2 + c.q3 + c.q4 + c.q5 + c.q6 + c.q7 + c.q8 + c.q9 + c.q10)/10);
+                    res.body.symptomScore.should.equal((c.q1 + c.q2 + c.q5 + c.q6)/4);
+                    res.body.mentalStateScore.should.equal((c.q3 + c.q4 )/2);
+                    res.body.functionalStateScore.should.equal((c.q7 + c.q8 + c.q9 + c.q10)/4);
 
                     done();
                 });
         });
 
-        it('Doctor can update CAT Records Data', function (done){
-            var tmp = data.doctor.newCat;
+        it('Doctor can update CCQ Records Data', function (done){
+            var tmp = data.doctor.newCCQ;
             tmp.status = "exacerbation";
             tmp.q1 = 5;
             request(url)
@@ -392,7 +401,7 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Doctor can delete certain CAT Records', function (done){
+        it('Doctor can delete certain CCQ Records', function (done){
             async.series
             ([
                 function (cb) {
@@ -418,14 +427,14 @@ describe('CAT Record Tests:', function() {
                 },
                 function (cb) {
                     request(url)
-                        .get(patData_url+'/cats')
+                        .get(patData_url+'/ccqs')
                         .set('Authorization', 'Bearer ' + access_token)
                         .expect(validStatusCodeForListOrEmptyList)
                         .end(function (err, res){
                             if (err) throw err;
                             if (res.statusCode == 200) {
-                                res.body.should.have.property('cats');
-                                res.body.cats.length.should.equal(list_length);
+                                res.body.should.have.property('ccqs');
+                                res.body.ccqs.length.should.equal(list_length);
                             }
                             if (err) throw cb(err);
                             cb(null, res);
@@ -471,9 +480,9 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Patient cant get his List of CAT Records', function (done){
+        it('Patient cant get his List of CCQ Records', function (done){
             request(url)
-                .get(patData_url + '/cats')
+                .get(patData_url + '/ccqs')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(403)
                 .end(function (err, res){
@@ -482,11 +491,11 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Patient cant create new CAT Record', function (done){
+        it('Patient cant create new CCQ Record', function (done){
             request(url)
-                .post(patData_url + '/cats')
+                .post(patData_url + '/ccqs')
                 .set('Authorization', 'Bearer ' + access_token)
-                .send (data.admin.newCat)
+                .send (data.admin.newCCQ)
                 .expect(403)
                 .end(function (err, res){
                     if (err) throw err;
@@ -494,21 +503,9 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Patient cant get a certain CAT Record', function (done){
+        it('Patient cant get a certain CCQ Record', function (done){
             request(url)
-                .get(patData_url + '/cats/42')
-                .set('Authorization', 'Bearer ' + access_token)
-                .expect(403)
-                .end(function (err, res){
-                    if (err) throw err;
-                    done();
-                });
-        });
-
-
-        it('Patient cant delete CAT Record', function (done){
-            request(url)
-                .del(patData_url + '/cats/42')
+                .get(patData_url + '/ccqs/42')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(403)
                 .end(function (err, res){
@@ -517,11 +514,23 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Patient cant update a CAT Record', function (done){
+
+        it('Patient cant delete CCQ Record', function (done){
             request(url)
-                .put(patData_url + '/cats/42')
+                .del(patData_url + '/ccqs/42')
                 .set('Authorization', 'Bearer ' + access_token)
-                .send (data.admin.newCat)
+                .expect(403)
+                .end(function (err, res){
+                    if (err) throw err;
+                    done();
+                });
+        });
+
+        it('Patient cant update a CCQ Record', function (done){
+            request(url)
+                .put(patData_url + '/ccqs/42')
+                .set('Authorization', 'Bearer ' + access_token)
+                .send (data.admin.newCCQ)
                 .expect(403)
                 .end(function (err, res){
                     if (err) throw err;
@@ -532,7 +541,7 @@ describe('CAT Record Tests:', function() {
     });
 
     after('Cleaning Up...', function(done) {
-        async.parallel
+        async.series
         ([
             function (cb) {
                 request(url)

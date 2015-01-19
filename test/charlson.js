@@ -1,5 +1,5 @@
 /**
- * Mocha Tests for CAT records...
+ * Mocha Tests for Charlson records...
  * Created by steimlfk on 17.12.14.
  */
 
@@ -11,9 +11,9 @@ var async = require('async');
 
 
 var config = require('./config.js');
-var data = require('./testdata/cats.js');
+var data = require('./testdata/charlson.js');
 
-describe('CAT Record Tests:', function() {
+describe('Charlson Record Tests:', function() {
     // Config Vars
     var url = config.url;
     var admin_username = config.admin_username;
@@ -180,7 +180,7 @@ describe('CAT Record Tests:', function() {
          };
          */
 
-        it('Admin cant get List of CAT Records of a certain Patient', function (done){
+        it('Admin cant get List of Charlson Records of a certain Patient', function (done){
             request(url)
                 .get(patData_url + '/cats')
                 .set('Authorization', 'Bearer ' + access_token)
@@ -191,11 +191,11 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Admin cant create new CAT Record', function (done){
+        it('Admin cant create new Charlson Record', function (done){
             request(url)
                 .post(patData_url + '/cats')
                 .set('Authorization', 'Bearer ' + access_token)
-                .send (data.admin.newCat)
+                .send (data.admin.newCharlson)
                 .expect(403)
                 .end(function (err, res){
                     if (err) throw err;
@@ -203,7 +203,7 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Admin cant get a certain CAT Records of a certain Patient', function (done){
+        it('Admin cant get a certain Charlson Records of a certain Patient', function (done){
             request(url)
                 .get(patData_url + '/cats/42')
                 .set('Authorization', 'Bearer ' + access_token)
@@ -215,7 +215,7 @@ describe('CAT Record Tests:', function() {
         });
 
 
-        it('Admin cant delete CAT Record', function (done){
+        it('Admin cant delete Charlson Record', function (done){
             request(url)
                 .del(patData_url + '/cats/42')
                 .set('Authorization', 'Bearer ' + access_token)
@@ -226,11 +226,11 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Admin cant update a CAT Record', function (done){
+        it('Admin cant update a Charlson Record', function (done){
             request(url)
                 .put(patData_url + '/cats/42')
                 .set('Authorization', 'Bearer ' + access_token)
-                .send (data.admin.newCat)
+                .send (data.admin.newCharlson)
                 .expect(403)
                 .end(function (err, res){
                     if (err) throw err;
@@ -279,7 +279,7 @@ describe('CAT Record Tests:', function() {
 
         };
 
-        it('Doctor can get CAT Records of his patients', function (done){
+        it('Doctor can get Charlson Records of his patients', function (done){
             request(url)
                 .get(patData_url+'/cats')
                 .set('Authorization', 'Bearer ' + access_token)
@@ -287,22 +287,24 @@ describe('CAT Record Tests:', function() {
                 .end(function (err, res){
                     if (err) throw err;
                     if (res.statusCode == 200) {
-                        res.body.should.have.property('cats');
-                        for (var i = 0; i < res.body.cats; i++) {
-                            res.body.cats[i].should.have.property('totalCatscale');
+                        res.body.should.have.property('charlsons');
+                        for (var i = 0; i < res.body.charlsons; i++) {
+                            res.body.ccqs[i].should.have.property('totalCharlsonScore');
+                            res.body.ccqs[i].should.have.property('symptomScore');
+                            res.body.ccqs[i].should.have.property('mentalStateScore');
+                            res.body.ccqs[i].should.have.property('functionalStateScore');
                         }
-                        list_length = res.body.cats.length;
+                        list_length = res.body.charlsons.length;
                     }
                     else list_length = 0;
                     done();
                 });
         });
 
-        it('Doctor can create new CAT Records Data (baseline)', function (done){
-            var tmp = data.doctor.newCat;
-            tmp.status = "baseline";
+        it('Doctor can create new Charlson Records Data ', function (done){
+            var tmp = data.doctor.newCharlson;
             request(url)
-                .post(patData_url+'/cats')
+                .post(patData_url+'/charlsons')
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (tmp)
                 .expect(201)
@@ -314,54 +316,25 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Doctor can create new CAT Records Data (exacerbation)', function (done){
-            var tmp = data.doctor.newCat;
-            tmp.status = "exacerbation";
+
+
+        it('Recordslists Length should be N+1', function (done){
             request(url)
-                .post(patData_url+'/cats')
-                .set('Authorization', 'Bearer ' + access_token)
-                .send (tmp)
-                .expect(201)
-                .end(function (err, res){
-                    if (err) throw err;
-
-                    exam2_url = res.headers.location;
-                    done();
-                });
-        });
-
-
-        it('Doctor cant create new CAT Records Data with status any other than baseline or exacerbation', function (done){
-            var tmp = data.doctor.newCat;
-            tmp.status = "fine";
-            request(url)
-                .post(patData_url+'/cats')
-                .set('Authorization', 'Bearer ' + access_token)
-                .send (tmp)
-                .expect(400)
-                .end(function (err, res){
-                    if (err) throw err;
-
-                    done();
-                });
-        });
-
-        it('Recordslists Length should be N+2', function (done){
-            request(url)
-                .get(patData_url+'/cats')
+                .get(patData_url+'/charlsons')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(200)
                 .end(function (err, res){
                     if (err) throw err;
-                    res.body.should.have.property('cats');
-                    res.body.cats.length.should.equal(list_length+2);
+
+                    res.body.should.have.property('charlsons');
+                    res.body.charlsons.length.should.equal(list_length+1);
 
                     done();
                 });
         });
 
-        it('Doctor can get created Data (totalCatscale should be set)', function (done){
-            var c = data.doctor.newCat;
+        it('Doctor can get created Data (totalCharlson should be set)', function (done){
+            var c = data.doctor.newCharlson;
             request(url)
                 .get(exam_url)
                 .set('Authorization', 'Bearer ' + access_token)
@@ -369,19 +342,18 @@ describe('CAT Record Tests:', function() {
                 .end(function (err, res){
                     if (err) throw err;
 
-                    res.body.should.have.property('totalCatscale');
-                    res.body.totalCatscale.should.equal(c.q1+ c.q2+ c.q3+c.q4+ c.q5+ c.q6+c.q7+ c.q8);
+                    res.body.should.have.property('totalCharlson');
 
                     done();
                 });
         });
 
-        it('Doctor can update CAT Records Data', function (done){
-            var tmp = data.doctor.newCat;
-            tmp.status = "exacerbation";
-            tmp.q1 = 5;
+        it('Doctor can update Charlson Records Data', function (done){
+            var tmp = data.doctor.newCharlson;
+            tmp.aids = true;
+            tmp.noConditionAvailable = false,
             request(url)
-                .put(exam2_url)
+                .put(exam_url)
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (tmp)
                 .expect(204)
@@ -392,7 +364,7 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Doctor can delete certain CAT Records', function (done){
+        it('Doctor can delete certain Charlson Records', function (done){
             async.series
             ([
                 function (cb) {
@@ -405,27 +377,17 @@ describe('CAT Record Tests:', function() {
                             cb(null, res);
                         });
                 },
-                function (cb) {
-                    request(url)
-                        .del(exam2_url)
-                        .set('Authorization', 'Bearer ' + access_token)
-                        .expect(204)
-                        .end(function (err, res){
-                            if (err) throw cb(err);
-                            cb(null, res);
 
-                        });
-                },
                 function (cb) {
                     request(url)
-                        .get(patData_url+'/cats')
+                        .get(patData_url+'/charlsons')
                         .set('Authorization', 'Bearer ' + access_token)
                         .expect(validStatusCodeForListOrEmptyList)
                         .end(function (err, res){
                             if (err) throw err;
                             if (res.statusCode == 200) {
-                                res.body.should.have.property('cats');
-                                res.body.cats.length.should.equal(list_length);
+                                res.body.should.have.property('charlsons');
+                                res.body.charlsons.length.should.equal(list_length);
                             }
                             if (err) throw cb(err);
                             cb(null, res);
@@ -471,9 +433,9 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Patient cant get his List of CAT Records', function (done){
+        it('Patient cant get his List of Charlson Records', function (done){
             request(url)
-                .get(patData_url + '/cats')
+                .get(patData_url + '/charlsons')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(403)
                 .end(function (err, res){
@@ -482,11 +444,11 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Patient cant create new CAT Record', function (done){
+        it('Patient cant create new Charlson Record', function (done){
             request(url)
-                .post(patData_url + '/cats')
+                .post(patData_url + '/charlsons')
                 .set('Authorization', 'Bearer ' + access_token)
-                .send (data.admin.newCat)
+                .send (data.admin.newCharlson)
                 .expect(403)
                 .end(function (err, res){
                     if (err) throw err;
@@ -494,21 +456,9 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Patient cant get a certain CAT Record', function (done){
+        it('Patient cant get a certain Charlson Record', function (done){
             request(url)
-                .get(patData_url + '/cats/42')
-                .set('Authorization', 'Bearer ' + access_token)
-                .expect(403)
-                .end(function (err, res){
-                    if (err) throw err;
-                    done();
-                });
-        });
-
-
-        it('Patient cant delete CAT Record', function (done){
-            request(url)
-                .del(patData_url + '/cats/42')
+                .get(patData_url + '/charlsons/42')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(403)
                 .end(function (err, res){
@@ -517,11 +467,23 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
-        it('Patient cant update a CAT Record', function (done){
+
+        it('Patient cant delete Charlson Record', function (done){
             request(url)
-                .put(patData_url + '/cats/42')
+                .del(patData_url + '/charlsons/42')
                 .set('Authorization', 'Bearer ' + access_token)
-                .send (data.admin.newCat)
+                .expect(403)
+                .end(function (err, res){
+                    if (err) throw err;
+                    done();
+                });
+        });
+
+        it('Patient cant update a Charlson Record', function (done){
+            request(url)
+                .put(patData_url + '/charlsons/42')
+                .set('Authorization', 'Bearer ' + access_token)
+                .send (data.admin.newCharlson)
                 .expect(403)
                 .end(function (err, res){
                     if (err) throw err;
@@ -532,7 +494,7 @@ describe('CAT Record Tests:', function() {
     });
 
     after('Cleaning Up...', function(done) {
-        async.parallel
+        async.series
         ([
             function (cb) {
                 request(url)

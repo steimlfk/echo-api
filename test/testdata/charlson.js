@@ -38,16 +38,28 @@ var newPatData = {
     "landline": "030123456"
 };
 
-var newCat = {
+var newCharlson = {
     "patientId": 42,
-    "q1": 0,
-    "q2": 1,
-    "q3": 2,
-    "q4": 3,
-    "q5": 5,
-    "q6": 4,
-    "q7": 3,
-    "q8": 2,
+    "myocardialInfarction": false,
+    "congestiveHeartFailure": false,
+    "peripheralVascularDisease": false,
+    "cerebrovascularDisease": false,
+    "dementia": false,
+    "chronicPulmonaryDiasease": false,
+    "connectiveTissueDisease": false,
+    "ulcerDisease": false,
+    "liverDiseaseMild": false,
+    "diabetes": false,
+    "hemiplegia": false,
+    "renalDiseaseModerateOrSevere": false,
+    "diabetesWithEndOrganDamage": false,
+    "anyTumor": false,
+    "metastaticSolidMalignancy": false,
+    "leukemia": false,
+    "malignantLymphoma": false,
+    "liverDiseaseModerateOrSevere": false,
+    "aids": false,
+    "noConditionAvailable": true,
     "diagnoseDate": "2014-12-17"
 }
 
@@ -60,15 +72,15 @@ module.exports = {
     },
     // data for admin tests....
     admin: {
-        newCat : newCat
+        newCharlson : newCharlson
     },
     // data for doctor tests
     doctor:{
-        newCat : newCat
+        newCharlson : newCharlson
     },
     // data for patient tests
     patient:{
-        newCat : newCat
+        newCharlson : newCharlson
     }
 
 };

@@ -38,7 +38,7 @@ var newPatData = {
     "landline": "030123456"
 };
 
-var newCat = {
+var newCCQ = {
     "patientId": 42,
     "q1": 0,
     "q2": 1,
@@ -48,6 +48,8 @@ var newCat = {
     "q6": 4,
     "q7": 3,
     "q8": 2,
+    "q9" : 1,
+    "q10" : 0,
     "diagnoseDate": "2014-12-17"
 }
 
@@ -60,15 +62,15 @@ module.exports = {
     },
     // data for admin tests....
     admin: {
-        newCat : newCat
+        newCCQ : newCCQ
     },
     // data for doctor tests
     doctor:{
-        newCat : newCat
+        newCCQ : newCCQ
     },
     // data for patient tests
     patient:{
-        newCat : newCat
+        newCCQ : newCCQ
     }
 
 };
