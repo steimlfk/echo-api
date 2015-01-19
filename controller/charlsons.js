@@ -197,8 +197,8 @@ exports.listOneSpec = {
 		" <b>500</b> Internal Server Error",
 		path : "/patients/{id}/charlsons/{rid}",
 		method: "GET",
-		type : "CCQ",
-		nickname : "listOneCCQ",
+		type : "Charlson",
+		nickname : "listOneCharlson",
 		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")],
 		responseMessages : [swagger.errors.notFound('rid')]
 
@@ -214,7 +214,7 @@ exports.delSpec = {
 		" <b>500</b> Internal Server Error",
 		path : "/patients/{id}/charlsons/{rid}",
 		method: "DELETE",
-		nickname : "delCCQ",
+		nickname : "delCharlson",
 		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")],
 		responseMessages : [swagger.errors.notFound('rid')]
 
@@ -230,7 +230,7 @@ exports.updateSpec = {
 		" <b>500</b> Internal Server Error",
 		path : "/patients/{id}/charlsons/{rid}",
 		method: "PUT",
-		nickname : "updateCCQ",
+		nickname : "updateCharlson",
 		parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string") ,swagger.bodyParam("Charlson", "updated Charlson Record", "Charlson")],
 		responseMessages : [swagger.errors.notFound('rid')]
 };
@@ -321,7 +321,7 @@ exports.models = {
 			            		 "type":"boolean","description": "Value for given Answer"
 			            	 },
 			            	 "totalCharlson":{
-			            		 "type":"boolean","description": "Value for given Answer"
+								 "type":"integer", "format": "int32","description": "Value for given Answer"
 			            	 }
 			             }
 		},
