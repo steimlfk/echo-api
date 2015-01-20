@@ -523,7 +523,7 @@ describe('Daily Reports Tests:', function() {
         });
 
     });
-/*
+
     after('Cleaning Up...', function(done) {
         async.series
         ([
@@ -564,10 +564,10 @@ describe('Daily Reports Tests:', function() {
                     });
             }
 
-        ], function (err, res) {
+        ], function (err) {
             if (err) throw err;
             done();
         });
     });
-*/
+
 });
