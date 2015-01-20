@@ -1,7 +1,7 @@
 /**
  * Route: Questions
  */
-
+	//TODO: COMPLETE DOCU!!!
 var mysql = require('../config/mysql');
 var swagger = require('swagger-node-express');
 var db = mysql.db;
@@ -256,7 +256,6 @@ exports.models = {
 				"type":"string",
 				"description": "Optional Description"
 			}
-
 		}
 	},
 	"Question":{
@@ -273,8 +272,7 @@ exports.models = {
 				"description" : "Answertype",
 				"enum":[
 					"radio",
-					"check",
-					"mixed"
+					"check"
 				]
 			},
 			"category":{
@@ -303,5 +301,4 @@ exports.models = {
 			}
 		}
 	}
-
 };

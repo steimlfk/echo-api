@@ -12,26 +12,26 @@ var db = mysql.db;
 var config = require('../config/config.js');
 var commons = require('./exam_commons.js');
 
-/*
+/**
  *  GET /patients/id/charlsons
  */
 exports.list = function(req,res,next){
 	commons.list(req,res,next,'charlsons');
 };
-/*
+/**
  * GET /patients/id/charlsons/recordid
  */
 exports.listOne = function(req,res,next){
 	commons.listOne(req,res,next,'charlsons');
 };
-/*
+/**
  *  DELETE /patients/id/charlsons/recordid
  */
 exports.del = function(req,res,next){
 	commons.del(req,res,next,'charlsons');
 };
 
-/*
+/**
  *  POST /patients/id/charlsons
  *  Steps: 
  *  	1) Validate Role!
@@ -59,8 +59,8 @@ exports.add = function(req,res,next){
 					// any given ID in the body will be ignored and the ids from the url are used!
 					var id = parseInt(req.params.id);
 					// if no date is given make it null, so the trigger can set the date
-					var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null;
-					// query db 
+					var date = i.diagnoseDate || null;
+					// query db
 					// ? from query will be replaced by values in [] - including escaping!
 					connection.query('call charlsonCreate(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
 							[id, date, i.aids,i.anyTumor,i.cerebrovascularDisease,
@@ -85,7 +85,7 @@ exports.add = function(req,res,next){
 		});
 };
 
-/*
+/**
  *  PUT /patients/id/charlsons/recordid
  *  Steps: 
  *  	1) Validate Role!
@@ -114,7 +114,7 @@ exports.update = function(req,res,next){
 					var id = parseInt(req.params.id);
 					var rid = parseInt(req.params.rid);
 					// if no date is given make it null, so the trigger can set the date
-					var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null;
+					var date = i.diagnoseDate || null;
 					connection.query('call charlsonUpdate(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', 
 							[rid, id, date, i.aids,i.anyTumor,i.cerebrovascularDisease,
 									i.chronicPulmonaryDiasease,i.congestiveHeartFailure,i.connectiveTissueDisease,i.dementia,
@@ -173,7 +173,7 @@ exports.listSpec = {
 
 exports.addSpec = {
 		summary : "Add  Charlson Records (Roles: doctor)",
-		notes: "This Function creates an new Catscale Record. If the Body contains patientId, its ignored. The Score Value don't has to be provided as the Database will calculate it. Also it will set the date if date is null. <br>This function passes its parameters to the SP charlsonCreate. <br><br>" +
+		notes: "This Function creates a new Charlsons Record. If the Body contains patientId, its ignored. The Score Value don't has to be provided as the Database will calculate it. Also it will set the date if date is null. <br>This function passes its parameters to the SP charlsonCreate. <br><br>" +
 		"<b>Possible Results</b>: <br>" +
 		" <b>201</b>  Record is created and the location is returned in the Location Header <br>" +
 		" <b>400</b>  The provided data contains errors, e.g. a invalid value for status <br>" +

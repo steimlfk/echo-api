@@ -1,9 +1,9 @@
 /**
  * Controller: Daily Reports
- *
+ * 
  * Contains Methods to GET and POST to /patients/id/daily_reports (list and add)
  * And Methodes to GET, PUT and DELETE  /patients/id/daily_reports/recordid (listOne, update and del)
- *
+ * 
  * Contains swagger specs and models
  */
 var swagger = require('swagger-node-express');
@@ -13,7 +13,7 @@ var config = require('../config/config.js');
 var ssl = require('../config/ssl.js').useSsl;
 
 
-/*
+/**
  *  GET /patients/id/daily_reports
  *    Steps: 
  *    	1) Validate Role!
@@ -117,7 +117,7 @@ exports.list = function(req, res, next1){
 	});
 };
 
-/*
+/**
  *  GET /patients/id/daily_reports/recordid
  *    Steps: 
  *      1) Validate Role
@@ -176,7 +176,7 @@ exports.listOne = function(req,res,next){
 	});
 };
 
-/*
+/**
  *  DELETE /patients/id/daily_reports/recordid
  *    Steps: 
  *      1) Validate Role
@@ -225,7 +225,7 @@ exports.del = function(req, res, next){
 		}
 	});
 };
-/*
+/**
  *  PUT /patients/id/daily_reports/recordid
  *  Steps: 
  *  	1) Validate Role!
@@ -253,7 +253,7 @@ exports.update = function(req,res,next){
 				var id = parseInt(req.params.id);
 				var rid = parseInt(req.params.rid);
 				// set date to null if not set
-				var date = (i.date || i.date != "")? i.date : null;
+				var date = i.date || null;
 				// query db
 				connection.query('call reportUpdate(?,?,?, ?,?,?,?,?, ?,?,?,?,?,?, ?,?,?,?,?,?,?)',
 					[rid, id, date,
@@ -279,7 +279,7 @@ exports.update = function(req,res,next){
 		}
 	});
 };
-/*
+/**
  *  POST /patients/id/daily_reports
  *  Steps: 
  *  	1) Validate Role!
@@ -305,7 +305,7 @@ exports.add = function(req,res,next){
 				var i = req.body;
 				var id = parseInt(req.params.id);
 				// set date to null if not set
-				var date = (i.date || i.date != "")? i.date : null;
+				var date = i.date || null;
 				// query db
 				connection.query('call reportCreate(?,?, ?,?,?,?,?, ?,?,?, ?,?,?, ?,?,?,?,?,?,?)',
 					[id, date,

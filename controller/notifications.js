@@ -11,7 +11,7 @@ var db = mysql.db;
 var config = require('../config/config.js');
 var ssl = require('../config/ssl.js').useSsl;
 
-/*
+/**
  *  GET /notifications
  *  
  *  Steps: 
@@ -117,8 +117,7 @@ exports.list = function(req, res, next){
 	});
 };
 
-
-/*
+/**
  *  POST /notifications
  *  
  *  Since this is a debug function it only stores the request body in the database

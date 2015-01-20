@@ -1,8 +1,8 @@
 /**
  * Common Functions for Catscales, CCQs, Charlsons, Treatments, Readings
- *
+ * 
  * These are the exam-subresources (with collection-resources) of patients, which only can be used by doctors.
- *
+ * 
  * Valid Values for exam parameter are: catscales, ccqs, charlsons, treatments, readings
  * (Those values are supported by the stored procedures!)
  */
@@ -13,7 +13,7 @@ var db = mysql.db;
 var config = require('../config/config.js');
 var ssl = require('../config/ssl.js').useSsl;
 
-/*
+/**
  * GET lists from Catscales, CCQs, Charlsons, Treatments, Readings
  * 
  * Valid Values for exam parameter are: catscales, ccqs, charlsons, treatments, readings
@@ -120,7 +120,7 @@ exports.list = function(req, res, next, exam){
 	});
 };
 
-/*
+/**
  * GET single record from Catscales, CCQs, Charlsons, Treatments, Readings
  * 
  * Valid Values for exam parameter are: catscales, ccqs, charlsons, treatments, readings
@@ -186,7 +186,7 @@ exports.listOne = function(req,res,next, exam) {
 	});
 
 };
-/*
+/**
  * DELETE single record from Catscales, CCQs, Charlsons, Treatments, Readings
  * 
  * Valid Values for exam parameter are: catscales, ccqs, charlsons, treatments, readings

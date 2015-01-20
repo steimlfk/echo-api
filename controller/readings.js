@@ -34,7 +34,7 @@ exports.del = function(req,res,next){
 };
 
 
-/*
+/**
  *  POST /patients/id/readings
  *  Steps: 
  *  	1) Validate Role!
@@ -62,7 +62,7 @@ exports.add = function(req,res,next){
 					// any given ID in the body will be ignored and the ids from the url are used!
 					var id = parseInt(req.params.id);
 					// if no date is given make it null, so the trigger can set the date
-					var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null;
+					var date = i.diagnoseDate || null;
 					// query db 
 					// ? from query will be replaced by values in [] - including escaping!
 					connection.query('call readingsCreate(?,?,?,?,?, ?,?,?,?,?,'
@@ -98,7 +98,7 @@ exports.add = function(req,res,next){
 		});
 };
 
-/*
+/**
  *  PUT /patients/id/readings/recordid
  *  Steps: 
  *  	1) Validate Role!
@@ -127,7 +127,7 @@ exports.update = function(req,res,next){
 					var id = parseInt(req.params.id);
 					var rid = parseInt(req.params.rid);
 					// if no date is given make it null, so the trigger can set the date
-					var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null;
+					var date = i.diagnoseDate || null;
 					// query db 
 					// ? from query will be replaced by values in [] - including escaping!
 					connection.query('call readingsUpdate(?,?,?,?,?, ?,?,?,?,?,'
