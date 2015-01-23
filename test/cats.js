@@ -532,7 +532,7 @@ describe('CAT Record Tests:', function() {
     });
 
     after('Cleaning Up...', function(done) {
-        async.parallel
+        async.series
         ([
             function (cb) {
                 request(url)
