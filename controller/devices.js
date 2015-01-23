@@ -21,36 +21,23 @@ var config = require('../config/config.js');
  *  	4) send
  */
 exports.add = function(req,res,next){
-    // 1) Get DB Connection
-    db.getConnection(function(err, connection) {
+    var connection = req.con;
+    // 3) create SQL Query from parameters
+    // ? from query will be replaced by values in [] - including escaping!
+    connection.query('CALL deviceAdd(?)' , [req.body.deviceId], function(err) {
         if (err) {
             next(err);
         } else {
-            //2) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
-            //   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id
-            connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
-                if (err) {
-                    next(err);
-                }
-                // 3) create SQL Query from parameters
-                // ? from query will be replaced by values in [] - including escaping!
-                connection.query('CALL deviceAdd(?)' , [req.body.deviceId], function(err) {
-                        if (err) {
-                            next(err);
-                        } else {
-                            // 4)
-                            res.statusCode = 201;
-                            res.location('/devices/' + req.body.deviceId);
-                            res.send();
-                        }
-                    connection.release();
-                    });
-            });
+            // 4)
+            res.statusCode = 201;
+            res.location('/devices/' + req.body.deviceId);
+            res.send();
         }
+        connection.release();
     });
 };
 
-/*
+/**
  *  DELETE /accounts/id/devices
  *  Steps:
  *  	1) Get DB Connection
@@ -59,40 +46,27 @@ exports.add = function(req,res,next){
  *  	4) send
  */
 exports.del =   function(req,res,next){
-    // 1) Get DB Connection
-    db.getConnection(function(err, connection) {
-        if (err) {
+    var connection = req.con;
+    // 3) create and execute SQL Query from parameters,
+    // ? from query will be replaced by values in [] - including escaping!
+    connection.query('CALL deviceRemove(?)', [req.params.deviceId], function(err, result) {
+        if (err){
+            // An error occured
             next(err);
-        } else {
-            //2) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
-            //   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id
-            connection.changeUser({user : req.user.accountId, password : config.calculatePW(req.user.accountId)}, function(err) {
-                if (err) {
-                    next(err);
-                }
-                // 3) create and execute SQL Query from parameters,
-                // ? from query will be replaced by values in [] - including escaping!
-                connection.query('CALL deviceRemove(?)', [req.params.deviceId], function(err, result) {
-                    if (err){
-                        // An error occured
-                        next(err);
-                    }
-                    else {
-                        // 4) Device was removed -> send
-                        if (result[0][0].affected_rows > 0){
-                            res.statusCode = 204;
-                            res.send();
-                        }
-                        else {
-                            // Device wasnt removed since it doesnt exist
-                            res.statusCode = 404;
-                            res.send();
-                        }
-                    }
-                    connection.release();
-                });
-            });
         }
+        else {
+            // 4) Device was removed -> send
+            if (result[0][0].affected_rows > 0){
+                res.statusCode = 204;
+                res.send();
+            }
+            else {
+                // Device wasnt removed since it doesnt exist
+                res.statusCode = 404;
+                res.send();
+            }
+        }
+        connection.release();
     });
 };
 

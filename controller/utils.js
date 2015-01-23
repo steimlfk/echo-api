@@ -1,4 +1,6 @@
 var url = require("url");
+var db = require('../config/mysql').db;
+var config = require('../config/config.js');
 
 var exam_commons = {
     methods: {
@@ -208,4 +210,26 @@ exports.errorHandler = function (err, req, res, next) {
         res.statusCode = 500;
         res.send({err: 'Internal Server Error. Please Contact the Admin!'});
     }
+};
+
+
+exports.databaseHandler = function(req,res,next){
+    db.getConnection(function(err, connection) {
+        if (err) {
+            next(err);
+        } else {
+            //2) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
+            //   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id
+            connection.changeUser({
+                user: req.user.accountId,
+                password: config.calculatePW(req.user.accountId)
+            }, function (err) {
+                if (err) {
+                    next(err);
+                }
+                req.con = connection;
+                next();
+            });
+        }
+    });
 };

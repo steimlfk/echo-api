@@ -70,19 +70,11 @@ var webdemo_path = '/demoapp';
 //app.get('/', function(req, res){res.redirect(webdemo_path+'/login');});	//required for webdemo
 app.get('/', function(req, res){res.redirect('/docs');});
 
-
-app.use('/accounts',  		passport.authenticate(['bearer'], { session: false }));
-app.use('/logout',    		passport.authenticate(['bearer'], { session: false }));
-app.use('/patients',  		passport.authenticate(['bearer'], { session: false }));
-app.use('/questions', 		passport.authenticate(['bearer'], { session: false }));
-app.use('/notifications', 	passport.authenticate(['bearer'], { session: false }));
-app.use('/createPatientAndAccount', passport.authenticate(['bearer'], { session: false }));
-app.use('/changeDoctor',	passport.authenticate(['bearer'], { session: false }));
-app.use('/devices',	 		passport.authenticate(['bearer'], { session: false }));
-
-app.use(utils.accessControl);
-
 swagger.addPost({'spec': oauth2.loginSpec, 'action': oauth2.endpoint});
+
+app.use(passport.authenticate(['bearer'], { session: false }));
+app.use(utils.accessControl);
+app.use(utils.databaseHandler);
 
 swagger.addModels(accounts);
 swagger.addGet(		{'spec': accounts.listSpec,'action': accounts.list});
