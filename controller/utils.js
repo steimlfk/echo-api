@@ -88,7 +88,7 @@ var permissions= {
 };
 
 exports.accessControl = function (req, res, next){
-    var url_parts = url.parse(req.url);
+    var url_parts = url.parse(req.originalUrl);
     var path = url_parts.pathname.split("/");
     var role = (req.user)? req.user.role : 'none';
     var err = new Error('Invalid Role');
@@ -108,7 +108,6 @@ exports.accessControl = function (req, res, next){
             else next_step = 'instance';
 
             perm = perm[next_step];
-
             //TODO Null Check!
 
             if (i < path.length-1) i++;

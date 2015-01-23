@@ -55,7 +55,6 @@ var url_port = config.url_port;
 app.set('port', port);									
 app.set('views', __dirname + '/demoapp/views');				//required for webdemo
 app.set('view engine', 'jade');								//required for webdemo
-app.use(bodyParser());					
 app.use(session({ secret: 'echo_secret' }));				//required for webdemo
 app.use(passport.initialize());	
 app.use(passport.session());								//required for webdemo
@@ -70,11 +69,16 @@ var webdemo_path = '/demoapp';
 //app.get('/', function(req, res){res.redirect(webdemo_path+'/login');});	//required for webdemo
 app.get('/', function(req, res){res.redirect('/docs');});
 
-swagger.addPost({'spec': oauth2.loginSpec, 'action': oauth2.endpoint});
+app.use('/login', bodyParser());
+swagger.addPost({'spec':oauth2.loginSpec,'action':oauth2.endpoint})
 
-app.use(passport.authenticate(['bearer'], { session: false }));
-app.use(utils.accessControl);
-app.use(utils.databaseHandler);
+
+var echo_endpoints = ['/accounts', '/patients', '/questions','/notifications','/createPatientAndAccount','/changeDoctor', '/devices'];
+var echo_middlewares = [bodyParser(), passport.authenticate(['bearer'], { session: false }), utils.accessControl, utils.databaseHandler];
+
+for (var i = 0; i< echo_endpoints.length; i++){
+        app.use(echo_endpoints[i], echo_middlewares);
+};
 
 swagger.addModels(accounts);
 swagger.addGet(		{'spec': accounts.listSpec,'action': accounts.list});
