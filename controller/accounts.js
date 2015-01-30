@@ -17,12 +17,12 @@ var ssl = require('../config/ssl.js').useSsl;
 
 /**
  *  GET /accounts
- *  
- *  Steps: 
+ *
+ *  Steps:
  *  	1) Get DB Connection
  *  	2) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
- *  	3) create SQL Query from parameters 
- *  	4) add links to result 
+ *  	3) create SQL Query from parameters
+ *  	4) add links to result
  *  	5) send
  */
 exports.list = function(req,res,nextOp){
@@ -136,11 +136,11 @@ exports.list = function(req,res,nextOp){
 
 /**
  *  GET /accounts/id
- *    Steps: 
+ *    Steps:
  *  	1) Get DB Connection
  *  	2) Change connected user to currently logged in user (found via req.user, which was populated by passport)
- *  	3) create SQL Query from parameters 
- *  	4) add links to result 
+ *  	3) create SQL Query from parameters
+ *  	4) add links to result
  *  	5) send
  */
 exports.listOne = function(req,res,next){
@@ -180,12 +180,12 @@ exports.listOne = function(req,res,next){
 
 /**
  *  POST /accounts
- *  Steps: 
+ *  Steps:
  *  	1) Validate Role!
  *  	2) Get DB Connection
  *  	3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
- *  	4) create SQL Query from parameters 
- *  	5) add links to result 
+ *  	4) create SQL Query from parameters
+ *  	5) add links to result
  *  	6) send
  */
 exports.add = function(req,res,next){
@@ -231,12 +231,12 @@ exports.add = function(req,res,next){
 
 /**
  *  DELETE /accounts/id
- *  Steps: 
+ *  Steps:
  *  	1) Validate Role!
  *  	2) Get DB Connection
  *  	3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
- *  	4) create and execute SQL Query from parameters 
- *  	5) add links to result 
+ *  	4) create and execute SQL Query from parameters
+ *  	5) add links to result
  *  	6) send
  */
 exports.del =   function(req,res,next){
@@ -267,11 +267,11 @@ exports.del =   function(req,res,next){
 
 /**
  *  PUT /accounts/id
- *  Steps: 
+ *  Steps:
  *  	1) Get DB Connection
  *  	2) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
- *  	3) create SQL Query from parameters 
- *  	4) add links to result 
+ *  	3) create SQL Query from parameters
+ *  	4) add links to result
  *  	5) send
  */
 exports.update = function(req,res,next){
@@ -316,13 +316,6 @@ exports.listSpec = {
     summary : "List all visible Accounts (Roles: all)",
     notes: "This Function lists all Accounts which are visible to the logged in user and are enabled. <br>This function constructs a sql query from the parameters and executes it on accounts_view. <br><br> <b>Parameters:</b> <br><br>  " +
     "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " +
-    "To support pagination the following links are supplied, if page is greater than zero:  <br>" +
-    "_links: { <br>" +
-    "self: (link to this collection) <br>" +
-    "first: (link to first page of collection) <br>" +
-    "next: (link to next page of the collection, if result size not equals pageSize) <br>" +
-    "back: (link to previous page of the collection, if page is greater than 1) <br>" +
-    "} <br> <br>" +
     "<b>Rolefilter</b>: If a valid role is provided the result, only contains accounts of this role. If the role is not valid, the parameter is ignored.<br><br>" +
     "<b>Possible Results</b>: <br>" +
     " <b>200</b>  Accountlist is supplied. Format accounts: [Array of Account Model] <br>" +
@@ -330,7 +323,7 @@ exports.listSpec = {
     " <b>500</b> Internal Server Error",
     path : "/accounts",
     method: "GET",
-    type : "Account",
+    type : "ListAccount",
     nickname : "listAccounts",
     parameters : [
         swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
@@ -393,106 +386,83 @@ exports.updateSpec = {
     path : "/accounts/{id}",
     method: "PUT",
     nickname : "updateAccount",
-    parameters : [swagger.pathParam("id", "Account to update", "string"),swagger.bodyParam("Account", "updated Account Record", "Account")]
+    parameters : [swagger.pathParam("id", "Account to update", "string"),swagger.bodyParam("Account", "updated Account Record", "UpdateAccount")]
 };
 
 
-/*
+/**
  *  Swagger Models
  */
+
+var contents =  {
+    "accountId":{
+        "type":"integer",
+        "format": "int64",
+        "description": "Unique Identifier"
+    },
+    "username":{
+        "type": "string",
+        "description" : "Unique Username"
+    },
+    "password":{
+        "type":"string",
+        "description": "Password"
+    },
+    "role":{
+        "type":"string",
+        "description" : "Role",
+        "enum":[  "admin", "doctor",  "patient" ]
+    },
+    "email":{
+        "type": "string",
+        "description" : "E-Mail Address"
+    },
+    "enabled":{
+        "type": "boolean",
+        "description" : "can this account login?"
+    },
+    "reminderTime":{
+        "type": "string",
+        "description" : "Reminder Time (Format: 'HH:MM')"
+    },
+    "notificationEnabled":{
+        "type": "boolean",
+        "description" : "Notifications enabled?"
+    },
+    "notificationMode":{
+        "type":"string",
+        "description" : "Notification Mode",
+        "enum":[  "sms",  "push",  "email" ]
+    },
+    "mobile":{
+        "type": "string",
+        "description" : "Mobile Number"
+    }
+};
+
 exports.models = {
     "Account":{
         "id":"Account",
         "required": ["accountId","username", "role", "email", "enabled", "reminderTime", "notificationEnabled", "notificationMode","mobile"],
-        "properties":{
-            "accountId":{
-                "type":"integer",
-                "format": "int64",
-                "description": "Unique Identifier"
-            },
-            "username":{
-                "type": "string",
-                "description" : "Unique Username"
-            },
-            "password":{
-                "type":"string",
-                "description": "Password"
-            },
-            "role":{
-                "type":"string",
-                "description" : "Role",
-                "enum":[  "admin", "doctor",  "patient" ]
-            },
-            "email":{
-                "type": "string",
-                "description" : "E-Mail Address"
-            },
-            "enabled":{
-                "type": "boolean",
-                "description" : "can this account login?"
-            },
-            "reminderTime":{
-                "type": "string",
-                "description" : "Reminder Time (Format: 'HH:MM')"
-            },
-            "notificationEnabled":{
-                "type": "boolean",
-                "description" : "Notifications enabled?"
-            },
-            "notificationMode":{
-                "type":"string",
-                "description" : "Notification Mode",
-                "enum":[  "sms",  "push",  "email" ]
-            },
-            "mobile":{
-                "type": "string",
-                "description" : "Mobile Number"
-            }
-        }
+        "properties": contents
     },
     "NewAccount":{
         "id":"Account",
         "required": ["role", "username","password","email", "enabled", "reminderTime", "notificationEnabled", "notificationMode","mobile"],
-        "properties":{
-            "username":{
-                "type": "string",
-                "description" : "Unique Username"
-            },
-            "password":{
-                "type":"string",
-                "description": "Password"
-            },
-            "role":{
-                "type":"string",
-                "description" : "Role",
-                "enum":["admin", "doctor", "patient" ]
-            },
-            "email":{
-                "type": "string",
-                "description" : "E-Mail Address"
-            },
-            "enabled":{
-                "type": "boolean",
-                "description" : "can this account login?"
-            },
-            "reminderTime":{
-                "type": "string",
-                "description" : "Reminder Time (Format: 'HH:MM')"
-            },
-            "notificationEnabled":{
-                "type": "boolean",
-                "description" : "Notifications enabled?"
-            },
-            "notificationMode":{
-                "type":"string",
-                "description" : "Notification Mode",
-                "enum":[ "sms", "push",  "email" ]
-            },
-            "mobile":{
-                "type": "string",
-                "description" : "Mobile Number"
-            }
-        }
+        "properties": contents
+
+    },
+    "UpdateAccount":{
+        "id":"Account",
+        "required": ["username", "email", "enabled", "reminderTime", "notificationEnabled", "notificationMode","mobile"],
+        "properties": contents
+
+    },
+    "ListAccount":{
+        "id":"ListAccount",
+        "required": ["accounts"],
+        "properties": { _links : { "$ref" : "CollectionLinks"}, accounts :  {"type" : "array", items : { "$ref" : "Account"}}}
+
     }
 };
 

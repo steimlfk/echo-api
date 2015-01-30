@@ -142,13 +142,6 @@ exports.listSpec = {
     summary : "Get Readings Records of this Patient (Roles: doctor)",
     notes: "This Function lists all Readings for the given patient. <br>This function passes the parameters to the SP listExams. <br><br> <b>Parameters:</b> <br><br>  " +
     "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " +
-    "To support pagination the following links are supplied, if page is greater than zero:  <br>" +
-    "_links: { <br>" +
-    "self: (link to this collection) <br>" +
-    "first: (link to first page of collection) <br>" +
-    "next: (link to next page of the collection, if result size not equals pageSize) <br>" +
-    "back: (link to previous page of the collection, if page is greater than 1) <br>" +
-    "} <br> <br>" +
     "<b>Possible Results</b>: <br>" +
     " <b>200</b>  List of Readings is supplied. Format cats: [Array of readings Model] <br>" +
     " <b>204</b>  List (or the current page) is currently empty <br>" +
@@ -156,13 +149,11 @@ exports.listSpec = {
     " <b>500</b> Internal Server Error",
     path : "/patients/{id}/readings",
     method: "GET",
-    type : "Readings",
+    type : "ListReadings",
     nickname : "listReadings",
     parameters : [swagger.pathParam("id", "Patient where the records belong to", "string"),
         swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
-        swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")],
-    responseMessages : [swagger.errors.notFound('id')]
-
+        swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")]
 };
 
 
@@ -178,9 +169,7 @@ exports.addSpec = {
     method: "POST",
     nickname : "addReadings",
     parameters : [swagger.bodyParam("Readings", "new Record", "NewReadings"),
-        swagger.pathParam("id", "Patient where the records belong to", "string")],
-    responseMessages : [swagger.errors.notFound('id')]
-
+        swagger.pathParam("id", "Patient where the records belong to", "string")]
 };
 
 exports.listOneSpec = {
@@ -196,9 +185,7 @@ exports.listOneSpec = {
     type : "Readings",
     nickname : "listOneReadings",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
-        swagger.pathParam("rid", "ID of the Record", "string")],
-    responseMessages : [swagger.errors.notFound('rid')]
-
+        swagger.pathParam("rid", "ID of the Record", "string")]
 };
 
 
@@ -213,9 +200,7 @@ exports.delSpec = {
     method: "DELETE",
     nickname : "delReadings",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
-        swagger.pathParam("rid", "ID of the Record", "string")],
-    responseMessages : [swagger.errors.notFound('rid')]
-
+        swagger.pathParam("rid", "ID of the Record", "string")]
 };
 
 exports.updateSpec = {
@@ -231,10 +216,58 @@ exports.updateSpec = {
     nickname : "updateReadings",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
         swagger.pathParam("rid", "ID of the Record", "string") ,
-        swagger.bodyParam("Readings", "updated Readings Record", "Readings")],
-    responseMessages : [swagger.errors.notFound('rid')]
+        swagger.bodyParam("Readings", "updated Readings Record", "NewReadings")],
 };
 
+var contents = {
+    "patientId": {"type":"integer", "format": "int32", "description": "patientId"},
+    "recordId":{"type":"integer","format": "int32","description": "Unique Identifier of this Record"},
+    "diagnoseDate":{"type":"string","format": "Date", "description": "Date of Diagnose"},
+    "status":{"type":"string","description" : "Status","enum":[ "baseline", "exacerbation"]},
+    "del_fef25_75_pro": {"type":"number", "format": "float", "description": "del_fef25_75_pro"},
+    "del_fev1_post": {"type":"number", "format": "float", "description": "del_fev1_post"},
+    "del_fvc_pro": {"type":"number", "format": "float", "description": "del_fvc_pro"},
+    "del_pef_pro": {"type":"number", "format": "float", "description": "del_pef_pro"},
+    "dlco_pro": {"type":"number", "format": "float", "description": "dlco_pro"},
+    "fef25_75_pre_pro": {"type":"number", "format": "float", "description": "fef25_75_pre_pro"},
+    "fev1": {"type":"number", "format": "float", "description": "fev1"},
+    "fev1_fvc": {"type":"number", "format": "float", "description": "fev1_fvc"},
+    "fev1_fvc_pre": {"type":"number", "format": "float", "description": "fev1_fvc_pre"},
+    "fev1_post": {"type":"number", "format": "float", "description": "fev1_post"},
+    "fev1_pre": {"type":"number", "format": "float", "description": "fev1_pre"},
+    "fev1_pre_pro": {"type":"number", "format": "float", "description": "fev1_pre_pro"},
+    "fev1_pro": {"type":"number", "format": "float", "description": "fev1_pro"},
+    "frc_pre": {"type":"number", "format": "float", "description": "frc_pre"},
+    "frc_pre_pro": {"type":"number", "format": "float", "description": "frc_pre_pro"},
+    "fvc": {"type":"number", "format": "float", "description": "fvc"},
+    "fvc_post": {"type":"number", "format": "float", "description": "fvc_post"},
+    "fvc_pre": {"type":"number", "format": "float", "description": "fvc_pre"},
+    "fvc_pre_pro": {"type":"number", "format": "float", "description": "fvc_pre_pro"},
+    "fvc_pro": {"type":"number", "format": "float", "description": "fvc_pro"},
+    "hco3": {"type":"number", "format": "float", "description": "hco3"},
+    "height": {"type":"integer", "format": "int32", "description": "height"},
+    "hematocrit": {"type":"number", "format": "float", "description": "hematocrit"},
+    "kco_pro": {"type":"number", "format": "float", "description": "kco_pro"},
+    "mmrc": {"type":"integer", "format": "int32", "description": "mmrc"},
+    "notes":{"type":"string","description" : "Notes"},
+    "paco2": {"type":"number", "format": "float", "description": "paco2"},
+    "pao2": {"type":"number", "format": "float", "description": "pao2"},
+    "pef_pre_pro": {"type":"number", "format": "float", "description": "pef_pre_pro"},
+    "pH": {"type":"number", "format": "float", "description": "pH"},
+    "pxy": {"type":"integer", "format": "int32", "description": "pxy"},
+    "rv": {"type":"number", "format": "float", "description": "rv"},
+    "rv_pre": {"type":"number", "format": "float", "description": "rv_pre"},
+    "rv_pre_pro": {"type":"number", "format": "float", "description": "rv_pre_pro"},
+    "rv_pro": {"type":"number", "format": "float", "description": "rv_pro"},
+    "rv_tlc": {"type":"number", "format": "float", "description": "rv_tlc"},
+    "satO2_pro": {"type":"number", "format": "float", "description": "satO2_pro"},
+    "smoker": {"type":"integer", "format": "int32", "description": "smoker"},
+    "tlc": {"type":"number", "format": "float", "description": "tlc"},
+    "tlc_pre": {"type":"number", "format": "float", "description": "tlc_pre"},
+    "tlc_pre_pro": {"type":"number", "format": "float", "description": "tlc_pre_pro"},
+    "tlc_pro": {"type":"number", "format": "float", "description": "tlc_pro"},
+    "weight": {"type":"integer", "format": "int32", "description": "weight"}
+};
 
 exports.models = {
     "Readings":{
@@ -244,110 +277,22 @@ exports.models = {
             "frc_pre_pro","fvc","fvc_post","fvc_pre","fvc_pre_pro","fvc_pro","hco3","height","hematocrit","kco_pro",
             "mmrc","notes","paco2","pao2","pef_pre_pro","pH","pxy","rv","rv_pre","rv_pre_pro","rv_pro","rv_tlc",
             "satO2_pro","smoker","tlc","tlc_pre","tlc_pre_pro","tlc_pro","weight"],
-        "properties":{
-            "patientId": {"type":"integer", "format": "int32", "description": "patientId"},
-            "recordId":{"type":"integer","format": "int32","description": "Unique Identifier of this Record"},
-            "diagnoseDate":{"type":"string","format": "Date", "description": "Date of Diagnose"},
-            "status":{"type":"string","description" : "Status","enum":[ "Baseline", "Exacerbation"]},
-            "del_fef25_75_pro": {"type":"number", "format": "float", "description": "del_fef25_75_pro"},
-            "del_fev1_post": {"type":"number", "format": "float", "description": "del_fev1_post"},
-            "del_fvc_pro": {"type":"number", "format": "float", "description": "del_fvc_pro"},
-            "del_pef_pro": {"type":"number", "format": "float", "description": "del_pef_pro"},
-            "dlco_pro": {"type":"number", "format": "float", "description": "dlco_pro"},
-            "fef25_75_pre_pro": {"type":"number", "format": "float", "description": "fef25_75_pre_pro"},
-            "fev1": {"type":"number", "format": "float", "description": "fev1"},
-            "fev1_fvc": {"type":"number", "format": "float", "description": "fev1_fvc"},
-            "fev1_fvc_pre": {"type":"number", "format": "float", "description": "fev1_fvc_pre"},
-            "fev1_post": {"type":"number", "format": "float", "description": "fev1_post"},
-            "fev1_pre": {"type":"number", "format": "float", "description": "fev1_pre"},
-            "fev1_pre_pro": {"type":"number", "format": "float", "description": "fev1_pre_pro"},
-            "fev1_pro": {"type":"number", "format": "float", "description": "fev1_pro"},
-            "frc_pre": {"type":"number", "format": "float", "description": "frc_pre"},
-            "frc_pre_pro": {"type":"number", "format": "float", "description": "frc_pre_pro"},
-            "fvc": {"type":"number", "format": "float", "description": "fvc"},
-            "fvc_post": {"type":"number", "format": "float", "description": "fvc_post"},
-            "fvc_pre": {"type":"number", "format": "float", "description": "fvc_pre"},
-            "fvc_pre_pro": {"type":"number", "format": "float", "description": "fvc_pre_pro"},
-            "fvc_pro": {"type":"number", "format": "float", "description": "fvc_pro"},
-            "hco3": {"type":"number", "format": "float", "description": "hco3"},
-            "height": {"type":"integer", "format": "int32", "description": "height"},
-            "hematocrit": {"type":"number", "format": "float", "description": "hematocrit"},
-            "kco_pro": {"type":"number", "format": "float", "description": "kco_pro"},
-            "mmrc": {"type":"integer", "format": "int32", "description": "mmrc"},
-            "notes":{"type":"string","description" : "Notes"},
-            "paco2": {"type":"number", "format": "float", "description": "paco2"},
-            "pao2": {"type":"number", "format": "float", "description": "pao2"},
-            "pef_pre_pro": {"type":"number", "format": "float", "description": "pef_pre_pro"},
-            "pH": {"type":"number", "format": "float", "description": "pH"},
-            "pxy": {"type":"integer", "format": "int32", "description": "pxy"},
-            "rv": {"type":"number", "format": "float", "description": "rv"},
-            "rv_pre": {"type":"number", "format": "float", "description": "rv_pre"},
-            "rv_pre_pro": {"type":"number", "format": "float", "description": "rv_pre_pro"},
-            "rv_pro": {"type":"number", "format": "float", "description": "rv_pro"},
-            "rv_tlc": {"type":"number", "format": "float", "description": "rv_tlc"},
-            "satO2_pro": {"type":"number", "format": "float", "description": "satO2_pro"},
-            "smoker": {"type":"integer", "format": "int32", "description": "smoker"},
-            "tlc": {"type":"number", "format": "float", "description": "tlc"},
-            "tlc_pre": {"type":"number", "format": "float", "description": "tlc_pre"},
-            "tlc_pre_pro": {"type":"number", "format": "float", "description": "tlc_pre_pro"},
-            "tlc_pro": {"type":"number", "format": "float", "description": "tlc_pro"},
-            "weight": {"type":"integer", "format": "int32", "description": "weight"}
-        }
+        "properties": contents
     },
     "NewReadings":{
-        "id":"Readings",
-        "required": ["diagnoseDate","status","del_fef25_75_pro","del_fev1_post","del_fvc_pro","del_pef_pro","dlco_pro",
+        "id":"NewReadings",
+        "required": ["status","del_fef25_75_pro","del_fev1_post","del_fvc_pro","del_pef_pro","dlco_pro",
             "fef25_75_pre_pro","fev1","fev1_fvc","fev1_fvc_pre","fev1_post","fev1_pre","fev1_pre_pro","fev1_pro","frc_pre",
             "frc_pre_pro","fvc","fvc_post","fvc_pre","fvc_pre_pro","fvc_pro","hco3","height","hematocrit","kco_pro",
             "mmrc","notes","paco2","pao2","pef_pre_pro","pH","pxy","rv","rv_pre","rv_pre_pro","rv_pro","rv_tlc",
             "satO2_pro","smoker","tlc","tlc_pre","tlc_pre_pro","tlc_pro","weight"],
-        "properties":{
-            "diagnoseDate":{"type":"string","format": "Date", "description": "Date of Diagnose"},
-            "status":{"type":"string","description" : "Status","enum":[ "Baseline", "Exacerbation"]},
-            "del_fef25_75_pro": {"type":"number", "format": "float", "description": "del_fef25_75_pro"},
-            "del_fev1_post": {"type":"number", "format": "float", "description": "del_fev1_post"},
-            "del_fvc_pro": {"type":"number", "format": "float", "description": "del_fvc_pro"},
-            "del_pef_pro": {"type":"number", "format": "float", "description": "del_pef_pro"},
-            "dlco_pro": {"type":"number", "format": "float", "description": "dlco_pro"},
-            "fef25_75_pre_pro": {"type":"number", "format": "float", "description": "fef25_75_pre_pro"},
-            "fev1": {"type":"number", "format": "float", "description": "fev1"},
-            "fev1_fvc": {"type":"number", "format": "float", "description": "fev1_fvc"},
-            "fev1_fvc_pre": {"type":"number", "format": "float", "description": "fev1_fvc_pre"},
-            "fev1_post": {"type":"number", "format": "float", "description": "fev1_post"},
-            "fev1_pre": {"type":"number", "format": "float", "description": "fev1_pre"},
-            "fev1_pre_pro": {"type":"number", "format": "float", "description": "fev1_pre_pro"},
-            "fev1_pro": {"type":"number", "format": "float", "description": "fev1_pro"},
-            "frc_pre": {"type":"number", "format": "float", "description": "frc_pre"},
-            "frc_pre_pro": {"type":"number", "format": "float", "description": "frc_pre_pro"},
-            "fvc": {"type":"number", "format": "float", "description": "fvc"},
-            "fvc_post": {"type":"number", "format": "float", "description": "fvc_post"},
-            "fvc_pre": {"type":"number", "format": "float", "description": "fvc_pre"},
-            "fvc_pre_pro": {"type":"number", "format": "float", "description": "fvc_pre_pro"},
-            "fvc_pro": {"type":"number", "format": "float", "description": "fvc_pro"},
-            "hco3": {"type":"number", "format": "float", "description": "hco3"},
-            "height": {"type":"integer", "format": "int32", "description": "height"},
-            "hematocrit": {"type":"number", "format": "float", "description": "hematocrit"},
-            "kco_pro": {"type":"number", "format": "float", "description": "kco_pro"},
-            "mmrc": {"type":"integer", "format": "int32", "description": "mmrc"},
-            "notes":{"type":"string","description" : "Notes"},
-            "paco2": {"type":"number", "format": "float", "description": "paco2"},
-            "pao2": {"type":"number", "format": "float", "description": "pao2"},
-            "pef_pre_pro": {"type":"number", "format": "float", "description": "pef_pre_pro"},
-            "pH": {"type":"number", "format": "float", "description": "pH"},
-            "pxy": {"type":"integer", "format": "int32", "description": "pxy"},
-            "rv": {"type":"number", "format": "float", "description": "rv"},
-            "rv_pre": {"type":"number", "format": "float", "description": "rv_pre"},
-            "rv_pre_pro": {"type":"number", "format": "float", "description": "rv_pre_pro"},
-            "rv_pro": {"type":"number", "format": "float", "description": "rv_pro"},
-            "rv_tlc": {"type":"number", "format": "float", "description": "rv_tlc"},
-            "satO2_pro": {"type":"number", "format": "float", "description": "satO2_pro"},
-            "smoker": {"type":"integer", "format": "int32", "description": "smoker"},
-            "tlc": {"type":"number", "format": "float", "description": "tlc"},
-            "tlc_pre": {"type":"number", "format": "float", "description": "tlc_pre"},
-            "tlc_pre_pro": {"type":"number", "format": "float", "description": "tlc_pre_pro"},
-            "tlc_pro": {"type":"number", "format": "float", "description": "tlc_pro"},
-            "weight": {"type":"integer", "format": "int32", "description": "weight"}
-        }
+        "properties":contents
+    },
+    "ListReadings":{
+        "id":"ListReadings",
+        "required": ["readings"],
+        "properties": { _links : { "$ref" : "CollectionLinks"}, readings : {"type" : "array", items : { "$ref" : "Readings"}}}
+
     }
 };
 

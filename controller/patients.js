@@ -278,13 +278,6 @@ exports.listSpec = {
     summary : "List All Patients (Roles: doctor and admin)",
     notes: "This Function lists all Patients which are visible to the logged in user and are enabled. <br>This function constructs a sql query from the parameters and executes it on patients_view. <br><br> <b>Parameters:</b> <br><br>  " +
     "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " +
-    "To support pagination the following links are supplied, if page is greater than zero:  <br>" +
-    "_links: { <br>" +
-    "self: (link to this collection) <br>" +
-    "first: (link to first page of collection) <br>" +
-    "next: (link to next page of the collection, if result size not equals pageSize) <br>" +
-    "back: (link to previous page of the collection, if page is greater than 1) <br>" +
-    "} <br> <br>" +
     "<b>Sorting</b>: If a valid column (patientId or email) is provided the result will be ordered after that column. If the role is not valid, the parameter is set to patientId.<br><br>" +
     "<b>Possible Results</b>: <br>" +
     " <b>200</b>  List of Patients is supplied. Format accounts: [Array of Patient Model] <br>" +
@@ -399,7 +392,7 @@ exports.models = {
             "firstDiagnoseDate": {
                 "type":"string",
                 "format":"date",
-                "description": "Date of First Diagnoe"
+                "description": "Date of First Diagnose"
             },
             "socialId": {
                 "type":"string",

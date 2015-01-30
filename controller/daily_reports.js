@@ -265,13 +265,6 @@ exports.listSpec = {
     summary : "Get All Daily Reports By this Patient (Roles: doctor and patient)",
     notes: "This Function lists all Daily Reports for the given patient. <br>This function passes the parameters to the SP reportList. <br><br> <b>Parameters:</b> <br><br>  " +
     "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " +
-    "To support pagination the following links are supplied, if page is greater than zero:  <br>" +
-    "_links: { <br>" +
-    "self: (link to this collection) <br>" +
-    "first: (link to first page of collection) <br>" +
-    "next: (link to next page of the collection, if result size not equals pageSize) <br>" +
-    "back: (link to previous page of the collection, if page is greater than 1) <br>" +
-    "} <br> <br>" +
     "<b>Possible Results</b>: <br>" +
     " <b>200</b>  List of Daily Reports is supplied. Format cats: [Array of daily_report Model] <br>" +
     " <b>204</b>  List (or the current page) is currently empty <br>" +
@@ -279,12 +272,11 @@ exports.listSpec = {
     " <b>500</b> Internal Server Error",
     path : "/patients/{id}/daily_reports",
     method: "GET",
-    type : "DailyReport",
+    type : "ListDailyReport",
     nickname : "listReport",
     parameters : [swagger.pathParam("id", "Patient who answered the Questions", "string"),
         swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
         swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")]
-
 };
 
 
@@ -300,8 +292,6 @@ exports.addSpec = {
     method: "POST",
     nickname : "addReport",
     parameters : [swagger.bodyParam("NewDailyReport", "new Set of Daily Answers", "NewDailyReport"), swagger.pathParam("id", "Patient who answered the Questions", "string")],
-    responseMessages : [swagger.errors.notFound('id')]
-
 };
 
 exports.listOneSpec = {
@@ -318,8 +308,6 @@ exports.listOneSpec = {
     nickname : "listOneReport",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
         swagger.pathParam("rid", "ID of the Record", "string")],
-    responseMessages : [swagger.errors.notFound('rid')]
-
 };
 
 
@@ -335,8 +323,6 @@ exports.delSpec = {
     nickname : "delReport",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
         swagger.pathParam("rid", "ID of the Record", "string")],
-    responseMessages : [swagger.errors.notFound('rid')]
-
 };
 
 exports.updateSpec = {
@@ -352,61 +338,49 @@ exports.updateSpec = {
     nickname : "updateReport",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
         swagger.pathParam("rid", "ID of the Record", "string") ,
-        swagger.bodyParam("DailyReport", "updated Readings Record", "DailyReport")],
-    responseMessages : [swagger.errors.notFound('rid')]
+        swagger.bodyParam("DailyReport", "updated Readings Record", "NewDailyReport")]
+};
+
+
+var contents = {
+    "patientId": {"type":"integer", "format": "int32", "description": "patientId"},
+    "recordId":{"type":"integer","format": "int32","description": "Unique Identifier of this Record"},
+    "date":{"type":"string","format": "Date", "description": "Date of Report"},
+    "q1" :{"type":"boolean","description": " Answer to q1 "},
+    "q2" :{"type":"boolean","description": " Answer to q2 "},
+    "q3" :{"type":"boolean","description": " Answer to q3 "},
+    "q4" :{"type":"boolean","description": " Answer to q4 "},
+    "q5" :{"type":"boolean","description": " Answer to q5 "},
+    "q1a" :{"type":"boolean","description": " Answer to q1a "},
+    "q1b" :{"type":"boolean","description": " Answer to q1b "},
+    "q1c" :{"type":"boolean","description": " Answer to q1c "},
+    "q3a" :{"type":"boolean","description": " Answer to q3a "},
+    "q3b" :{"type":"boolean","description": " Answer to q3b "},
+    "q3c" :{"type":"boolean","description": " Answer to q3c "},
+    "satO2": {"type":"number", "format": "float", "description": "satO2"},
+    "walkingDist": {"type":"number", "format": "float", "description": "walkingDist"},
+    "temperature": {"type":"number", "format": "float", "description": "temperature"},
+    "pefr": {"type":"number", "format": "float", "description": "pefr"},
+    "heartRate": {"type":"number", "format": "float", "description": "heartRate"},
+    "x":{"type":"string", "description": "X Coordinate of GPS Location. Type is String to avoid rounding."},
+    "y":{"type":"string", "description": "Y Coordinate of GPS Location. Type is String to avoid rounding."}
 };
 
 exports.models = {
     "DailyReport":{
         "id" : "DailyReport",
-        "required": ["patientId", "recordId", "date", "q1","q2","q3","q4","q5","q1a","q1b","q1c","q3a","q3b","q3c","satO2", "walkingDist", "temperature", "pefr", "heartRate"],
-        "properties":{
-            "patientId": {"type":"integer", "format": "int32", "description": "patientId"},
-            "recordId":{"type":"integer","format": "int32","description": "Unique Identifier of this Record"},
-            "date":{"type":"string","format": "Date", "description": "Date of Report"},
-            "q1" :{"type":"boolean","description": " Answer to q1 "},
-            "q2" :{"type":"boolean","description": " Answer to q2 "},
-            "q3" :{"type":"boolean","description": " Answer to q3 "},
-            "q4" :{"type":"boolean","description": " Answer to q4 "},
-            "q5" :{"type":"boolean","description": " Answer to q5 "},
-            "q1a" :{"type":"boolean","description": " Answer to q1a "},
-            "q1b" :{"type":"boolean","description": " Answer to q1b "},
-            "q1c" :{"type":"boolean","description": " Answer to q1c "},
-            "q3a" :{"type":"boolean","description": " Answer to q3a "},
-            "q3b" :{"type":"boolean","description": " Answer to q3b "},
-            "q3c" :{"type":"boolean","description": " Answer to q3c "},
-            "satO2": {"type":"number", "format": "float", "description": "satO2"},
-            "walkingDist": {"type":"number", "format": "float", "description": "walkingDist"},
-            "temperature": {"type":"number", "format": "float", "description": "temperature"},
-            "pefr": {"type":"number", "format": "float", "description": "pefr"},
-            "heartRate": {"type":"number", "format": "float", "description": "heartRate"},
-            "x":{"type":"string", "description": "X Coordinate of GPS Location. Type is String to avoid rounding."},
-            "y":{"type":"string", "description": "Y Coordinate of GPS Location. Type is String to avoid rounding."}
-        }
+        "required": ["patientId", "recordId", "date", "q1","q2","q3","q4","q5","q1a","q1b","q1c","q3a","q3b","q3c","satO2", "walkingDist", "temperature", "pefr", "heartRate", "x", "y"],
+        "properties": contents
     },
     "NewDailyReport":{
-        "id" : "DailyReport",
-        "required": ["date", "q1","q2","q3","q4","q5","q1a","q1b","q1c","q3a","q3b","q3c","satO2", "walkingDist", "temperature", "pefr", "heartRate"],
-        "properties":{
-            "date":{"type":"string","format": "Date", "description": "Date of Report"},
-            "q1" :{"type":"boolean","description": " Answer to q1 "},
-            "q2" :{"type":"boolean","description": " Answer to q2 "},
-            "q3" :{"type":"boolean","description": " Answer to q3 "},
-            "q4" :{"type":"boolean","description": " Answer to q4 "},
-            "q5" :{"type":"boolean","description": " Answer to q5 "},
-            "q1a" :{"type":"boolean","description": " Answer to q1a "},
-            "q1b" :{"type":"boolean","description": " Answer to q1b "},
-            "q1c" :{"type":"boolean","description": " Answer to q1c "},
-            "q3a" :{"type":"boolean","description": " Answer to q3a "},
-            "q3b" :{"type":"boolean","description": " Answer to q3b "},
-            "q3c" :{"type":"boolean","description": " Answer to q3c "},
-            "satO2": {"type":"number", "format": "float", "description": "satO2"},
-            "walkingDist": {"type":"number", "format": "float", "description": "walkingDist"},
-            "temperature": {"type":"number", "format": "float", "description": "temperature"},
-            "pefr": {"type":"number", "format": "float", "description": "pefr"},
-            "heartRate": {"type":"number", "format": "float", "description": "heartRate"},
-            "x":{"type":"string", "description": "X Coordinate of GPS Location. Type is String to avoid rounding."},
-            "y":{"type":"string", "description": "Y Coordinate of GPS Location. Type is String to avoid rounding."}
-        }
+        "id" : "NewDailyReport",
+        "required": ["q1","q2","q3","q4","q5"],
+        "properties": contents
+    },
+    "ListDailyReport":{
+        "id":"ListDailyReport",
+        "required": ["daily_reports"],
+        "properties": { _links : { "$ref" : "CollectionLinks"}, daily_reports : {"type" : "array", items : { "$ref" : "DailyReport"}}}
+
     }
 };

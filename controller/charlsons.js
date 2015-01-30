@@ -119,13 +119,6 @@ exports.listSpec = {
     summary : "Get Charlson Records of this Patient (Roles: doctor)",
     notes: "This Function lists all Charlson Tests for the given patient. <br>This function passes the parameters to the SP listExams. <br><br> <b>Parameters:</b> <br><br>  " +
     "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " +
-    "To support pagination the following links are supplied, if page is greater than zero:  <br>" +
-    "_links: { <br>" +
-    "self: (link to this collection) <br>" +
-    "first: (link to first page of collection) <br>" +
-    "next: (link to next page of the collection, if result size not equals pageSize) <br>" +
-    "back: (link to previous page of the collection, if page is greater than 1) <br>" +
-    "} <br> <br>" +
     "<b>Possible Results</b>: <br>" +
     " <b>200</b>  List of Charlsons is supplied. Format cats: [Array of charlson Model] <br>" +
     " <b>204</b>  List (or the current page) is currently empty <br>" +
@@ -133,13 +126,11 @@ exports.listSpec = {
     " <b>500</b> Internal Server Error",
     path : "/patients/{id}/charlsons",
     method: "GET",
-    type : "Charlson",
+    type : "ListCharlson",
     nickname : "listCharlson",
     parameters : [swagger.pathParam("id", "Patient where the records belong to", "string"),
         swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
-        swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")],
-    responseMessages : [swagger.errors.notFound('id')]
-
+        swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")]
 };
 
 
@@ -154,9 +145,7 @@ exports.addSpec = {
     path : "/patients/{id}/charlsons",
     method: "POST",
     nickname : "addCharlson",
-    parameters : [swagger.bodyParam("Charlson", "new Record", "NewCharlson"), swagger.pathParam("id", "Patient where the records belong to", "string")],
-    responseMessages : [swagger.errors.notFound('id')]
-
+    parameters : [swagger.bodyParam("Charlson", "new Record", "NewCharlson"), swagger.pathParam("id", "Patient where the records belong to", "string")]
 };
 
 exports.listOneSpec = {
@@ -171,9 +160,7 @@ exports.listOneSpec = {
     method: "GET",
     type : "Charlson",
     nickname : "listOneCharlson",
-    parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")],
-    responseMessages : [swagger.errors.notFound('rid')]
-
+    parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")]
 };
 
 
@@ -203,10 +190,91 @@ exports.updateSpec = {
     path : "/patients/{id}/charlsons/{rid}",
     method: "PUT",
     nickname : "updateCharlson",
-    parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string") ,swagger.bodyParam("Charlson", "updated Charlson Record", "Charlson")],
-    responseMessages : [swagger.errors.notFound('rid')]
+    parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string") ,swagger.bodyParam("Charlson", "updated Charlson Record", "NewCharlson")]
 };
 
+
+var contents = {
+    "patientId":{
+        "type":"integer",
+        "format": "int32",
+        "description": "Unique Identifier of the Patient"
+    },
+    "diagnoseDate":{
+        "type":"string",
+        "format": "Date",
+        "description": "Date of Diagnose"
+    },
+    "recordId":{
+        "type":"integer",
+        "format": "int32",
+        "description": "Unique Identifier of this Record"
+    },
+    "myocardialInfarction":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "congestiveHeartFailure":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "peripheralVascularDisease":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "cerebrovascularDisease":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "dementia":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "chronicPulmonaryDiasease":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "connectiveTissueDisease":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "ulcerDisease":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "liverDiseaseMild":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "diabetes":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "hemiplegia":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "renalDiseaseModerateOrSevere":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "diabetesWithEndOrganDamage":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "anyTumor":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "metastaticSolidMalignancy":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "leukemia":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "malignantLymphoma":{
+        "type":"boolean","description": "Value for given Answer"
+
+    },
+    "liverDiseaseModerateOrSevere":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "aids":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "noConditionAvailable":{
+        "type":"boolean","description": "Value for given Answer"
+    },
+    "totalCharlson":{
+        "type":"integer", "format": "int32","description": "Value for given Answer"
+    }
+};
 
 exports.models = {
     "Charlson":{
@@ -215,161 +283,21 @@ exports.models = {
             "cerebrovascularDisease","dementia","chronicPulmonaryDiasease","connectiveTissueDisease","ulcerDisease","liverDiseaseMild",
             "diabetes","hemiplegia","renalDiseaseModerateOrSevere","diabetesWithEndOrganDamage","anyTumor","leukemia","malignantLymphoma",
             "liverDiseaseModerateOrSevere","metastaticSolidMalignancy","aids","noConditionAvailable","totalCharlson"],
-        "properties":{
-            "patientId":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Unique Identifier of the Patient"
-            },
-            "diagnoseDate":{
-                "type":"string",
-                "format": "Date",
-                "description": "Date of Diagnose"
-            },
-            "recordId":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Unique Identifier of this Record"
-            },
-            "myocardialInfarction":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "congestiveHeartFailure":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "peripheralVascularDisease":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "cerebrovascularDisease":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "dementia":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "chronicPulmonaryDiasease":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "connectiveTissueDisease":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "ulcerDisease":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "liverDiseaseMild":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "diabetes":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "hemiplegia":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "renalDiseaseModerateOrSevere":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "diabetesWithEndOrganDamage":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "anyTumor":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "metastaticSolidMalignancy":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "leukemia":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "malignantLymphoma":{
-                "type":"boolean","description": "Value for given Answer"
-
-            },
-            "liverDiseaseModerateOrSevere":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "aids":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "noConditionAvailable":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "totalCharlson":{
-                "type":"integer", "format": "int32","description": "Value for given Answer"
-            }
-        }
+        "properties": contents
     },
     "NewCharlson":{
-        "id":"Charlson",
+        "id":"NewCharlson",
         "required": ["myocardialInfarction","congestiveHeartFailure","peripheralVascularDisease",
             "cerebrovascularDisease","dementia","chronicPulmonaryDiasease","connectiveTissueDisease","ulcerDisease","liverDiseaseMild",
             "diabetes","hemiplegia","renalDiseaseModerateOrSevere","diabetesWithEndOrganDamage","anyTumor","leukemia","malignantLymphoma",
             "liverDiseaseModerateOrSevere","metastaticSolidMalignancy","aids","noConditionAvailable"],
-        "properties":{
-            "diagnoseDate":{
-                "type":"string",
-                "format": "Date",
-                "description": "Date of Diagnose"
-            },
-            "myocardialInfarction":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "congestiveHeartFailure":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "peripheralVascularDisease":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "cerebrovascularDisease":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "dementia":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "chronicPulmonaryDiasease":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "connectiveTissueDisease":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "ulcerDisease":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "liverDiseaseMild":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "diabetes":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "hemiplegia":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "renalDiseaseModerateOrSevere":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "diabetesWithEndOrganDamage":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "anyTumor":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "metastaticSolidMalignancy":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "leukemia":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "malignantLymphoma":{
-                "type":"boolean", "description": "Value for given Answer"
-            },
-            "liverDiseaseModerateOrSevere":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "aids":{
-                "type":"boolean","description": "Value for given Answer"
-            },
-            "noConditionAvailable":{
-                "type":"boolean","description": "Value for given Answer"
-            }
-        }
+        "properties": contents
+    },
+    "ListCharlson":{
+        "id":"ListCharlson",
+        "required": ["charlsons"],
+        "properties": { _links : { "$ref" : "CollectionLinks"}, charlsons : {"type" : "array", items : { "$ref" : "Charlson"}}}
+
     }
 };
 

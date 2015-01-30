@@ -139,19 +139,13 @@ exports.listSpec = {
 
     "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " +
     "To support pagination the following links are supplied, if page is greater than zero:  <br>" +
-    "_links: { <br>" +
-    "self: (link to this collection) <br>" +
-    "first: (link to first page of collection) <br>" +
-    "next: (link to next page of the collection, if result size not equals pageSize) <br>" +
-    "back: (link to previous page of the collection, if page is greater than 1) <br>" +
-    "} <br> <br>" +
     "<b>Possible Results</b>: <br>" +
     " <b>200</b>  List of Patients is supplied. Format accounts: [Array of Notifications Model] <br>" +
     " <b>204</b>  List (or the current page) is currently empty <br>" +
     " <b>500</b> Internal Server Error",
     path : "/notifications",
     method: "GET",
-    type : "Notification",
+    type : "ListNotification",
     nickname : "listNotifications",
     parameters : [
         swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
@@ -195,5 +189,11 @@ exports.models = {
             "type":{"type":"integer","format": "int32","description": "notification type (range 1-6)"},
             "message":{"type":"string"}
         }
+    },
+    "ListNotification":{
+        "id":"ListNotification",
+        "required": ["notifications"],
+        "properties": { _links : { "$ref" : "CollectionLinks"}, notifications : {"type" : "array", items : { "$ref" : "Notification"}}}
+
     }
 };

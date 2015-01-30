@@ -142,13 +142,6 @@ exports.listSpec = {
     summary : "Get Treatment Records of this Patient (Roles: doctor)",
     notes: "This Function lists all Treatment Records for the given patient. <br>This function passes the parameters to the SP listExams. <br><br> <b>Parameters:</b> <br><br>  " +
     "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " +
-    "To support pagination the following links are supplied, if page is greater than zero:  <br>" +
-    "_links: { <br>" +
-    "self: (link to this collection) <br>" +
-    "first: (link to first page of collection) <br>" +
-    "next: (link to next page of the collection, if result size not equals pageSize) <br>" +
-    "back: (link to previous page of the collection, if page is greater than 1) <br>" +
-    "} <br> <br>" +
     "<b>Possible Results</b>: <br>" +
     " <b>200</b>  List of Readings is supplied. Format cats: [Array of treatments Model] <br>" +
     " <b>204</b>  List (or the current page) is currently empty <br>" +
@@ -156,13 +149,11 @@ exports.listSpec = {
     " <b>500</b> Internal Server Error",
     path : "/patients/{id}/treatments",
     method: "GET",
-    type : "Treatment",
+    type : "ListTreatment",
     nickname : "listTreatment",
     parameters : [swagger.pathParam("id", "Patient where the records belong to", "string"),
         swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
-        swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")],
-    responseMessages : [swagger.errors.notFound('id')]
-
+        swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")]
 };
 
 
@@ -228,9 +219,34 @@ exports.updateSpec = {
     nickname : "updateTreatment",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
         swagger.pathParam("rid", "ID of the Record", "string") ,
-        swagger.bodyParam("Treatment", "updated Treatment Record", "Treatment")]
+        swagger.bodyParam("Treatment", "updated Treatment Record", "NewTreatment")]
 };
 
+var contents = {
+    "patientId": {"type":"integer", "format": "int32", "description": "patientId"},
+    "recordId":{"type":"integer","format": "int32","description": "Unique Identifier of this Record"},
+    "diagnoseDate":{"type":"string","format": "Date", "description": "Date of Diagnose"},
+    "status":{"type":"string","description" : "Status","enum":[ "baseline", "exacerbation"]},
+    "antibiotics":{"type":"boolean","description": "antibiotics"},
+    "antiflu":{"type":"boolean","description": "antiflu"},
+    "antipneum":{"type":"boolean","description": "antipneum"},
+    "lama":{"type":"boolean","description": "lama"},
+    "longActingB2":{"type":"boolean","description": "longActingB2"},
+    "ltot":{"type":"boolean","description": "ltot"},
+    "ltotDevice":{"type":"string","description" : "LTOT Device","enum":[ "CPAP", "BiPAP"]},
+    "ltotStartDate":{"type":"string","format": "Date", "description": "Date of LTOT Start"},
+    "mycolytocis":{"type":"boolean","description": "mycolytocis"},
+    "niv":{"type":"boolean","description": "niv"},
+    "pdef4Inhalator":{"type":"boolean","description": "pdef4Inhalator"},
+    "sama":{"type":"boolean","description": "sama"},
+    "shortActingB2":{"type":"boolean","description": "shortActingB2"},
+    "steroidsInhaled":{"type":"boolean","description": "steroidsInhaled"},
+    "steroidsOral":{"type":"boolean","description": "steroidsOral"},
+    "theophyline":{"type":"boolean","description": "theophyline"},
+    "ultraLongB2":{"type":"boolean","description": "ultraLongB2"},
+    "ventilationDevice":{"type":"string","description" : "Ventilation Device","enum":[ "Concetrator", "Cylinder", "Liquid"]},
+    "ventilationStart":{"type":"string","format": "Date", "description": "Date of Ventilation Start"}
+};
 
 exports.models = {
     "Treatment":{
@@ -238,60 +254,20 @@ exports.models = {
         "required": ["patientId","recordId","diagnoseDate","status","antibiotics","antiflu","antipneum","lama","longActingB2","ltot",
             "ltotDevice","ltotStart","mycolytocis","niv","pdef4Inhalator","sama","shortActingB2","steroidsInhaled",
             "steroidsOral","theophyline","ultraLongB2","ventilationDevice","ventilationStart"],
-        "properties":{
-            "patientId": {"type":"integer", "format": "int32", "description": "patientId"},
-            "recordId":{"type":"integer","format": "int32","description": "Unique Identifier of this Record"},
-            "diagnoseDate":{"type":"string","format": "Date", "description": "Date of Diagnose"},
-            "status":{"type":"string","description" : "Status","enum":[ "Baseline", "Exacerbation"]},
-            "antibiotics":{"type":"boolean","description": "antibiotics"},
-            "antiflu":{"type":"boolean","description": "antiflu"},
-            "antipneum":{"type":"boolean","description": "antipneum"},
-            "lama":{"type":"boolean","description": "lama"},
-            "longActingB2":{"type":"boolean","description": "longActingB2"},
-            "ltot":{"type":"boolean","description": "ltot"},
-            "ltotDevice":{"type":"string","description" : "LTOT Device","enum":[ "CPAP", "BiPAP"]},
-            "ltotStartDate":{"type":"string","format": "Date", "description": "Date of LTOT Start"},
-            "mycolytocis":{"type":"boolean","description": "mycolytocis"},
-            "niv":{"type":"boolean","description": "niv"},
-            "pdef4Inhalator":{"type":"boolean","description": "pdef4Inhalator"},
-            "sama":{"type":"boolean","description": "sama"},
-            "shortActingB2":{"type":"boolean","description": "shortActingB2"},
-            "steroidsInhaled":{"type":"boolean","description": "steroidsInhaled"},
-            "steroidsOral":{"type":"boolean","description": "steroidsOral"},
-            "theophyline":{"type":"boolean","description": "theophyline"},
-            "ultraLongB2":{"type":"boolean","description": "ultraLongB2"},
-            "ventilationDevice":{"type":"string","description" : "Ventilation Device","enum":[ "Concetrator", "Cylinder", "Liquid"]},
-            "ventilationStart":{"type":"string","format": "Date", "description": "Date of Ventilation Start"}
-        }
+        "properties": contents
     },
     "NewTreatment":{
-        "id":"Treatment",
+        "id":"NewTreatment",
         "required": ["patientId","diagnoseDate","status","antibiotics","antiflu","antipneum","lama","longActingB2","ltot",
             "ltotDevice","ltotStart","mycolytocis","niv","pdef4Inhalator","sama","shortActingB2","steroidsInhaled",
             "steroidsOral","theophyline","ultraLongB2","ventilationDevice","ventilationStart"],
-        "properties":{
-            "diagnoseDate":{"type":"string","format": "Date", "description": "Date of Diagnose"},
-            "status":{"type":"string","description" : "Status","enum":[ "Baseline", "Exacerbation"]},
-            "antibiotics":{"type":"boolean","description": "antibiotics"},
-            "antiflu":{"type":"boolean","description": "antiflu"},
-            "antipneum":{"type":"boolean","description": "antipneum"},
-            "lama":{"type":"boolean","description": "lama"},
-            "longActingB2":{"type":"boolean","description": "longActingB2"},
-            "ltot":{"type":"boolean","description": "ltot"},
-            "ltotDevice":{"type":"string","description" : "LTOT Device","enum":[ "CPAP", "BiPAP"]},
-            "ltotStartDate":{"type":"string","format": "Date", "description": "Date of LTOT Start"},
-            "mycolytocis":{"type":"boolean","description": "mycolytocis"},
-            "niv":{"type":"boolean","description": "niv"},
-            "pdef4Inhalator":{"type":"boolean","description": "pdef4Inhalator"},
-            "sama":{"type":"boolean","description": "sama"},
-            "shortActingB2":{"type":"boolean","description": "shortActingB2"},
-            "steroidsInhaled":{"type":"boolean","description": "steroidsInhaled"},
-            "steroidsOral":{"type":"boolean","description": "steroidsOral"},
-            "theophyline":{"type":"boolean","description": "theophyline"},
-            "ultraLongB2":{"type":"boolean","description": "ultraLongB2"},
-            "ventilationDevice":{"type":"string","description" : "Ventilation Device","enum":[ "Concetrator", "Cylinder", "Liquid"]},
-            "ventilationStart":{"type":"string","format": "Date", "description": "Date of Ventilation Start"}
-        }
+        "properties": contents
+    },
+    "ListTreatment":{
+        "id":"ListTreatment",
+        "required": ["treatments"],
+        "properties": { _links : { "$ref" : "CollectionLinks"}, treatments : {"type" : "array", items : { "$ref" : "Treatment"}}}
+
     }
 };
 

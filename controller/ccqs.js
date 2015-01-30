@@ -118,13 +118,6 @@ exports.listSpec = {
     summary : "Get All CCQ Records of this Patient (Roles: doctor)",
     notes: "This Function lists all COPD Clinical Questionnaires for the given patient. <br>This function passes the parameters to the SP listExams. <br><br> <b>Parameters:</b> <br><br>  " +
     "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " +
-    "To support pagination the following links are supplied, if page is greater than zero:  <br>" +
-    "_links: { <br>" +
-    "self: (link to this collection) <br>" +
-    "first: (link to first page of collection) <br>" +
-    "next: (link to next page of the collection, if result size not equals pageSize) <br>" +
-    "back: (link to previous page of the collection, if page is greater than 1) <br>" +
-    "} <br> <br>" +
     "<b>Possible Results</b>: <br>" +
     " <b>200</b>  List of CCQs is supplied. Format cats: [Array of ccq Model] <br>" +
     " <b>204</b>  List (or the current page) is currently empty <br>" +
@@ -132,7 +125,7 @@ exports.listSpec = {
     " <b>500</b> Internal Server Error",
     path : "/patients/{id}/ccqs",
     method: "GET",
-    type : "CCQ",
+    type : "ListCCQ",
     nickname : "listCCQ",
     parameters : [swagger.pathParam("id", "Patient where the records belong to", "string"),
         swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
@@ -153,8 +146,6 @@ exports.addSpec = {
     method: "POST",
     nickname : "addCCQ",
     parameters : [swagger.bodyParam("CCQ", "new Record", "NewCCQ"), swagger.pathParam("id", "Patient where the records belong to", "string")]
-
-
 };
 
 
@@ -171,7 +162,6 @@ exports.listOneSpec = {
     type : "CCQ",
     nickname : "listOneCCQ",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")]
-
 };
 
 
@@ -186,7 +176,6 @@ exports.delSpec = {
     method: "DELETE",
     nickname : "delCCQ",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string")]
-
 };
 
 exports.updateSpec = {
@@ -200,180 +189,90 @@ exports.updateSpec = {
     path : "/patients/{id}/ccqs/{rid}",
     method: "PUT",
     nickname : "updateCCQ",
-    parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string") ,swagger.bodyParam("CCQ", "updated CCQ Record", "CCQ")]
+    parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string") ,swagger.bodyParam("CCQ", "updated CCQ Record", "NewCCQ")]
 };
 
+var ccqAnswer = {
+    "type":"integer",
+    "format": "int32",
+    "description": "CCQ Answer Value",
+    "minimum": "0",
+    "maximum" : "5"
+};
+
+var contents = {
+    "patientId":{
+        "type":"integer",
+        "format": "int32",
+        "description": "Unique Identifier of the Patient"
+    },
+    "recordId":{
+        "type":"integer",
+        "format": "int32",
+        "description": "Unique Identifier of this Record"
+    },
+    "diagnoseDate":{
+        "type":"string",
+        "format": "Date",
+        "description": "Date of Diagnose"
+    },
+    "status":{
+        "type":"string",
+        "description" : "Status",
+        "enum":[
+            "baseline",
+            "exacerbation"
+        ]
+    },
+    "q1":ccqAnswer,
+    "q2":ccqAnswer,
+    "q3":ccqAnswer,
+    "q4":ccqAnswer,
+    "q5":ccqAnswer,
+    "q6":ccqAnswer,
+    "q7":ccqAnswer,
+    "q8":ccqAnswer,
+    "q9":ccqAnswer,
+    "q10":ccqAnswer,
+    "totalCCQScore":{
+        "type":"number",
+        "format": "float",
+        "description": "Total CCQ Score"
+    },
+    "symptomScore":{
+        "type":"number",
+        "format": "float",
+        "description": "Symptom Score"
+    },
+    "mentalStateScore":{
+        "type":"number",
+        "format": "float",
+        "description": "Mental State Score"
+    },
+    "functionalStateScore":{
+        "type":"number",
+        "format": "float",
+        "description": "Functional State Score"
+    }
+
+};
 
 exports.models = {
     "CCQ":{
         "id":"CCQ",
         "required": ["patientId","recordId", "diagnoseDate", "status", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "totalCCQScore", "symptomScore", "mentalStateScore", "functionalStateScore"],
-        "properties":{
-            "patientId":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Unique Identifier of the Patient"
-            },
-            "recordId":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Unique Identifier of this Record"
-            },
-            "diagnoseDate":{
-                "type":"string",
-                "format": "Date",
-                "description": "Date of Diagnose"
-            },
-            "status":{
-                "type":"string",
-                "description" : "Status",
-                "enum":[
-                    "Baseline",
-                    "Exacerbation"
-                ]
-            },
-            "q1":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q1"
-            },
-            "q2":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q2"
-            },
-            "q3":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q3"
-            },
-            "q4":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q4"
-            },
-            "q5":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q5"
-            },
-            "q6":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q6"
-            },
-            "q7":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q7"
-            },
-            "q8":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q8"
-            },
-            "q9":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q9"
-            },
-            "q10":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q10"
-            },
-            "totalCCQScore":{
-                "type":"number",
-                "format": "float",
-                "description": "Total CCQ Score"
-            },
-            "symptomScore":{
-                "type":"number",
-                "format": "float",
-                "description": "Symptom Score"
-            },
-            "mentalStateScore":{
-                "type":"number",
-                "format": "float",
-                "description": "Mental State Score"
-            },
-            "functionalStateScore":{
-                "type":"number",
-                "format": "float",
-                "description": "Functional State Score"
-            }
-
-        }
+        "properties" : contents
     },
     "NewCCQ":{
-        "id":"CCQ",
+        "id":"NewCCQ",
         "required": ["q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "status"],
-        "properties":{
-            "diagnoseDate":{
-                "type":"string",
-                "format": "Date",
-                "description": "Date of Diagnose"
-            },
-            "status":{
-                "type":"string",
-                "description" : "Status",
-                "enum":[
-                    "Baseline",
-                    "Exacerbation"
-                ]
-            },
-            "q1":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q1"
-            },
-            "q2":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q2"
-            },
-            "q3":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q3"
-            },
-            "q4":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q4"
-            },
-            "q5":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q5"
-            },
-            "q6":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q6"
-            },
-            "q7":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q7"
-            },
-            "q8":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q8"
-            },
-            "q9":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q9"
-            },
-            "q10":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q10"
-            }
+        "properties": contents
+    },
+    "ListCCQ":{
+        "id":"ListCCQ",
+        "required": ["ccqs"],
+        "properties": { _links : { "$ref" : "CollectionLinks"}, ccqs : {"type" : "array", items : { "$ref" : "CCQ"}}}
 
-        }
     }
 };
 

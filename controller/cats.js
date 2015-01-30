@@ -36,12 +36,12 @@ exports.del = function(req,res,next){
 
 /**
  *  POST /patients/id/cats
- *  Steps: 
+ *  Steps:
  *  	1) Validate Role!
  *  	2) Get DB Connection
  *  	3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
- *  	4) create SQL Query from parameters 
- *  	5) add links to result 
+ *  	4) create SQL Query from parameters
+ *  	5) add links to result
  *  	6) send
  */
 exports.add = function(req,res,next){
@@ -74,12 +74,12 @@ exports.add = function(req,res,next){
 
 /**
  *  PUT /patients/id/cats/recordid
- *  Steps: 
+ *  Steps:
  *  	1) Validate Role!
  *  	2) Get DB Connection
  *  	3) Change connected user to currently logged in user (found via req.user, which was populated by passport)
- *  	4) create SQL Query from parameters 
- *  	5) add links to result 
+ *  	4) create SQL Query from parameters
+ *  	5) add links to result
  *  	6) send
  */
 exports.update = function(req,res,next){
@@ -119,13 +119,6 @@ exports.listSpec = {
     summary : "Get All Catscale Records of this Patient (Roles: doctor)",
     notes: "This Function lists all COPD Assessment Test for the given patient. <br>This function passes the parameters to the SP listExams. <br><br> <b>Parameters:</b> <br><br>  " +
     "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " +
-    "To support pagination the following links are supplied, if page is greater than zero:  <br>" +
-    "_links: { <br>" +
-    "self: (link to this collection) <br>" +
-    "first: (link to first page of collection) <br>" +
-    "next: (link to next page of the collection, if result size not equals pageSize) <br>" +
-    "back: (link to previous page of the collection, if page is greater than 1) <br>" +
-    "} <br> <br>" +
     "<b>Possible Results</b>: <br>" +
     " <b>200</b>  List of CAT is supplied. Format cats: [Array of cats Model] <br>" +
     " <b>204</b>  List (or the current page) is currently empty <br>" +
@@ -133,7 +126,7 @@ exports.listSpec = {
     " <b>500</b> Internal Server Error",
     path : "/patients/{id}/cats",
     method: "GET",
-    type : "Catscale",
+    type : "ListCatscale",
     nickname : "listCatscale",
     parameters : [swagger.pathParam("id", "Patient where the records belong to", "string"),
         swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
@@ -197,149 +190,73 @@ exports.updateSpec = {
     path : "/patients/{id}/cats/{rid}",
     method: "PUT",
     nickname : "updateCatscale",
-    parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string") ,swagger.bodyParam("Catscale", "updated Catscale Record", "Catscale")]
+    parameters : [swagger.pathParam("id", "ID of the Patient", "string"), swagger.pathParam("rid", "ID of the Record", "string") ,swagger.bodyParam("Catscale", "updated Catscale Record", "NewCatscale")]
+};
+
+var catAnswer = {
+    "type":"integer",
+    "format": "int32",
+    "description": "Catscale Answer Value",
+    "minimum" : "0",
+    "maximum" : "5"
+};
+
+var contents ={
+    "patientId":{
+        "type":"integer",
+        "format": "int32",
+        "description": "Unique Identifier of the Patient"
+    },
+    "recordId":{
+        "type":"integer",
+        "format": "int32",
+        "description": "Unique Identifier of this Record"
+    },
+    "totalCatscale":{
+        "type":"integer",
+        "format": "int32",
+        "description": "Catscale Score"
+    },
+    "q1": catAnswer,
+    "q2": catAnswer,
+    "q3": catAnswer,
+    "q4": catAnswer,
+    "q5": catAnswer,
+    "q6": catAnswer,
+    "q7": catAnswer,
+    "q8": catAnswer,
+    "diagnoseDate":{
+        "type":"string",
+        "format": "Date",
+        "description": "Date of Diagnose"
+    },
+    "status":{
+        "type":"string",
+        "description" : "Status",
+        "enum":[
+            "baseline",
+            "exacerbation"
+        ]
+    }
+
 };
 
 exports.models = {
     "Catscale":{
         "id":"Catscale",
-        "required": ["q1","q2","q3","q4","q5","q6","q7","q8","totalCatscale","patientId","recordId","diagnoseDate" ],
-        "properties":{
-            "patientId":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Unique Identifier of the Patient"
-            },
-            "recordId":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Unique Identifier of this Record"
-            },
-            "totalCatscale":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Catscale Score"
-            },
-            "q1":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q1"
-            },
-            "q2":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q2"
-            },
-            "q3":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q3"
-            },
-            "q4":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q4"
-            },
-            "q5":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q5"
-            },
-            "q6":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q6"
-            },
-            "q7":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q7"
-            },
-            "q8":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Score for Q8"
-            },
-            "diagnoseDate":{
-                "type":"string",
-                "format": "Date",
-                "description": "Date of Diagnose"
-            },
-            "status":{
-                "type":"string",
-                "description" : "Status",
-                "enum":[
-                    "Baseline",
-                    "Exacerbation"
-                ]
-            }
-
-        }
+        "required": ["q1","q2","q3","q4","q5","q6","q7","q8","totalCatscale","patientId","recordId","diagnoseDate","status" ],
+        properties: contents
     },
     "NewCatscale":{
-        "id":"Catscale",
+        "id":"NewCatscale",
         "required": ["q1","q2","q3","q4","q5","q6","q7","q8","status" ],
-        "properties":{
-            "patientId":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Unique Identifier of the Patient"
-            },
-            "q1":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Catscale Score"
-            },
-            "q2":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Catscale Score"
-            },
-            "q3":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Catscale Score"
-            },
-            "q4":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Catscale Score"
-            },
-            "q5":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Catscale Score"
-            },
-            "q6":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Catscale Score"
-            },
-            "q7":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Catscale Score"
-            },
-            "q8":{
-                "type":"integer",
-                "format": "int32",
-                "description": "Catscale Score"
-            },
-            "diagnoseDate":{
-                "type":"string",
-                "format": "Date",
-                "description": "Date of Diagnose"
-            },
-            "status":{
-                "type":"string",
-                "description" : "Status",
-                "enum":[
-                    "Baseline",
-                    "Exacerbation"
-                ]
-            }
+        "properties": contents
+    },
+    "ListCatscale":{
+        "id":"ListCatscale",
+        "required": ["cats"],
+        "properties": { _links : { "$ref" : "CollectionLinks"}, cats : {"type" : "array", items : { "$ref" : "Catscale"}}}
 
-        }
     }
 };
 
