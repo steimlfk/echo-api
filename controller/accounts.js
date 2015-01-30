@@ -9,8 +9,6 @@
  * TODO CATCH DELETE ACCOUNT (patients table references accounts table...)
  */
 var swagger = require('swagger-node-express');
-var mysql = require('../config/mysql');
-var db = mysql.db;
 var config = require('../config/config.js');
 var bcrypt = require('bcryptjs');
 var ssl = require('../config/ssl.js').useSsl;

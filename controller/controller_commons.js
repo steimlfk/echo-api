@@ -8,8 +8,6 @@
  */
 
 var swagger = require('swagger-node-express');
-var mysql = require('../config/mysql');
-var db = mysql.db;
 var config = require('../config/config.js');
 var ssl = require('../config/ssl.js').useSsl;
 
