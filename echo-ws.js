@@ -36,20 +36,13 @@ var url_port = config.url_port;
 
 
 app.set('port', port);									
-app.set('views', __dirname + '/demoapp/views');				//required for webdemo
-app.set('view engine', 'jade');								//required for webdemo
-app.use(session({ secret: 'echo_secret' }));				//required for webdemo
-app.use(passport.initialize());	
-app.use(passport.session());								//required for webdemo
-app.use(serveStatic(path.join(__dirname, 'public')));		//required for webdemo
+app.use(passport.initialize());
 
 var auth = require('./config/auth');
 
 /**
  * REST API
  */
-var webdemo_path = '/demoapp';
-//app.get('/', function(req, res){res.redirect(webdemo_path+'/login');});	//required for webdemo
 app.get('/', function(req, res){res.redirect('/docs');});
 
 //setup login-Endpoint
@@ -102,11 +95,6 @@ for (var i = 0; i < files.length; i++){
 
 app.use(utils.errorHandler);
 
-/**
- * Demo Web-App
- */
-
-app.use(webdemo_path, require('./demoapp')(host, url_port, webdemo_path, ssl));
 
 /**
  * Swagger UI
