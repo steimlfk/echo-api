@@ -53,12 +53,12 @@ var webdemo_path = '/demoapp';
 app.get('/', function(req, res){res.redirect('/docs');});
 
 //setup login-Endpoint
-app.use('/login', bodyParser());
+app.use('/login', bodyParser.json());
 swagger.addPost({'spec':oauth2.loginSpec,'action':oauth2.endpoint})
 
 //setup protected ECHO Endpoints
 var echo_endpoints = ['/accounts', '/patients', '/questions','/notifications','/createPatientAndAccount','/changeDoctor', '/devices'];
-var echo_middlewares = [bodyParser(), passport.authenticate(['bearer'], { session: false }), utils.accessControl, utils.databaseHandler];
+var echo_middlewares = [bodyParser.json(), passport.authenticate(['bearer'], { session: false }), utils.accessControl, utils.databaseHandler];
 
 for (var i = 0; i< echo_endpoints.length; i++){
         app.use(echo_endpoints[i], echo_middlewares);
