@@ -12,7 +12,7 @@ var mysql = require('../config/mysql');
 var db = mysql.db;
 var config = require('../config/config.js');
 
-/*
+/**
  *  POST /accounts/id/devices
  *  Steps:
  *  	1) Get DB Connection

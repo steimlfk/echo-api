@@ -10,23 +10,23 @@ var swagger = require('swagger-node-express');
 var mysql = require('../config/mysql');
 var db = mysql.db;
 var config = require('../config/config.js');
-var commons = require('./exam_commons.js');
+var commons = require('./controller_commons.js');
 
-/*
+/**
  *  GET /patients/id/treatments
  */
 exports.list = function(req,res,next){
     commons.list(req,res,next,'treatments');
 };
 
-/*
+/**
  * GET /patients/id/treatments/recordid
  */
 exports.listOne = function(req,res,next){
     commons.listOne(req,res,next,'treatments');
 };
 
-/*
+/**
  *  DELETE /patients/id/treatments/recordid
  */
 exports.del = function(req,res,next){

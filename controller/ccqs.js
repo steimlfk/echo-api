@@ -10,7 +10,7 @@ var swagger = require('swagger-node-express');
 var mysql = require('../config/mysql');
 var db = mysql.db;
 var config = require('../config/config.js');
-var commons = require('./exam_commons.js');
+var commons = require('./controller_commons.js');
 
 /**
  *  GET /patients/id/ccqs

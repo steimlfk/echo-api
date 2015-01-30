@@ -9,7 +9,7 @@ var db					= require('./mysql').db;
 var jwt 				= require('jsonwebtoken');
 var swagger 			= require('swagger-node-express');
 var HashMap 			= require('hashmap').HashMap;
-var utils 				= require('../config/utils.js');
+var utils 				= require('../config/controller_utils.js');
 var config 				= require('../config/config.js');
 
 //create OAuth 2.0 server which will create the tokens

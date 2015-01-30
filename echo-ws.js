@@ -12,24 +12,7 @@ swagger = require("swagger-node-express"),
 session = require('cookie-session'),
 fs = require('fs');
 
-/**
- * Controller
- */
-var patients =         	require('./controller/patients'),
-accounts =             	require('./controller/accounts'),
-catscale =             	require('./controller/cats'),
-questions =            	require('./controller/questions'),
-daily_answers =        	require('./controller/daily_reports'),
-death =        			require('./controller/death'),
-charlson =             	require('./controller/charlsons'),
-readings =           	require('./controller/readings'),
-treatments =           	require('./controller/treatments'),
-notifications =         require('./controller/notifications'),
-commands =        		require('./controller/commands'),
-devices =        		require('./controller/devices'),
-ccqweek =              	require('./controller/ccqs');
-
-var utils =				require('./controller/utils');
+var utils =				require('./controller/controller_utils');
 
 /**
  * Config & Vars
@@ -69,10 +52,11 @@ var webdemo_path = '/demoapp';
 //app.get('/', function(req, res){res.redirect(webdemo_path+'/login');});	//required for webdemo
 app.get('/', function(req, res){res.redirect('/docs');});
 
+//setup login-Endpoint
 app.use('/login', bodyParser());
 swagger.addPost({'spec':oauth2.loginSpec,'action':oauth2.endpoint})
 
-
+//setup protected ECHO Endpoints
 var echo_endpoints = ['/accounts', '/patients', '/questions','/notifications','/createPatientAndAccount','/changeDoctor', '/devices'];
 var echo_middlewares = [bodyParser(), passport.authenticate(['bearer'], { session: false }), utils.accessControl, utils.databaseHandler];
 
@@ -80,91 +64,41 @@ for (var i = 0; i< echo_endpoints.length; i++){
         app.use(echo_endpoints[i], echo_middlewares);
 };
 
-swagger.addModels(accounts);
-swagger.addGet(		{'spec': accounts.listSpec,'action': accounts.list});
-swagger.addPost(	{'spec': accounts.addSpec,'action': accounts.add});
-swagger.addGet(		{'spec': accounts.listOneSpec,'action': accounts.listOne});
-swagger.addPut(		{'spec': accounts.updateSpec,'action': accounts.update});
-swagger.addDelete(	{'spec': accounts.delSpec,'action': accounts.del});
 
+var models = {CollectionLinks : {
+    id : "CollectionLinks",
+    required : ["self", "first"],
+    properties: {
+        self : {"type":"string", "description": "Link to this Collection"},
+        first : {"type":"string", "description": "Link to first Page of this Collection"},
+        next : {"type":"string", "description": "Link to next Page of this Collection"},
+        back : {"type":"string", "description": "Link to previous Page of this Collection"}
+    }
+}};
+swagger.addModels({models:models});
 
-swagger.addModels(patients);
-swagger.addGet(		{'spec': patients.listSpec,'action': patients.list});
-swagger.addPost(	{'spec': patients.addSpec,'action': patients.add}); 
-swagger.addGet(		{'spec': patients.listOneSpec,'action': patients.listOne});
-swagger.addPut(		{'spec': patients.updateSpec,'action': patients.update});
-swagger.addDelete(	{'spec': patients.delSpec,'action': patients.del});
+// Loading Controllers
+var files = utils.getFilesFromDir('./controller');
 
+for (var i = 0; i < files.length; i++){
+    //var res_name = files[i].split('/').pop().split('.')[0];
+    if (fs.statSync(files[i]).isFile()){
+        var ctrl = require (files[i]);
+        // Load File only if there is a property called models (which is supposed to contain swagger models)
+        if (ctrl.models){
+            swagger.addModels(ctrl);
 
-swagger.addModels(catscale);
-swagger.addGet(		{'spec': catscale.listSpec,'action': catscale.list});
-swagger.addPost(	{'spec': catscale.addSpec,'action': catscale.add});
-swagger.addGet(		{'spec': catscale.listOneSpec,'action': catscale.listOne});
-swagger.addPut(		{'spec': catscale.updateSpec,'action': catscale.update});
-swagger.addDelete(	{'spec': catscale.delSpec,'action': catscale.del});
+            for (var fkt in ctrl){
+                // iterate over all properties with 'Spec' in name
+                // and load the corresponding functions into swagger
+                if (ctrl.hasOwnProperty(fkt) && fkt.indexOf("Spec") > -1) {
+                    swagger.addHandlers(ctrl[fkt].method , { '0': {spec: ctrl[fkt], action: ctrl[fkt.split("Spec")[0]]}});
 
-
-swagger.addModels(ccqweek);
-swagger.addGet(		{'spec': ccqweek.listSpec,'action': ccqweek.list});
-swagger.addPost(	{'spec': ccqweek.addSpec,'action': ccqweek.add});
-swagger.addGet(		{'spec': ccqweek.listOneSpec,'action': ccqweek.listOne});
-swagger.addPut(		{'spec': ccqweek.updateSpec,'action': ccqweek.update});
-swagger.addDelete(	{'spec': ccqweek.delSpec,'action': ccqweek.del});
-
-
-swagger.addModels(charlson);
-swagger.addGet(		{'spec': charlson.listSpec,'action': charlson.list});
-swagger.addPost(	{'spec': charlson.addSpec,'action': charlson.add});
-swagger.addGet(		{'spec': charlson.listOneSpec,'action': charlson.listOne});
-swagger.addPut(		{'spec': charlson.updateSpec,'action': charlson.update});
-swagger.addDelete(	{'spec': charlson.delSpec,'action': charlson.del});
-
-swagger.addModels(daily_answers);
-swagger.addGet(		{'spec': daily_answers.listSpec,'action': daily_answers.list});
-swagger.addPost(	{'spec': daily_answers.addSpec,'action': daily_answers.add});
-swagger.addGet(		{'spec': daily_answers.listOneSpec,'action': daily_answers.listOne});
-swagger.addPut(		{'spec': daily_answers.updateSpec,'action': daily_answers.update});
-swagger.addDelete(	{'spec': daily_answers.delSpec,'action': daily_answers.del});
-
-swagger.addModels(death);
-swagger.addGet(		{'spec': death.listSpec,'action': death.list});
-swagger.addPost(	{'spec': death.addSpec,'action': death.add});
-swagger.addPut(		{'spec': death.updateSpec,'action': death.update});
-swagger.addDelete(	{'spec': death.delSpec,'action': death.del});
-
-swagger.addModels(readings);
-swagger.addGet(		{'spec': readings.listSpec,'action': readings.list});
-swagger.addPost(	{'spec': readings.addSpec,'action': readings.add});
-swagger.addGet(		{'spec': readings.listOneSpec,'action': readings.listOne});
-swagger.addPut(		{'spec': readings.updateSpec,'action': readings.update});
-swagger.addDelete(	{'spec': readings.delSpec,'action': readings.del});
-
-swagger.addModels(treatments);
-swagger.addGet(		{'spec': treatments.listSpec,'action': treatments.list});
-swagger.addPost(	{'spec': treatments.addSpec,'action': treatments.add});
-swagger.addGet(		{'spec': treatments.listOneSpec,'action': treatments.listOne});
-swagger.addPut(		{'spec': treatments.updateSpec,'action': treatments.update});
-swagger.addDelete(	{'spec': treatments.delSpec,'action': treatments.del});
-
-swagger.addModels(questions);
-swagger.addGet(		{'spec': questions.listSpec,'action': questions.list});
-swagger.addPost(	{'spec': questions.addSpec,'action': questions.add});
-swagger.addGet(		{'spec': questions.listCatscaleSpec,'action': questions.listCatscale});
-swagger.addGet(		{'spec': questions.listCCQSpec,'action': questions.listCCQ});
-swagger.addGet(		{'spec': questions.listCharlsonSpec,'action': questions.listCharlson});
-swagger.addGet(		{'spec': questions.listDailySpec,'action': questions.listDaily});
-
-swagger.addModels(notifications);
-swagger.addGet(		{'spec': notifications.listSpec,'action': notifications.list});
-swagger.addPost(	{'spec': notifications.addSpec,'action': notifications.add});
-
-swagger.addModels(commands);
-swagger.addPost(	{'spec': commands.createSpec, 'action': commands.createPatientAndAccount});
-swagger.addPost(	{'spec': commands.changeSpec, 'action': commands.changeDoctor});
-
-swagger.addModels(devices);
-swagger.addPost(	{'spec': devices.addSpec, 'action': devices.add});
-swagger.addDelete(	{'spec': devices.delSpec, 'action': devices.del});
+                }
+            }
+        }
+    };
+};
 
 app.use(utils.errorHandler);
 
@@ -256,3 +190,4 @@ else {
 		console.log('Swagger Base: http://'+host+':'+url_port + api_docs);
 	});
 }
+

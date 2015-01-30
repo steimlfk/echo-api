@@ -10,31 +10,31 @@ var swagger = require('swagger-node-express');
 var mysql = require('../config/mysql');
 var db = mysql.db;
 var config = require('../config/config.js');
-var commons = require('./exam_commons.js');
+var commons = require('./controller_commons.js');
 
 
-/*
+/**
  *  GET /patients/id/cats
  */
 exports.list = function(req,res,next){
     commons.list(req,res,next,'cats');
 };
 
-/*
+/**
  * GET /patients/id/cats/recordid
  */
 exports.listOne = function(req,res,next){
     commons.listOne(req,res,next,'cats');
 };
 
-/*
+/**
  *  DELETE /patients/id/cats/recordid
  */
 exports.del = function(req,res,next){
     commons.del(req,res,next,'cats');
 };
 
-/*
+/**
  *  POST /patients/id/cats
  *  Steps: 
  *  	1) Validate Role!
@@ -72,7 +72,7 @@ exports.add = function(req,res,next){
         });
 };
 
-/*
+/**
  *  PUT /patients/id/cats/recordid
  *  Steps: 
  *  	1) Validate Role!

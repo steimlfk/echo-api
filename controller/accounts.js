@@ -15,7 +15,7 @@ var config = require('../config/config.js');
 var bcrypt = require('bcryptjs');
 var ssl = require('../config/ssl.js').useSsl;
 
-/*
+/**
  *  GET /accounts
  *  
  *  Steps: 
@@ -134,7 +134,7 @@ exports.list = function(req,res,nextOp){
 };
 
 
-/*
+/**
  *  GET /accounts/id
  *    Steps: 
  *  	1) Get DB Connection
@@ -178,7 +178,7 @@ exports.listOne = function(req,res,next){
     });
 };
 
-/*
+/**
  *  POST /accounts
  *  Steps: 
  *  	1) Validate Role!
@@ -229,7 +229,7 @@ exports.add = function(req,res,next){
 };
 
 
-/*
+/**
  *  DELETE /accounts/id
  *  Steps: 
  *  	1) Validate Role!
@@ -265,7 +265,7 @@ exports.del =   function(req,res,next){
     });
 };
 
-/*
+/**
  *  PUT /accounts/id
  *  Steps: 
  *  	1) Get DB Connection
