@@ -3,7 +3,7 @@
  *
  * These are the exam-subresources (with collection-resources) of patients, which only can be used by doctors.
  *
- * Valid Values for exam parameter are: catscales, ccqs, charlsons, treatments, readings
+ * Valid Values for exam parameter are: cats, ccqs, charlsons, treatments, readings
  * (Those values are supported by the stored procedures!)
  */
 
@@ -12,9 +12,9 @@ var config = require('../config/config.js');
 var ssl = require('../config/ssl.js').useSsl;
 
 /**
- * GET lists from Catscales, CCQs, Charlsons, Treatments, Readings
+ * GET lists from CATs, CCQs, Charlsons, Treatments, Readings
  *
- * Valid Values for exam parameter are: catscales, ccqs, charlsons, treatments, readings
+ * Valid Values for exam parameter are: cats, ccqs, charlsons, treatments, readings
  * (Those values are supported by the stored procedures!)
  *
  * Steps:
@@ -105,9 +105,9 @@ exports.list = function(req, res, next, exam){
 };
 
 /**
- * GET single record from Catscales, CCQs, Charlsons, Treatments, Readings
+ * GET single record from CATs, CCQs, Charlsons, Treatments, Readings
  *
- * Valid Values for exam parameter are: catscales, ccqs, charlsons, treatments, readings
+ * Valid Values for exam parameter are: cats, ccqs, charlsons, treatments, readings
  * (Those values are supported by the stored procedures!)
  *
  * Steps:
@@ -154,9 +154,9 @@ exports.listOne = function(req,res,next, exam) {
 
 };
 /**
- * DELETE single record from Catscales, CCQs, Charlsons, Treatments, Readings
+ * DELETE single record from CATs, CCQs, Charlsons, Treatments, Readings
  *
- * Valid Values for exam parameter are: catscales, ccqs, charlsons, treatments, readings
+ * Valid Values for exam parameter are: cats, ccqs, charlsons, treatments, readings
  * (Those values are supported by the stored procedures!)
  *
  * Steps:
