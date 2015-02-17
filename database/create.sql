@@ -9,7 +9,7 @@ DROP SCHEMA IF EXISTS `echo` ;
 CREATE SCHEMA IF NOT EXISTS `echo` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci ;
 USE `echo` ;
 
-CREATE USER 'echo_db_usr'@'localhost' IDENTIFIED BY '123abc456';
+-- CREATE USER 'echo_db_usr'@'localhost' IDENTIFIED BY '123abc456';
 GRANT CREATE USER ON *.* to 'echo_db_usr'@'localhost';
 GRANT CREATE, GRANT OPTION ON echo.* TO 'echo_db_usr'@'localhost';
 GRANT SHOW VIEW, DELETE, INSERT, SELECT, UPDATE, TRIGGER, CREATE, GRANT OPTION ON TABLE echo.* TO 'echo_db_usr'@'localhost';
@@ -20,7 +20,7 @@ GRANT SHOW VIEW, DELETE, INSERT, SELECT, UPDATE, TRIGGER, CREATE, GRANT OPTION O
 
 DELIMITER $$
 USE `echo`$$
-CREATE DEFINER=`echo_db_usr`@`localhost` FUNCTION `getRole`() RETURNS char(10) CHARSET utf8
+CREATE DEFINER=`echo_db_usr`@`localhost` FUNCTION `getRole`() RETURNS char(10) CHARSET utf8 deterministic
 BEGIN
 	SELECT role into @ret from accounts where accountId = substring_index(user(), '@', 1);
 	RETURN @ret;
@@ -378,38 +378,38 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `echo`.`dailyreports`
+-- Table `echo`.`dailyReports`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`dailyreports` (
-  `recordId` INT(11) NOT NULL AUTO_INCREMENT,
-  `patientId` INT(11) NOT NULL,
-  `date` DATE NULL DEFAULT NULL,
-  `q1` TINYINT(1) NOT NULL,
-  `q2` TINYINT(1) NOT NULL,
-  `q3` TINYINT(1) NOT NULL,
-  `q4` TINYINT(1) NOT NULL,
-  `q5` TINYINT(1) NOT NULL,
-  `q1a` TINYINT(1) NULL DEFAULT '0',
-  `q1b` TINYINT(1) NULL DEFAULT '0',
-  `q1c` TINYINT(1) NULL DEFAULT '0',
-  `q3a` TINYINT(1) NULL DEFAULT '0',
-  `q3b` TINYINT(1) NULL DEFAULT '0',
-  `q3c` TINYINT(1) NULL DEFAULT '0',
-  `satO2` FLOAT(11) NULL DEFAULT '0',
-  `walkingDist` FLOAT(11) NULL DEFAULT '0',
-  `temperature` FLOAT(11) NULL DEFAULT '0',
-  `pefr` FLOAT(11) NULL DEFAULT '0',
-  `heartRate` FLOAT(11) NULL DEFAULT '0',
-  PRIMARY KEY (`recordId`),
-  INDEX `repFKpat_idx` (`patientId` ASC),
-  CONSTRAINT `repFKpat`
-    FOREIGN KEY (`patientId`)
-    REFERENCES `echo`.`patients` (`patientId`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8
-COLLATE = utf8_general_ci;
+-- CREATE TABLE IF NOT EXISTS `echo`.`dailyReports` (
+--  `recordId` INT(11) NOT NULL AUTO_INCREMENT,
+--  `patientId` INT(11) NOT NULL,
+--  `date` DATE NULL DEFAULT NULL,
+--  `q1` TINYINT(1) NOT NULL,
+--  `q2` TINYINT(1) NOT NULL,
+--  `q3` TINYINT(1) NOT NULL,
+--  `q4` TINYINT(1) NOT NULL,
+--  `q5` TINYINT(1) NOT NULL,
+--  `q1a` TINYINT(1) NULL DEFAULT '0',
+--  `q1b` TINYINT(1) NULL DEFAULT '0',
+--  `q1c` TINYINT(1) NULL DEFAULT '0',
+--  `q3a` TINYINT(1) NULL DEFAULT '0',
+--  `q3b` TINYINT(1) NULL DEFAULT '0',
+--  `q3c` TINYINT(1) NULL DEFAULT '0',
+--  `satO2` FLOAT(11) NULL DEFAULT '0',
+--  `walkingDist` FLOAT(11) NULL DEFAULT '0',
+--  `temperature` FLOAT(11) NULL DEFAULT '0',
+--  `pefr` FLOAT(11) NULL DEFAULT '0',
+--  `heartRate` FLOAT(11) NULL DEFAULT '0',
+--  PRIMARY KEY (`recordId`),
+--  INDEX `repFKpat_idx` (`patientId` ASC),
+--  CONSTRAINT `repFKpat`
+--    FOREIGN KEY (`patientId`)
+--    REFERENCES `echo`.`patients` (`patientId`)
+--    ON DELETE CASCADE
+--    ON UPDATE NO ACTION)
+-- ENGINE = InnoDB
+-- DEFAULT CHARACTER SET = utf8
+-- COLLATE = utf8_general_ci;
 
 
 -- -----------------------------------------------------
@@ -519,9 +519,9 @@ CREATE TABLE IF NOT EXISTS `echo`.`treatments_view` (`patientId` INT, `diagnoseD
 CREATE TABLE IF NOT EXISTS `echo`.`readings_view` (`patientId` INT, `diagnoseDate` INT, `weight` INT, `height` INT, `pxy` INT, `fev1` INT, `fev1_pro` INT, `fvc` INT, `fvc_pro` INT, `fev1_fvc` INT, `rv` INT, `rv_pro` INT, `tlc` INT, `tlc_pro` INT, `rv_tlc` INT, `satO2_pro` INT, `dlco_pro` INT, `pao2` INT, `paco2` INT, `hco3` INT, `pH` INT, `fvc_pre` INT, `fvc_pre_pro` INT, `fev1_pre` INT, `fev1_pre_pro` INT, `fev1_fvc_pre` INT, `fef25_75_pre_pro` INT, `pef_pre_pro` INT, `tlc_pre` INT, `tlc_pre_pro` INT, `frc_pre` INT, `frc_pre_pro` INT, `rv_pre` INT, `rv_pre_pro` INT, `kco_pro` INT, `hematocrit` INT, `status` INT, `fvc_post` INT, `del_fvc_pro` INT, `fev1_post` INT, `del_fev1_post` INT, `del_fef25_75_pro` INT, `del_pef_pro` INT, `mmrc` INT, `smoker` INT, `notes` INT, `recordId` INT);
 
 -- -----------------------------------------------------
--- Placeholder table for view `echo`.`dailyreports_view`
+-- Placeholder table for view `echo`.`dailyReports_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`dailyreports_view` (`recordId` INT, `patientId` INT, `date` INT, `q1` INT, `q2` INT, `q3` INT, `q4` INT, `q5` INT, `q1a` INT, `q1b` INT, `q1c` INT, `q3a` INT, `q3b` INT, `q3c` INT, `satO2` INT, `walkingDist` INT, `temperature` INT, `pefr` INT, `heartRate` INT);
+CREATE TABLE IF NOT EXISTS `echo`.`dailyReports_view` (`recordId` INT, `patientId` INT, `date` INT, `q1` INT, `q2` INT, `q3` INT, `q4` INT, `q5` INT, `q1a` INT, `q1b` INT, `q1c` INT, `q3a` INT, `q3b` INT, `q3c` INT, `satO2` INT, `walkingDist` INT, `temperature` INT, `pefr` INT, `heartRate` INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`deaths_view`
@@ -1398,7 +1398,7 @@ proc: BEGIN
 		end if;
 	end if;
 	
-	SET @stmt = "INSERT INTO dailyreports (patientId, date, q1, q2, q3, q4, q5, q1a, q1b, q1c, q3a, q3b, q3c, satO2, walkingDist, temperature, pefr, heartRate) 
+	SET @stmt = "INSERT INTO dailyReports (patientId, date, q1, q2, q3, q4, q5, q1a, q1b, q1c, q3a, q3b, q3c, satO2, walkingDist, temperature, pefr, heartRate) 
 	VALUES (?,?,?,?,?,?,?, ?,?,?,?,?,?, ?,?,?,?,?)";
 set @patientId = patId ;
 set @date = date ;
@@ -1441,7 +1441,7 @@ IN recordId INT
 BEGIN
 		set @pid = patientId;
 		set @rid = recordId;
-		SET @stmt = CONCAT("DELETE FROM dailyreports_view WHERE recordId = ? and patientId = ?");
+		SET @stmt = CONCAT("DELETE FROM dailyReports_view WHERE recordId = ? and patientId = ?");
 		PREPARE s FROM @stmt;
 		EXECUTE s using @rid, @pid;
 		SELECT ROW_COUNT() as affected_rows;
@@ -1471,7 +1471,7 @@ BEGIN
 			signal sqlstate '22403' set message_text = 'Access Forbidden, Please use your Account for the report.'; 
 		end if;
 	end if;
-		set @basic_stmt = CONCAT ('SELECT * FROM dailyreports_view WHERE patientId = ?');
+		set @basic_stmt = CONCAT ('SELECT * FROM dailyReports_view WHERE patientId = ?');
 		set @page_stmt = ' ';
 		set @pid = patId;
 
@@ -1515,7 +1515,7 @@ BEGIN
 			signal sqlstate '22403' set message_text = 'Access Forbidden, Please use your Account for the report.'; 
 		end if;
 	end if;
-		set @basic_stmt = CONCAT ('SELECT * FROM dailyreports_view WHERE patientId = ? and recordId = ?');
+		set @basic_stmt = CONCAT ('SELECT * FROM dailyReports_view WHERE patientId = ? and recordId = ?');
 		set @pid = patId;
 		set @rid = recId;
 		PREPARE s FROM @basic_stmt;
@@ -1554,7 +1554,7 @@ in pefr float,
 in heartRate float 
 )
 BEGIN
-	SET @stmt = "UPDATE dailyreports_view  SET date=?,q1=?,q2=?,q3=?,q4=?,q5=?,q1a=?,q1b=?,q1c=?,q3a=?,q3b=?,q3c=?,satO2=?,walkingDist=?,temperature=?,pefr=?,heartRate=?
+	SET @stmt = "UPDATE dailyReports_view  SET date=?,q1=?,q2=?,q3=?,q4=?,q5=?,q1a=?,q1b=?,q1c=?,q3a=?,q3b=?,q3c=?,satO2=?,walkingDist=?,temperature=?,pefr=?,heartRate=?
  where  recordId =? and patientId = ?";
 set @recId = recordId;
 set @patientId = patientId ;
@@ -2505,11 +2505,11 @@ USE `echo`;
 CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`readings_view` AS select `echo`.`readings`.`patientId` AS `patientId`,`echo`.`readings`.`diagnoseDate` AS `diagnoseDate`,`echo`.`readings`.`weight` AS `weight`,`echo`.`readings`.`height` AS `height`,`echo`.`readings`.`pxy` AS `pxy`,`echo`.`readings`.`fev1` AS `fev1`,`echo`.`readings`.`fev1_pro` AS `fev1_pro`,`echo`.`readings`.`fvc` AS `fvc`,`echo`.`readings`.`fvc_pro` AS `fvc_pro`,`echo`.`readings`.`fev1_fvc` AS `fev1_fvc`,`echo`.`readings`.`rv` AS `rv`,`echo`.`readings`.`rv_pro` AS `rv_pro`,`echo`.`readings`.`tlc` AS `tlc`,`echo`.`readings`.`tlc_pro` AS `tlc_pro`,`echo`.`readings`.`rv_tlc` AS `rv_tlc`,`echo`.`readings`.`satO2_pro` AS `satO2_pro`,`echo`.`readings`.`dlco_pro` AS `dlco_pro`,`echo`.`readings`.`pao2` AS `pao2`,`echo`.`readings`.`paco2` AS `paco2`,`echo`.`readings`.`hco3` AS `hco3`,`echo`.`readings`.`pH` AS `pH`,`echo`.`readings`.`fvc_pre` AS `fvc_pre`,`echo`.`readings`.`fvc_pre_pro` AS `fvc_pre_pro`,`echo`.`readings`.`fev1_pre` AS `fev1_pre`,`echo`.`readings`.`fev1_pre_pro` AS `fev1_pre_pro`,`echo`.`readings`.`fev1_fvc_pre` AS `fev1_fvc_pre`,`echo`.`readings`.`fef25_75_pre_pro` AS `fef25_75_pre_pro`,`echo`.`readings`.`pef_pre_pro` AS `pef_pre_pro`,`echo`.`readings`.`tlc_pre` AS `tlc_pre`,`echo`.`readings`.`tlc_pre_pro` AS `tlc_pre_pro`,`echo`.`readings`.`frc_pre` AS `frc_pre`,`echo`.`readings`.`frc_pre_pro` AS `frc_pre_pro`,`echo`.`readings`.`rv_pre` AS `rv_pre`,`echo`.`readings`.`rv_pre_pro` AS `rv_pre_pro`,`echo`.`readings`.`kco_pro` AS `kco_pro`,`echo`.`readings`.`hematocrit` AS `hematocrit`,`echo`.`readings`.`status` AS `status`,`echo`.`readings`.`fvc_post` AS `fvc_post`,`echo`.`readings`.`del_fvc_pro` AS `del_fvc_pro`,`echo`.`readings`.`fev1_post` AS `fev1_post`,`echo`.`readings`.`del_fev1_post` AS `del_fev1_post`,`echo`.`readings`.`del_fef25_75_pro` AS `del_fef25_75_pro`,`echo`.`readings`.`del_pef_pro` AS `del_pef_pro`,`echo`.`readings`.`mmrc` AS `mmrc`,`echo`.`readings`.`smoker` AS `smoker`,`echo`.`readings`.`notes` AS `notes`,`echo`.`readings`.`recordId` AS `recordId` from `echo`.`readings` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`readings`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
--- View `echo`.`dailyreports_view`
+-- View `echo`.`dailyReports_view`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `echo`.`dailyreports_view`;
+DROP TABLE IF EXISTS `echo`.`dailyReports_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`dailyreports_view` AS select `echo`.`dailyreports`.`recordId` AS `recordId`,`echo`.`dailyreports`.`patientId` AS `patientId`,`echo`.`dailyreports`.`date` AS `date`,`echo`.`dailyreports`.`q1` AS `q1`,`echo`.`dailyreports`.`q2` AS `q2`,`echo`.`dailyreports`.`q3` AS `q3`,`echo`.`dailyreports`.`q4` AS `q4`,`echo`.`dailyreports`.`q5` AS `q5`,`echo`.`dailyreports`.`q1a` AS `q1a`,`echo`.`dailyreports`.`q1b` AS `q1b`,`echo`.`dailyreports`.`q1c` AS `q1c`,`echo`.`dailyreports`.`q3a` AS `q3a`,`echo`.`dailyreports`.`q3b` AS `q3b`,`echo`.`dailyreports`.`q3c` AS `q3c`,`echo`.`dailyreports`.`satO2` AS `satO2`,`echo`.`dailyreports`.`walkingDist` AS `walkingDist`,`echo`.`dailyreports`.`temperature` AS `temperature`,`echo`.`dailyreports`.`pefr` AS `pefr`,`echo`.`dailyreports`.`heartRate` AS `heartRate` from `echo`.`dailyreports` where (case when (`getRole`() = 'admin') then (1 = 1) when (`getRole`() = 'doctor') then `echo`.`dailyreports`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) else (`echo`.`dailyreports`.`patientId` = substring_index(user(),'@',1)) end);
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`dailyReports_view` AS select `echo`.`dailyReports`.`recordId` AS `recordId`,`echo`.`dailyReports`.`patientId` AS `patientId`,`echo`.`dailyReports`.`date` AS `date`,`echo`.`dailyReports`.`q1` AS `q1`,`echo`.`dailyReports`.`q2` AS `q2`,`echo`.`dailyReports`.`q3` AS `q3`,`echo`.`dailyReports`.`q4` AS `q4`,`echo`.`dailyReports`.`q5` AS `q5`,`echo`.`dailyReports`.`q1a` AS `q1a`,`echo`.`dailyReports`.`q1b` AS `q1b`,`echo`.`dailyReports`.`q1c` AS `q1c`,`echo`.`dailyReports`.`q3a` AS `q3a`,`echo`.`dailyReports`.`q3b` AS `q3b`,`echo`.`dailyReports`.`q3c` AS `q3c`,`echo`.`dailyReports`.`satO2` AS `satO2`,`echo`.`dailyReports`.`walkingDist` AS `walkingDist`,`echo`.`dailyReports`.`temperature` AS `temperature`,`echo`.`dailyReports`.`pefr` AS `pefr`,`echo`.`dailyReports`.`heartRate` AS `heartRate` from `echo`.`dailyReports` where (case when (`getRole`() = 'admin') then (1 = 1) when (`getRole`() = 'doctor') then `echo`.`dailyReports`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) else (`echo`.`dailyReports`.`patientId` = substring_index(user(),'@',1)) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`deaths_view`
@@ -3000,7 +3000,7 @@ end;
 $$
 
 USE `echo`$$
-CREATE TRIGGER `dailyReport_BINS` BEFORE INSERT ON `dailyreports` FOR EACH ROW
+CREATE TRIGGER `dailyReport_BINS` BEFORE INSERT ON `dailyReports` FOR EACH ROW
 Begin
 
 if (new.date is null) then set new.date = CURDATE(); end if;
