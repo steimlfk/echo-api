@@ -20,7 +20,7 @@ GRANT SHOW VIEW, DELETE, INSERT, SELECT, UPDATE, TRIGGER, CREATE, GRANT OPTION O
 
 DELIMITER $$
 USE `echo`$$
-CREATE DEFINER=`echo_db_usr`@`localhost` FUNCTION `getRole`() RETURNS char(10) CHARSET utf8
+CREATE DEFINER=`echo_db_usr`@`localhost` FUNCTION `getRole`() RETURNS char(10) CHARSET utf8 deterministic
 BEGIN
 	SELECT role into @ret from accounts where accountId = substring_index(user(), '@', 1);
 	RETURN @ret;
@@ -344,6 +344,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`answers` (
 ENGINE = InnoDB;
 
 
+
 -- -----------------------------------------------------
 -- Table `echo`.`dailyReports`
 -- -----------------------------------------------------
@@ -367,6 +368,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`dailyReports` (
   `temperature` FLOAT NULL DEFAULT 0,
   `pefr` FLOAT NULL DEFAULT 0,
   `heartRate` FLOAT NULL DEFAULT 0,
+  `loc` POINT NULL DEFAULT NULL,
   PRIMARY KEY (`recordId`),
   INDEX `repFKpat_idx` (`patientId` ASC),
   CONSTRAINT `repFKpat`
@@ -376,40 +378,6 @@ CREATE TABLE IF NOT EXISTS `echo`.`dailyReports` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
-
--- -----------------------------------------------------
--- Table `echo`.`dailyreports`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`dailyreports` (
-  `recordId` INT(11) NOT NULL AUTO_INCREMENT,
-  `patientId` INT(11) NOT NULL,
-  `date` DATE NULL DEFAULT NULL,
-  `q1` TINYINT(1) NOT NULL,
-  `q2` TINYINT(1) NOT NULL,
-  `q3` TINYINT(1) NOT NULL,
-  `q4` TINYINT(1) NOT NULL,
-  `q5` TINYINT(1) NOT NULL,
-  `q1a` TINYINT(1) NULL DEFAULT '0',
-  `q1b` TINYINT(1) NULL DEFAULT '0',
-  `q1c` TINYINT(1) NULL DEFAULT '0',
-  `q3a` TINYINT(1) NULL DEFAULT '0',
-  `q3b` TINYINT(1) NULL DEFAULT '0',
-  `q3c` TINYINT(1) NULL DEFAULT '0',
-  `satO2` FLOAT(11) NULL DEFAULT '0',
-  `walkingDist` FLOAT(11) NULL DEFAULT '0',
-  `temperature` FLOAT(11) NULL DEFAULT '0',
-  `pefr` FLOAT(11) NULL DEFAULT '0',
-  `heartRate` FLOAT(11) NULL DEFAULT '0',
-  PRIMARY KEY (`recordId`),
-  INDEX `repFKpat_idx` (`patientId` ASC),
-  CONSTRAINT `repFKpat`
-    FOREIGN KEY (`patientId`)
-    REFERENCES `echo`.`patients` (`patientId`)
-    ON DELETE CASCADE
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8
-COLLATE = utf8_general_ci;
 
 
 -- -----------------------------------------------------
@@ -519,9 +487,9 @@ CREATE TABLE IF NOT EXISTS `echo`.`treatments_view` (`patientId` INT, `diagnoseD
 CREATE TABLE IF NOT EXISTS `echo`.`readings_view` (`patientId` INT, `diagnoseDate` INT, `weight` INT, `height` INT, `pxy` INT, `fev1` INT, `fev1_pro` INT, `fvc` INT, `fvc_pro` INT, `fev1_fvc` INT, `rv` INT, `rv_pro` INT, `tlc` INT, `tlc_pro` INT, `rv_tlc` INT, `satO2_pro` INT, `dlco_pro` INT, `pao2` INT, `paco2` INT, `hco3` INT, `pH` INT, `fvc_pre` INT, `fvc_pre_pro` INT, `fev1_pre` INT, `fev1_pre_pro` INT, `fev1_fvc_pre` INT, `fef25_75_pre_pro` INT, `pef_pre_pro` INT, `tlc_pre` INT, `tlc_pre_pro` INT, `frc_pre` INT, `frc_pre_pro` INT, `rv_pre` INT, `rv_pre_pro` INT, `kco_pro` INT, `hematocrit` INT, `status` INT, `fvc_post` INT, `del_fvc_pro` INT, `fev1_post` INT, `del_fev1_post` INT, `del_fef25_75_pro` INT, `del_pef_pro` INT, `mmrc` INT, `smoker` INT, `notes` INT, `recordId` INT);
 
 -- -----------------------------------------------------
--- Placeholder table for view `echo`.`dailyreports_view`
+-- Placeholder table for view `echo`.`dailyReports_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`dailyreports_view` (`recordId` INT, `patientId` INT, `date` INT, `q1` INT, `q2` INT, `q3` INT, `q4` INT, `q5` INT, `q1a` INT, `q1b` INT, `q1c` INT, `q3a` INT, `q3b` INT, `q3c` INT, `satO2` INT, `walkingDist` INT, `temperature` INT, `pefr` INT, `heartRate` INT);
+CREATE TABLE IF NOT EXISTS `echo`.`dailyReports_view` (`recordId` INT, `patientId` INT, `date` INT, `q1` INT, `q2` INT, `q3` INT, `q4` INT, `q5` INT, `q1a` INT, `q1b` INT, `q1c` INT, `q3a` INT, `q3b` INT, `q3c` INT, `satO2` INT, `walkingDist` INT, `temperature` INT, `pefr` INT, `heartRate` INT, `loc` INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`deaths_view`
@@ -1382,7 +1350,9 @@ in satO2 float,
 in walkingDist float,
 in temperature float,
 in pefr float,
-in heartRate float 
+in heartRate float,
+in x VARCHAR(20),
+in y VARCHAR(20)
 )
 proc: BEGIN
 	DECLARE tmp1 INTEGER;
@@ -1398,8 +1368,8 @@ proc: BEGIN
 		end if;
 	end if;
 	
-	SET @stmt = "INSERT INTO dailyreports (patientId, date, q1, q2, q3, q4, q5, q1a, q1b, q1c, q3a, q3b, q3c, satO2, walkingDist, temperature, pefr, heartRate) 
-	VALUES (?,?,?,?,?,?,?, ?,?,?,?,?,?, ?,?,?,?,?)";
+	SET @stmt = "INSERT INTO dailyReports (patientId, date, q1, q2, q3, q4, q5, q1a, q1b, q1c, q3a, q3b, q3c, satO2, walkingDist, temperature, pefr, heartRate, loc) 
+	VALUES (?,?, ?,?,?,?,?, ?,?,?, ?,?,?, ?,?,?,?,?, GeomFromText(?))";
 set @patientId = patId ;
 set @date = date ;
 set @q1 = q1 ;
@@ -1418,15 +1388,17 @@ set @walkingDist = walkingDist ;
 set @temperature = temperature ;
 set @pefr = pefr ;
 set @heartRate = heartRate ;
+set @loc = CONCAT("POINT(", x , " ", y, ")");
 
 	PREPARE s FROM @stmt;
-	EXECUTE s using @patientId,@date,@q1,@q2,@q3,@q4,@q5,@q1a,@q1b,@q1c,@q3a,@q3b,@q3c,@satO2,@walkingDist,@temperature,@pefr,@heartRate;
+	EXECUTE s using @patientId,@date,@q1,@q2,@q3,@q4,@q5,@q1a,@q1b,@q1c,@q3a,@q3b,@q3c,@satO2,@walkingDist,@temperature,@pefr,@heartRate, @loc;
 	SELECt last_insert_id() as insertId;
 	DEALLOCATE PREPARE s;
 
 END$$
 
 DELIMITER ;
+
 
 -- -----------------------------------------------------
 -- procedure reportDelete
@@ -1441,7 +1413,7 @@ IN recordId INT
 BEGIN
 		set @pid = patientId;
 		set @rid = recordId;
-		SET @stmt = CONCAT("DELETE FROM dailyreports_view WHERE recordId = ? and patientId = ?");
+		SET @stmt = CONCAT("DELETE FROM dailyReports_view WHERE recordId = ? and patientId = ?");
 		PREPARE s FROM @stmt;
 		EXECUTE s using @rid, @pid;
 		SELECT ROW_COUNT() as affected_rows;
@@ -1471,7 +1443,7 @@ BEGIN
 			signal sqlstate '22403' set message_text = 'Access Forbidden, Please use your Account for the report.'; 
 		end if;
 	end if;
-		set @basic_stmt = CONCAT ('SELECT * FROM dailyreports_view WHERE patientId = ?');
+		set @basic_stmt = CONCAT ('SELECT recordId, patientId, date, q1, q2, q3, q4, q5, q1a, q1b, q1c, q3a, q3b, q3c, satO2, walkingDist, temperature, pefr, heartRate, X(loc) as X, Y(loc) as Y FROM dailyReports_view WHERE patientId = ?');
 		set @page_stmt = ' ';
 		set @pid = patId;
 
@@ -1486,6 +1458,7 @@ BEGIN
 		end if;
 
 		set @basic_stmt = CONCAT(@basic_stmt, @page_stmt);
+        
 		PREPARE s FROM @basic_stmt;
 		EXECUTE s using @pid;
 		DEALLOCATE PREPARE s;
@@ -1515,7 +1488,7 @@ BEGIN
 			signal sqlstate '22403' set message_text = 'Access Forbidden, Please use your Account for the report.'; 
 		end if;
 	end if;
-		set @basic_stmt = CONCAT ('SELECT * FROM dailyreports_view WHERE patientId = ? and recordId = ?');
+		set @basic_stmt = CONCAT ('SELECT recordId, patientId, date, q1, q2, q3, q4, q5, q1a, q1b, q1c, q3a, q3b, q3c, satO2, walkingDist, temperature, pefr, heartRate, X(loc) as X, Y(loc) as Y  FROM dailyReports_view WHERE patientId = ? and recordId = ?');
 		set @pid = patId;
 		set @rid = recId;
 		PREPARE s FROM @basic_stmt;
@@ -1525,6 +1498,7 @@ BEGIN
 END$$
 
 DELIMITER ;
+
 
 -- -----------------------------------------------------
 -- procedure reportUpdate
@@ -1551,11 +1525,14 @@ in satO2 float,
 in walkingDist float,
 in temperature float,
 in pefr float,
-in heartRate float 
+in heartRate float,
+in x VARCHAR(20),
+in y VARCHAR(20)
 )
 BEGIN
-	SET @stmt = "UPDATE dailyreports_view  SET date=?,q1=?,q2=?,q3=?,q4=?,q5=?,q1a=?,q1b=?,q1c=?,q3a=?,q3b=?,q3c=?,satO2=?,walkingDist=?,temperature=?,pefr=?,heartRate=?
- where  recordId =? and patientId = ?";
+	SET @stmt = "UPDATE dailyReports_view  SET date=?,q1=?,q2=?,q3=?,q4=?,q5=?,q1a=?,q1b=?,q1c=?
+    ,q3a=?,q3b=?,q3c=?,satO2=?,walkingDist=?,temperature =?,pefr=?,heartRate=?, loc =GeomFromText(?)
+ where  recordId =? and patientId = ?"; 
 set @recId = recordId;
 set @patientId = patientId ;
 set @date = date ;
@@ -1575,9 +1552,11 @@ set @walkingDist = walkingDist ;
 set @temperature = temperature ;
 set @pefr = pefr ;
 set @heartRate = heartRate ;
+set @loc = CONCAT("POINT(", x , " ", y, ")");
+
 
 	PREPARE s FROM @stmt;
-	EXECUTE s using @date,@q1,@q2,@q3,@q4,@q5,@q1a,@q1b,@q1c,@q3a,@q3b,@q3c,@satO2,@walkingDist,@temperature,@pefr,@heartRate,@recId,@patientId;
+	EXECUTE s using @date,@q1,@q2,@q3,@q4,@q5,@q1a,@q1b,@q1c,@q3a,@q3b,@q3c,@satO2,@walkingDist,@temperature,@pefr,@heartRate, @loc,@recId,@patientId;
 	SELECT ROW_COUNT() as affected_rows;
 	DEALLOCATE PREPARE s;
 
@@ -2442,6 +2421,118 @@ END$$
 
 DELIMITER ;
 
+
+-- -----------------------------------------------------
+-- procedure createAllDbUsers
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=CURRENT_USER PROCEDURE `createAllDbUsers`(IN pw_prefix VARCHAR (100))
+BEGIN
+
+  #declare variable
+  DECLARE ptr INTEGER;
+  DECLARE done INT DEFAULT FALSE;
+  #declare cursor
+  DECLARE cur1 CURSOR FOR SELECT accountId
+  FROM `echo`.`accounts`;
+  #declare handle 
+  DECLARE CONTINUE  HANDLER FOR NOT FOUND SET done = TRUE;
+  
+  #open cursor
+  OPEN cur1;
+  #starts the loop
+  accounts_loop: LOOP
+    #get the values of each column into our  variables
+    FETCH cur1 INTO ptr;
+    IF done THEN
+      LEAVE accounts_loop;
+    END IF;
+	CALL createDbUser(ptr, pw_prefix);
+  END LOOP accounts_loop;
+  CLOSE cur1;
+
+END
+$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure dropAllDbUsers
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=CURRENT_USER PROCEDURE `dropAllDbUsers`()
+BEGIN
+
+  #declare variable
+  DECLARE ptr INTEGER;
+  DECLARE done INT DEFAULT FALSE;
+  #declare cursor
+  DECLARE cur1 CURSOR FOR SELECT accountId
+  FROM `echo`.`accounts`;
+  #declare handle 
+  DECLARE CONTINUE  HANDLER FOR NOT FOUND SET done = TRUE;
+  
+  #open cursor
+  OPEN cur1;
+  #starts the loop
+  accounts_loop: LOOP
+    #get the values of each column into our  variables
+    FETCH cur1 INTO ptr;
+    IF done THEN
+      LEAVE accounts_loop;
+    END IF;
+	SET @stmt = CONCAT("DROP USER '",ptr,"'@'localhost'");
+	PREPARE s from @stmt;
+	EXECUTE s;
+	deallocate PREPARE s;
+  END LOOP accounts_loop;
+  CLOSE cur1;
+
+END
+$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure repairPermissions
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=CURRENT_USER PROCEDURE `repairPermissions`()
+BEGIN
+
+  #declare variable
+  DECLARE ptr INTEGER;
+  DECLARE ro VARCHAR(10);
+  DECLARE done INT DEFAULT FALSE;
+  #declare cursor
+  DECLARE cur1 CURSOR FOR SELECT accountId,role
+  FROM `echo`.`accounts`;
+  #declare handle 
+  DECLARE CONTINUE  HANDLER FOR NOT FOUND SET done = TRUE;
+  
+  #open cursor
+  OPEN cur1;
+  #starts the loop
+  accounts_loop: LOOP
+    #get the values of each column into our  variables
+    FETCH cur1 INTO ptr, ro;
+    IF done THEN
+      LEAVE accounts_loop;
+    END IF;
+	CALL grantRolePermissions(ptr, ro);
+  END LOOP accounts_loop;
+  CLOSE cur1;
+
+END$$
+
+DELIMITER ;
+
 -- -----------------------------------------------------
 -- View `echo`.`accounts_view`
 -- -----------------------------------------------------
@@ -2505,11 +2596,11 @@ USE `echo`;
 CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`readings_view` AS select `echo`.`readings`.`patientId` AS `patientId`,`echo`.`readings`.`diagnoseDate` AS `diagnoseDate`,`echo`.`readings`.`weight` AS `weight`,`echo`.`readings`.`height` AS `height`,`echo`.`readings`.`pxy` AS `pxy`,`echo`.`readings`.`fev1` AS `fev1`,`echo`.`readings`.`fev1_pro` AS `fev1_pro`,`echo`.`readings`.`fvc` AS `fvc`,`echo`.`readings`.`fvc_pro` AS `fvc_pro`,`echo`.`readings`.`fev1_fvc` AS `fev1_fvc`,`echo`.`readings`.`rv` AS `rv`,`echo`.`readings`.`rv_pro` AS `rv_pro`,`echo`.`readings`.`tlc` AS `tlc`,`echo`.`readings`.`tlc_pro` AS `tlc_pro`,`echo`.`readings`.`rv_tlc` AS `rv_tlc`,`echo`.`readings`.`satO2_pro` AS `satO2_pro`,`echo`.`readings`.`dlco_pro` AS `dlco_pro`,`echo`.`readings`.`pao2` AS `pao2`,`echo`.`readings`.`paco2` AS `paco2`,`echo`.`readings`.`hco3` AS `hco3`,`echo`.`readings`.`pH` AS `pH`,`echo`.`readings`.`fvc_pre` AS `fvc_pre`,`echo`.`readings`.`fvc_pre_pro` AS `fvc_pre_pro`,`echo`.`readings`.`fev1_pre` AS `fev1_pre`,`echo`.`readings`.`fev1_pre_pro` AS `fev1_pre_pro`,`echo`.`readings`.`fev1_fvc_pre` AS `fev1_fvc_pre`,`echo`.`readings`.`fef25_75_pre_pro` AS `fef25_75_pre_pro`,`echo`.`readings`.`pef_pre_pro` AS `pef_pre_pro`,`echo`.`readings`.`tlc_pre` AS `tlc_pre`,`echo`.`readings`.`tlc_pre_pro` AS `tlc_pre_pro`,`echo`.`readings`.`frc_pre` AS `frc_pre`,`echo`.`readings`.`frc_pre_pro` AS `frc_pre_pro`,`echo`.`readings`.`rv_pre` AS `rv_pre`,`echo`.`readings`.`rv_pre_pro` AS `rv_pre_pro`,`echo`.`readings`.`kco_pro` AS `kco_pro`,`echo`.`readings`.`hematocrit` AS `hematocrit`,`echo`.`readings`.`status` AS `status`,`echo`.`readings`.`fvc_post` AS `fvc_post`,`echo`.`readings`.`del_fvc_pro` AS `del_fvc_pro`,`echo`.`readings`.`fev1_post` AS `fev1_post`,`echo`.`readings`.`del_fev1_post` AS `del_fev1_post`,`echo`.`readings`.`del_fef25_75_pro` AS `del_fef25_75_pro`,`echo`.`readings`.`del_pef_pro` AS `del_pef_pro`,`echo`.`readings`.`mmrc` AS `mmrc`,`echo`.`readings`.`smoker` AS `smoker`,`echo`.`readings`.`notes` AS `notes`,`echo`.`readings`.`recordId` AS `recordId` from `echo`.`readings` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`readings`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
--- View `echo`.`dailyreports_view`
+-- View `echo`.`dailyReports_view`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `echo`.`dailyreports_view`;
+DROP TABLE IF EXISTS `echo`.`dailyReports_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`dailyreports_view` AS select `echo`.`dailyreports`.`recordId` AS `recordId`,`echo`.`dailyreports`.`patientId` AS `patientId`,`echo`.`dailyreports`.`date` AS `date`,`echo`.`dailyreports`.`q1` AS `q1`,`echo`.`dailyreports`.`q2` AS `q2`,`echo`.`dailyreports`.`q3` AS `q3`,`echo`.`dailyreports`.`q4` AS `q4`,`echo`.`dailyreports`.`q5` AS `q5`,`echo`.`dailyreports`.`q1a` AS `q1a`,`echo`.`dailyreports`.`q1b` AS `q1b`,`echo`.`dailyreports`.`q1c` AS `q1c`,`echo`.`dailyreports`.`q3a` AS `q3a`,`echo`.`dailyreports`.`q3b` AS `q3b`,`echo`.`dailyreports`.`q3c` AS `q3c`,`echo`.`dailyreports`.`satO2` AS `satO2`,`echo`.`dailyreports`.`walkingDist` AS `walkingDist`,`echo`.`dailyreports`.`temperature` AS `temperature`,`echo`.`dailyreports`.`pefr` AS `pefr`,`echo`.`dailyreports`.`heartRate` AS `heartRate` from `echo`.`dailyreports` where (case when (`getRole`() = 'admin') then (1 = 1) when (`getRole`() = 'doctor') then `echo`.`dailyreports`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) else (`echo`.`dailyreports`.`patientId` = substring_index(user(),'@',1)) end);
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`dailyReports_view` AS select `echo`.`dailyReports`.`recordId` AS `recordId`,`echo`.`dailyReports`.`patientId` AS `patientId`,`echo`.`dailyReports`.`date` AS `date`,`echo`.`dailyReports`.`q1` AS `q1`,`echo`.`dailyReports`.`q2` AS `q2`,`echo`.`dailyReports`.`q3` AS `q3`,`echo`.`dailyReports`.`q4` AS `q4`,`echo`.`dailyReports`.`q5` AS `q5`,`echo`.`dailyReports`.`q1a` AS `q1a`,`echo`.`dailyReports`.`q1b` AS `q1b`,`echo`.`dailyReports`.`q1c` AS `q1c`,`echo`.`dailyReports`.`q3a` AS `q3a`,`echo`.`dailyReports`.`q3b` AS `q3b`,`echo`.`dailyReports`.`q3c` AS `q3c`,`echo`.`dailyReports`.`satO2` AS `satO2`,`echo`.`dailyReports`.`walkingDist` AS `walkingDist`,`echo`.`dailyReports`.`temperature` AS `temperature`,`echo`.`dailyReports`.`pefr` AS `pefr`,`echo`.`dailyReports`.`heartRate` AS `heartRate`,`echo`.`dailyReports`.`loc` AS `loc` from `echo`.`dailyReports` where (case when (`GETROLE`() = 'admin') then (1 = 1) when (`GETROLE`() = 'doctor') then `echo`.`dailyReports`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) else (`echo`.`dailyReports`.`patientId` = substring_index(user(),'@',1)) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`deaths_view`
@@ -3000,7 +3091,7 @@ end;
 $$
 
 USE `echo`$$
-CREATE TRIGGER `dailyReport_BINS` BEFORE INSERT ON `dailyreports` FOR EACH ROW
+CREATE TRIGGER `dailyReport_BINS` BEFORE INSERT ON `dailyReports` FOR EACH ROW
 Begin
 
 if (new.date is null) then set new.date = CURDATE(); end if;
@@ -3146,6 +3237,168 @@ INSERT INTO `echo`.`settings` (`setting`,`val`) VALUES ('nextId', 1);
 CALL `echo`.`accountsCreate`('secret_', 'nimda', '$2a$10$5f3gnmB/Cbe1TjrJhaUvNe6MTT6w87Ckiqyr0j4VxLChMtZFIMHka', 'admin@hospital.de', 'admin', 1, '18:00', 1, 'email', '1337');
 
 CALL `echo`.`grantRolePermissions`(1, 'admin');
+
+
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (1,'cat','radio','',1,'q1');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (2,'cat','radio','',1,'q2');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (3,'cat','radio','',1,'q3');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (4,'cat','radio','',1,'q4');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (5,'cat','radio','',1,'q5');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (6,'cat','radio','',1,'q6');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (7,'cat','radio','',1,'q7');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (8,'cat','radio','',1,'q8');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (9,'daily','check','Did your shortness of breath increase?',1,'q1');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (10,'daily','check','Did your cough increase?',1,'q2');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (11,'daily','check','Did your sputum change?',1,'q3');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (12,'daily','check','Did you have chest pain or discomfort?',1,'q4');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (13,'daily','check','Did you take the same medications? Or increas',1,'q5');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (14,'daily','check','Can you do the daily work you did before?',1,'q1a');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (15,'daily','check','Can you support yourself (go to toilet, showe',1,'q1b');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (16,'daily','check','Can you walk?',1,'q1c');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (17,'daily','check','Is your sputum yellow?',1,'q3a');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (18,'daily','check','Is it green?',1,'q3b');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (19,'daily','check','Or bloody?',1,'q3c');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (20,'daily','mixed','SatoO2?',1,'satO2');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (21,'daily','mixed','Heartrate?',1,'heartRate');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (22,'daily','mixed','Temperature?',1,'temperature');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (23,'daily','mixed','PETR?',1,'petr');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (24,'daily','mixed','Walking Distance?',1,'walkingDist');
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (25,'daily','radio','How do you feel right now?',1,NULL);
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (26,'daily','radio','How did you feel yesterday?',1,NULL);
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (27,'ccq','radio','Short of breath at rest?',1,NULL);
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (28,'ccq','radio','Short of breath doing physical activities?',1,NULL);
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (29,'ccq','radio','Concerned about getting a cold or your breath',1,NULL);
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (30,'ccq','radio','Depressed (down) because of your breathing pr',1,NULL);
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (31,'ccq','radio','During the past week, did you cough?',1,NULL);
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (32,'ccq','radio','During the past week, did you produce phlegm?',1,NULL);
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (33,'ccq','radio','Limited activities due to: Strenuous physical',1,NULL);
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (34,'ccq','radio','Limited activities due to: Moderate physical ',1,NULL);
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (35,'ccq','radio','Limited activities due to:Daily activities at',1,NULL);
+INSERT INTO `questions` (`questionId`,`category`,`type`,`text`,`active`,`label`) VALUES (36,'ccq','radio','Limited activities due to:Social activities?',1,NULL);
+
+
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (1,1,'I never cough.',0);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (2,1,'',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (3,1,'',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (4,1,'',3);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (5,1,'',4);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (6,1,'I cough all the time.',5);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (7,2,'I have no phlegm in my chest at all.',0);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (8,2,'',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (9,2,'',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (10,2,'',3);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (11,2,'',4);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (12,2,'My chest is completely full of phlegm.',5);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (13,3,'My chest does not feel tight at all.',0);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (14,3,'',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (15,3,'',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (16,3,'',3);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (17,3,'',4);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (18,3,'My chest feels very tight.',5);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (19,4,'When I walk up a hill or one flight of stairs I am not breathless.',0);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (20,4,'',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (21,4,'',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (22,4,'',3);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (23,4,'',4);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (24,4,'When I walk up a hill or one flight of stairs I am very breathless.',5);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (25,5,'I am not limited doing any activities at home.',0);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (26,5,'',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (27,5,'',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (28,5,'',3);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (29,5,'',4);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (30,5,'I am very limited doing activities at home.',5);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (31,6,'I am confident leaving my home despite lung condition.',0);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (32,6,'',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (33,6,'',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (34,6,'',3);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (35,6,'',4);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (36,6,'I am not at all confident leaving my home because od my lung condition.',5);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (37,7,'I sleep soundly.',0);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (38,7,'',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (39,7,'',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (40,7,'',3);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (41,7,'',4);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (42,7,'I dont sleep soundly because of my lung condition.',5);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (43,8,'I have lots of energy.',0);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (44,8,'',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (45,8,'',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (46,8,'',3);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (47,8,'',4);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (48,8,'I have no energy at all.',5);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (49,25,'Ok',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (50,25,'Not Ok',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (51,26,'Not OK',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (52,26,'OK',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (53,27,'never',0);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (54,27,'hardly ever',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (55,27,'a few times',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (56,27,'several times',3);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (57,27,'many times',4);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (58,27,'a great many times',5);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (59,27,'almost all the time',6);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (60,28,'Never',0);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (61,28,'hardly ever',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (62,28,'a few times',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (63,28,'several times',3);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (64,28,'many times',4);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (65,28,'a great many times',5);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (66,28,'almost all the time',6);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (67,29,'Never',0);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (68,29,'hardly ever',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (69,29,'a few times',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (70,29,'several times',3);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (71,29,'many times',4);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (72,29,'a great many times',5);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (73,29,'almost all the time',6);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (74,30,'Never',0);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (75,30,'hardly ever',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (76,30,'a few times',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (77,30,'several times',3);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (78,30,'many times',4);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (79,30,'a great many times',5);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (80,30,'almost all the time',6);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (81,31,'Never',0);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (82,31,'hardly ever',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (83,31,'a few times',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (84,31,'several times',3);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (85,31,'many times',4);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (86,31,'a great many times',5);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (87,31,'almost all the time',6);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (88,32,'Never',0);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (89,32,'hardly ever',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (90,32,'a few times',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (91,32,'several times',3);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (92,32,'many times',4);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (93,32,'a great many times',5);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (94,32,'almost all the time',6);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (95,33,'Never',0);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (96,33,'hardly ever',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (97,33,'a few times',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (98,33,'several times',3);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (99,33,'many times',4);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (100,33,'a great many times',5);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (101,33,'almost all the time',6);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (102,34,'Never',0);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (103,34,'hardly ever',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (104,34,'a few times',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (105,34,'several times',3);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (106,34,'many times',4);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (107,34,'a great many times',5);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (108,34,'almost all the time',6);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (109,35,'Never',0);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (110,35,'hardly ever',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (111,35,'a few times',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (112,35,'several times',3);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (113,35,'many times',4);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (114,35,'a great many times',5);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (115,35,'almost all the time',6);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (116,36,'Never',0);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (117,36,'hardly ever',1);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (118,36,'a few times',2);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (119,36,'several times',3);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (120,36,'many times',4);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (121,36,'a great many times',5);
+INSERT INTO `answers` (`answerId`,`questionId`,`text`,`value`) VALUES (122,36,'almost all the time',6);
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
