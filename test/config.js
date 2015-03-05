@@ -1,5 +1,5 @@
 module.exports = {
-    url : 'http://localhost:3000',
+    url : 'https://s1.chroniconline.eu',
     admin_username : 'nimda',
     admin_pwd : 'nimda'
 };

@@ -75,10 +75,14 @@ describe('Daily Reports Tests:', function() {
                     });
             },
             function(cb){
+                var tmp = data.init.newPAcc;
+                tmp.notificationEnabled = true;
+                tmp.notificationMode = 'email';
+                tmp.email = 'steimlfk@ipvs.uni-stuttgart.de';
                 request(url)
                     .post('/accounts')
                     .set('Authorization', 'Bearer ' + access_token_admin)
-                    .send(data.init.newPAcc)
+                    .send(tmp)
                     .expect(201)
                     .end(function(err, res) {
                         if (err) {

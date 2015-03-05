@@ -34,19 +34,22 @@ var DailyAnalyzer = function() {
         db.getConnection(function(err, connection) {
             connection.query('SELECT * FROM accounts a, dailyReports d where a.accountId = d.patientId and d.recordId = ?', id, function(err, result) {
                 console.log(result)
-                if (result.notificationEnabled){
-                    if (result.notificationMode == 'email'){
+                if (result[0].notificationEnabled == 1){
+                    if (result[0].notificationMode == 'email'){
                         postOptions.path = '/echo/email';
 
-                        var data = querystring.stringify({
+                        var addresses = [];
+                        addresses[0] =  result[0].email;
+
+                        var data = JSON.stringify({
                             'subject' : 'This is an ECHO Notification',
                             'message' : 'You are dead.',
-                            'to' : result.email
+                            'to' : addresses
 
                         });
 
-                        postOptions.headers['Content-Length'] =  Buffer.byteLength(data);
-                        postOptions.headers['Content-Type'] =  'application/x-www-form-urlencoded';
+                        postOptions.headers['Content-Length'] =  data.length;
+                        postOptions.headers['Content-Type'] =  'application/json';
 
 
                         var request = http.request(postOptions, function(res) {
