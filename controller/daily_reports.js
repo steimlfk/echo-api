@@ -250,6 +250,10 @@ exports.add = function(req,res,next){
                 next(err);
 
             } else {
+                // trigger analysis
+                var analyzer = require('./notify.js');
+                var dailyAnalyzer = new analyzer();
+                dailyAnalyzer.emit('newDailyReport', result[0][0].insertId);
                 // new ressource created
                 res.statusCode = 201;
                 res.location('/patients/'+ id + '/daily_reports/' + result[0][0].insertId);
