@@ -253,7 +253,11 @@ exports.add = function(req,res,next){
                 // trigger analysis
                 var analyzer = require('./notify.js');
                 var dailyAnalyzer = new analyzer();
-                dailyAnalyzer.emit('newDailyReport', result[0][0].insertId);
+                // this postpones the analysis of the data until the POST is completely processed
+                process.nextTick (function (){
+                    dailyAnalyzer.emit('newDailyReport', result[0][0].insertId);
+                });
+
                 // new ressource created
                 res.statusCode = 201;
                 res.location('/patients/'+ id + '/daily_reports/' + result[0][0].insertId);
