@@ -10,7 +10,8 @@ bodyParser = require('body-parser'),
 serveStatic = require('serve-static'),
 swagger = require("swagger-node-express"),
 session = require('cookie-session'),
-fs = require('fs');
+fs = require('fs'),
+schedule = require('node-schedule');
 
 var utils =				require('./controller/controller_utils');
 
@@ -135,6 +136,11 @@ swagger.configureDeclaration("notifications", {
 	produces: ["application/json"]
 });
 
+var j = schedule.scheduleJob('*/15 * * * *', function() {
+    var notify = new require('controller/notify.js')();
+    notify.emit('twoDayAnalyzes');
+    notify.emit('inactiveAnalyzes');
+});
 
 /**
  * Main

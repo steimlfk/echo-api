@@ -16,6 +16,7 @@
     "jade": "*",
     "jsonwebtoken": "*",
     "mysql": "*",
+    "node-schedule": "^0.2.3",
     "oauth2orize": "^1.0.1",
     "passport": "*",
     "passport-http": "*",
