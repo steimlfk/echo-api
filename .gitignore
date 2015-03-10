@@ -4,4 +4,4 @@ log
 .idea
 .project
 ssl
-config/*.js
+config.js
