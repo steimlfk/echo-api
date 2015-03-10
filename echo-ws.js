@@ -46,12 +46,12 @@ var auth = require('./config/auth');
 app.get('/', function(req, res){res.redirect('/docs');});
 
 //setup login-Endpoint
-app.use('/login', bodyParser.json());
+app.use('/login', bodyParser.json(), bodyParser.urlencoded({ extended: false }));
 swagger.addPost({'spec':oauth2.loginSpec,'action':oauth2.endpoint})
 
 //setup protected ECHO Endpoints
 var echo_endpoints = ['/accounts', '/patients', '/questions','/notifications','/createPatientAndAccount','/changeDoctor', '/devices'];
-var echo_middlewares = [bodyParser.json(), passport.authenticate(['bearer'], { session: false }), utils.accessControl, utils.databaseHandler];
+var echo_middlewares = [passport.authenticate(['bearer'], { session: false }), utils.accessControl, bodyParser.json(),bodyParser.urlencoded({ extended: false }), utils.databaseHandler];
 
 for (var i = 0; i< echo_endpoints.length; i++){
         app.use(echo_endpoints[i], echo_middlewares);
