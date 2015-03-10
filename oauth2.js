@@ -5,12 +5,12 @@
 
 var oauth2orize         = require('oauth2orize');
 var passport            = require('passport');
-var db					= require('./mysql').db;
+var utils 				= require('./utils.js');
+var db					= utils.db;
 var jwt 				= require('jsonwebtoken');
 var swagger 			= require('swagger-node-express');
 var HashMap 			= require('hashmap').HashMap;
-var utils 				= require('../config/utils.js');
-var config 				= require('../config/config.js');
+var config 				= require('./config.js');
 
 //create OAuth 2.0 server which will create the tokens
 var server = oauth2orize.createServer();
@@ -28,8 +28,7 @@ var hm = new HashMap();
 server.exchange(oauth2orize.exchange.password(function(client, username, password, scope, done) {
 	db.getConnection(function(err, connection) {
 		if (err) {
-			res.statusCode = 500;
-			res.send({err: 'Internal Server Error'}); 
+			return done(err);
 		} else {
 			// Call the SP login() 
 			// it checks whether a enabled account with the given username exists
@@ -40,7 +39,7 @@ server.exchange(oauth2orize.exchange.password(function(client, username, passwor
 				if (rows[0].length == 0) {  return done(null, false);  }
 
 				// passwort check ()
-				config.comparePassword(password, rows[0][0].password, function(err, match){
+				utils.comparePassword(password, rows[0][0].password, function(err, match){
 					if (err) {  return done(err); }
 
 					// password matches the hash?

@@ -1,6 +1,14 @@
+/**
+ * Health API Middlewares
+ *
+ */
+
 var url = require("url");
-var db = require('../config/mysql').db;
-var config = require('../config/config.js');
+
+var utils = require('./utils.js');
+var db = utils.db;
+var config = require('./config.js');
+
 
 var exam_commons = {
     methods: {
@@ -222,7 +230,7 @@ exports.databaseHandler = function(req,res,next){
             //   Password is "calculated" by function defined in config.js - currently its a concatenation of a given prefix and user id
             connection.changeUser({
                 user: req.user.accountId,
-                password: config.calculatePW(req.user.accountId)
+                password: utils.calculatePW(req.user.accountId)
             }, function (err) {
                 if (err) {
                     next(err);
@@ -234,28 +242,3 @@ exports.databaseHandler = function(req,res,next){
     });
 };
 
-var _getAllFilesFromFolder = function(dir) {
-
-    var filesystem = require("fs");
-    var results = [];
-
-    filesystem.readdirSync(dir).forEach(function(file) {
-
-        file = dir+'/'+file;
-        var stat = filesystem.statSync(file);
-
-        if (stat && stat.isDirectory() && file.indexOf('not_needed') == -1) {
-            results = results.concat(_getAllFilesFromFolder(file))
-        } else results.push(file);
-
-    });
-
-    return results;
-
-};
-exports.getFilesFromDir = _getAllFilesFromFolder;
-
-exports.toTitleCase = function(str)
-{
-    return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
-}

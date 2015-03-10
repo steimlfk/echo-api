@@ -9,11 +9,11 @@
  * TODO CATCH DELETE ACCOUNT (patients table references accounts table...)
  */
 var swagger = require('swagger-node-express');
-var config = require('../config/config.js');
+var config = require('../config.js');
 var bcrypt = require('bcryptjs');
 var async = require('async');
 
-var ssl = require('../config/ssl.js').useSsl;
+var ssl = config.ssl.useSsl;
 
 /**
  *  GET /accounts
@@ -214,7 +214,7 @@ exports.add = function(req,res,next){
             next(err);
         } else {
             var newId = result[1][0][0][0].location;
-            connection.changeUser({user: 'echo_db_usr', password: ''}, function (err){
+            connection.changeUser({user: 'echo_db_usr', password: config.db.pwd}, function (err){
                 async.parallel([
                     function(cb){
                         connection.query('UPDATE accounts SET password = ? WHERE accountId = ?' , [result[0], newId], cb);

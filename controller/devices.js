@@ -8,7 +8,6 @@
  */
 
 var swagger = require('swagger-node-express');
-var config = require('../config/config.js');
 
 /**
  *  POST /accounts/id/devices

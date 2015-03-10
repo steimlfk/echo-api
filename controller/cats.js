@@ -7,7 +7,6 @@
  * Contains swagger specs and models
  */
 var swagger = require('swagger-node-express');
-var config = require('../config/config.js');
 var commons = require('./controller_commons.js');
 
 
