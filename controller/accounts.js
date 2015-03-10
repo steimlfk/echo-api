@@ -10,7 +10,7 @@
  */
 var swagger = require('swagger-node-express');
 var config = require('../config.js');
-var bcrypt = require('bcryptjs');
+var utils = require('../utils.js');
 var async = require('async');
 
 var ssl = config.ssl.useSsl;
@@ -199,10 +199,7 @@ exports.add = function(req,res,next){
 
     async.parallel([
         function (cb) {
-            bcrypt.genSalt(10, function(err, salt) {
-                bcrypt.hash(i.password, salt, cb);
-            });
-
+            utils.cryptPassword(i.password, cb);
         },
         function (cb) {
             connection.query('CALL accountsCreate(?,?,?,?,?,?, ?,?,?,?)' ,
@@ -295,8 +292,7 @@ exports.update = function(req,res,next){
     // password given? if no pw is given the SP wont change it! (SP checks if value is null)
     var pwd = null;
     if (i.password != null && i.password != ""){
-        var salt = bcrypt.genSaltSync(10);
-        pwd = bcrypt.hashSync(i.password, salt);
+        pwd = utils.cryptPasswordSync(i.password);
     }
     // make NotificationMode lower case so the db triggers can validate the value
     var mode = i.notificationMode.toLowerCase();

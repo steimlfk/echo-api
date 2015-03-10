@@ -50,6 +50,11 @@ exports.comparePassword = function(password, hash, callback) {
     });
 };
 
+exports.cryptPasswordSync = function(password){
+    var salt = bcrypt.genSaltSync(10);
+    var pwd = bcrypt.hashSync(password, salt);
+    return pwd;
+};
 
 /**
  * Section Database
