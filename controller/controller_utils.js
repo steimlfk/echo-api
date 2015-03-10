@@ -125,10 +125,11 @@ exports.accessControl = function (req, res, next){
 
 exports.errorHandler = function (err, req, res, next) {
     if (err) {
+        var timestamp = new Date().toUTCString()
         // Error Handling
         var msg = err.message;
         var user = req.user || 'none';
-        console.error('Error on ' + req.method + ' ' + req.url + ': ', msg);
+        console.error(timestamp+': Error on ' + req.method + ' ' + req.url + ': ', msg);
         console.error('User: ');
         console.error(user);
         console.error('Body: ');
