@@ -4,11 +4,20 @@
 var swagger = require('swagger-node-express');
 var config = require('../config.js');
 var async = require('async');
-var bcrypt = require('bcryptjs');
+var request = require('request');
 
 
 exports.createPatientAndAccount = function(req,res,next) {
     var connection = req.con;
+
+    var postOptions = {
+        method: 'POST',
+        json : true,
+        headers: {
+            Authorization: req.headers.authorization,
+            "Content-Type": 'application/json'
+        }
+    };
 
     // check if account and patient data was submitted
     if (req.body.account && req.body.patient) {
@@ -17,34 +26,35 @@ exports.createPatientAndAccount = function(req,res,next) {
         // it was necessary to write a new SP to create a patient and an account
         async.waterfall([
                 function(cb){
-                    // shorter vars
-                    var i = req.body.account;
-                    var j = req.body.patient;
-                    // hash pw
-                    var salt = bcrypt.genSaltSync(10);
-                    var pwd = bcrypt.hashSync(i.password, salt);
-                    // set doctorid if current role is doctor
-                    var doc_id = i.doctorId;
-                    if (req.user.role == 'doctor') doc_id = req.user.accountId;
-                    // query db
-                    connection.query('CALL patientsAndAccountCreate(?,?,? ,?,?,? ,?,?,? ,?, ?,?,?, ?,?,?, ?,?,?, ?,?)' ,
-                        [ config.db_pw_prefix, i.username, pwd,
-                            i.email, i.role, i.enabled,
-                            i.reminderTime, i.notificationEnabled, i.notificationMode,
-                            i.mobile,
-                            doc_id, j.firstName, j.lastName,
-                            j.secondName, j.socialId, j.sex,
-                            j.dateOfBirth, j.firstDiagnoseDate, j.fileId,
-                            j.fullAddress, j.landline],
-                        cb);
-                },
-                function(arg1, fields, ccb){
-                    // grant rights if create was successfull
-                    var i = req.body.account;
-                    connection.query('CALL grantRolePermissions(?, ?)' , [parseInt(arg1[0][0].location), i.role], function (err, result){
-                        if (err) ccb(err);
-                        else ccb (null, arg1[0][0].location);
+                    postOptions.url = ((config.ssl.useSsl)? 'https://':'http://')+req.headers.host+'/accounts';
+                    postOptions.body =  req.body.account;
+                    request(postOptions, function (err, res0, body) {
+                        if (err) cb(err);
+                        else {
+                            cb (null, res0.headers.location);
+                        }
                     });
+
+
+                },
+                function(arg1, ccb){
+                    var data = req.body.patient;
+                    pat_id = parseInt(arg1.split("/").pop());
+                    data.accountId = pat_id;
+                    doc_id = req.user.accountId;
+                    if (req.user.role != 'admin') data.doctorId = doc_id;
+
+                    postOptions.url = ((config.ssl.useSsl)? 'https://':'http://')+req.headers.host+'/patients';
+                    postOptions.body =  data;
+
+                    request(postOptions, function (err, res0, body) {
+                        if (err) ccb(err);
+                        else {
+                            ccb (null, res0.headers.location);
+                        }
+                    });
+
+
                 }
             ],
             // optional callback
@@ -55,7 +65,7 @@ exports.createPatientAndAccount = function(req,res,next) {
                     // resource was created
                     // link will be provided in location header
                     res.statusCode = 201;
-                    res.location('/patients/' + re1);
+                    res.location(re1);
                     res.send();
                 }
                 connection.release();
@@ -90,7 +100,7 @@ exports.changeDoctor = function(req,res,next){
 
 
 
-exports.createSpec = {
+exports.createPatientAndAccountSpec = {
     summary : "Create Patient with Account (Roles: doctor)",
     notes: "Instead of calling POST /account and POST /patient in a row, you can use this function to create a patients' account. Uses new SP instead of combinig the existing two methods, since there is no possiblity to delete an account if this operation fails after account creation <br><br>" +
     "<b>Possible Results</b>: <br>" +
@@ -105,7 +115,7 @@ exports.createSpec = {
 
 };
 
-exports.changeSpec = {
+exports.changeDoctorSpec = {
     summary : "Changes Doctor of Given Patient (Roles: admin)",
     notes: "Changes Doctor of Given Patient <br><br><b>Possible Results</b>: <br>" +
     " <b>200</b>  Doctor changed <br>" +
