@@ -3,21 +3,12 @@
  */
 var swagger = require('swagger-node-express');
 var config = require('../config.js');
+var utils = require('../utils.js');
 var async = require('async');
-var request = require('request');
 
 
 exports.createPatientAndAccount = function(req,res,next) {
     var connection = req.con;
-
-    var postOptions = {
-        method: 'POST',
-        json : true,
-        headers: {
-            Authorization: req.headers.authorization,
-            "Content-Type": 'application/json'
-        }
-    };
 
     // check if account and patient data was submitted
     if (req.body.account && req.body.patient) {
@@ -25,36 +16,63 @@ exports.createPatientAndAccount = function(req,res,next) {
         // since its not possible to "really" delete a created account
         // it was necessary to write a new SP to create a patient and an account
         async.waterfall([
-                function(cb){
-                    postOptions.url = ((config.ssl.useSsl)? 'https://':'http://')+req.headers.host+'/accounts';
-                    postOptions.body =  req.body.account;
-                    request(postOptions, function (err, res0, body) {
-                        if (err) cb(err);
-                        else {
-                            cb (null, res0.headers.location);
+                function(ccb){
+                    // 4) create SQL Query from parameters
+                    var i = req.body.account;
+                    // make NotificationMode and role lower case so the db triggers can validate the value
+                    var mode = i.notificationMode.toLowerCase();
+                    var role = i.role.toLowerCase();
+
+                    async.parallel([
+                        function (cb) {
+                            utils.cryptPassword(i.password, cb);
+                        },
+                        function (cb) {
+                            connection.query('CALL accountsCreate(?,?,?,?,?,?, ?,?,?,?)' ,
+                                [config.db_pw_prefix, i.username," ", i.email, role, i.enabled, i.reminderTime, i.notificationEnabled, mode, i.mobile], cb);
                         }
+                    ], function (err, result){
+                        if (err) {
+                            ccb(err);
+                        } else {
+                            var newId = result[1][0][0][0].location;
+                            connection.changeUser({user: 'echo_db_usr', password: config.db.pwd}, function (err){
+                                if (err) ccb(err);
+                                else {
+                                    async.parallel([
+                                        function (cb) {
+                                            connection.query('UPDATE accounts SET password = ? WHERE accountId = ?', [result[0], newId], cb);
+                                        },
+                                        function (cb) {
+                                            connection.query('CALL grantRolePermissions(?, ?)', [newId, i.role], cb);
+                                        }
+                                    ], function (err, res0) {
+                                        if (err) {
+                                            // Something went wrong - shouldnt happen
+                                            next(err);
+                                        }
+                                        else {
+                                            ccb(null, newId);
+                                        }
+                                    });
+                                }
+                            });
+                        };
                     });
-
-
                 },
                 function(arg1, ccb){
-                    var data = req.body.patient;
-                    pat_id = parseInt(arg1.split("/").pop());
-                    data.accountId = pat_id;
-                    doc_id = req.user.accountId;
-                    if (req.user.role != 'admin') data.doctorId = doc_id;
-
-                    postOptions.url = ((config.ssl.useSsl)? 'https://':'http://')+req.headers.host+'/patients';
-                    postOptions.body =  data;
-
-                    request(postOptions, function (err, res0, body) {
+                    connection.changeUser({user: req.user.accountId, password: utils.calculatePW(req.user.accountId)}, function (err){
                         if (err) ccb(err);
                         else {
-                            ccb (null, res0.headers.location);
-                        }
+                            var i = req.body.patient;
+                            // set doctor id to current user if current user is doctor
+                            var doc_id = i.doctorId;
+                            if (req.user.role == 'doctor') doc_id = req.user.accountId;
+                            connection.query('CALL patientsCreate(?,?,?,?,?,?,?,?,?,?,?,?)', [arg1, doc_id, i.firstName, i.lastName, i.secondName, i.socialId, i.sex, i.dateOfBirth, i.firstDiagnoseDate, i.fileId, i.fullAddress, i.landline], ccb);
+                        };
+
+
                     });
-
-
                 }
             ],
             // optional callback
@@ -65,7 +83,7 @@ exports.createPatientAndAccount = function(req,res,next) {
                     // resource was created
                     // link will be provided in location header
                     res.statusCode = 201;
-                    res.location(re1);
+                    res.location('/patients/'+re1[0][0].insertId);
                     res.send();
                 }
                 connection.release();

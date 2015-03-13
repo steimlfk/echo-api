@@ -203,7 +203,7 @@ describe('CreatePatientWithAccount Tests:', function() {
 
     after('Cleaning Up...', function(done){
         var patAccURL = '/accounts/'+pat_url.split("/").pop();
-        async.parallel([
+        async.series([
             function (cb) {
                 request(url)
                     .del(pat_url)
