@@ -231,7 +231,7 @@ var contents = {
     "lama":{"type":"boolean","description": "lama"},
     "longActingB2":{"type":"boolean","description": "longActingB2"},
     "ltot":{"type":"boolean","description": "ltot"},
-    "ltotDevice":{"type":"string","description" : "LTOT Device","enum":[ "CPAP", "BiPAP"]},
+    "ltotDevice":{"type":"string","description" : "LTOT Device","enum":[ "none", "CPAP", "BiPAP"]},
     "ltotStartDate":{"type":"string","format": "Date", "description": "Date of LTOT Start"},
     "mycolytocis":{"type":"boolean","description": "mycolytocis"},
     "niv":{"type":"boolean","description": "niv"},
@@ -242,7 +242,7 @@ var contents = {
     "steroidsOral":{"type":"boolean","description": "steroidsOral"},
     "theophyline":{"type":"boolean","description": "theophyline"},
     "ultraLongB2":{"type":"boolean","description": "ultraLongB2"},
-    "ventilationDevice":{"type":"string","description" : "Ventilation Device","enum":[ "Concetrator", "Cylinder", "Liquid"]},
+    "ventilationDevice":{"type":"string","description" : "Ventilation Device","enum":[ "none", "Concetrator", "Cylinder", "Liquid"]},
     "ventilationStart":{"type":"string","format": "Date", "description": "Date of Ventilation Start"}
 };
 
@@ -268,5 +268,3 @@ exports.models = {
 
     }
 };
-
-

@@ -25,7 +25,7 @@ exports.list = function(req,res,next){
     var connection = req.con;
     // 3) create SQL Query from parameters
     // set base statement
-    var qry = 'SELECT * FROM patients_view';
+    var qry = 'SELECT * FROM patients_view WHERE enabled=1';
     // extending statement if req.query.sortBy (/accounts?sortBy=<sort>) contains a vaild value
     // if its not valid: set it to primary key
     var sort = 'patientId';
@@ -273,7 +273,7 @@ exports.update = function(req,res,next){
 
 
 exports.listSpec = {
-    summary : "List All Patients (Roles: doctor and admin)",
+    summary : "List All enabled Patients (Roles: doctor and admin)",
     notes: "This Function lists all Patients which are visible to the logged in user and are enabled. <br>This function constructs a sql query from the parameters and executes it on patients_view. <br><br> <b>Parameters:</b> <br><br>  " +
     "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " +
     "<b>Sorting</b>: If a valid column (patientId or email) is provided the result will be ordered after that column. If the role is not valid, the parameter is set to patientId.<br><br>" +

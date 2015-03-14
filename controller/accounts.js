@@ -267,7 +267,7 @@ exports.del =   function(req,res,next){
  *  PUT /accounts/id
  *  Steps:
  *  	1) Get DB Connection
- *  	2) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
+ *  	2) Change connected user to currently logged in user (found via req.user, which was populated by passport)
  *  	3) create SQL Query from parameters
  *  	4) add links to result
  *  	5) send
@@ -288,22 +288,29 @@ exports.update = function(req,res,next){
     // execute query
     // ? from query will be replaced by values in [] - including escaping!
     // any value for accountId given in the body will be ignored!
-    connection.query('CALL accountsUpdate(?,?,?,?, ?,?,?,?)' , [req.params.id, i.username, pwd, i.email, i.reminderTime, i.notificationEnabled, mode, i.mobile], function(err, result) {
+    connection.query('SELECT enabled FROM accounts_view', function(err, result) {
         if (err) {
             next(err);
         } else {
-            // Account was updated
-            if (result[0][0].affected_rows > 0){
-                res.statusCode = 204;
-                res.send();
-            }
-            else {
-                // Account wasnt updated since it doesnt exist or isnt visible to the user
-                res.statusCode = 404;
-                res.send();
-            }
+            var enabled = i.enabled == undefined ? result[0] : i.enabled;
+            connection.query('CALL accountsUpdate(?,?,?,?, ?,?,?,?)', [req.params.id, i.username, pwd, i.email, i.reminderTime, i.notificationEnabled, mode, i.mobile, enabled], function (err, result) {
+                if (err) {
+                    next(err);
+                } else {
+                    // Account was updated
+                    if (result[0][0].affected_rows > 0) {
+                        res.statusCode = 204;
+                        res.send();
+                    }
+                    else {
+                        // Account wasnt updated since it doesnt exist or isnt visible to the user
+                        res.statusCode = 404;
+                        res.send();
+                    }
+                }
+                connection.release();
+            });
         }
-        connection.release();
     });
 };
 
