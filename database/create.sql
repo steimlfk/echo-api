@@ -31,6 +31,26 @@ DELIMITER ;
 GRANT EXECUTE ON function  `echo`.`getRole` TO 'echo_db_usr'@'localhost';
 
 -- -----------------------------------------------------
+-- function twoDayAnalyzes
+-- -----------------------------------------------------
+
+DELIMITER $$
+CREATE DEFINER=`echo_db_usr`@`localhost` FUNCTION `twoDayAnalyzes`(
+id Integer
+) RETURNS tinyint(1)
+    DETERMINISTIC
+BEGIN
+declare yesterday boolean;
+declare today boolean;
+select coalesce((select q1 from dailyReports where date >= (now() - interval 1 day))) into @today;
+select coalesce((select q1 from dailyReports where date<(now()-interval 1 day) and date >=(now()-interval 2 day))) into @yesterday;
+RETURN @today=@yesterday and @today=1;
+END$$
+DELIMITER ;
+
+GRANT EXECUTE ON function `echo`.`twoDayAnalyzes` TO 'echo_db_usr'@'localhost';
+
+-- -----------------------------------------------------
 -- Table `echo`.`accounts`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `echo`.`accounts` (
@@ -449,6 +469,18 @@ CREATE TABLE IF NOT EXISTS `echo`.`settings` (
   PRIMARY KEY (`setting`))
 ENGINE = InnoDB;
 
+-- -----------------------------------------------------
+-- Table `echo`.`severity`
+-- -----------------------------------------------------
+CREATE TABLE `severity` (
+  `patientId` int(11) NOT NULL,
+  `severity` enum('A','B','C','D') NOT NULL,
+  `validFrom` date NOT NULL,
+  `comment` mediumtext,
+  KEY `sevFKpat_idx` (`patientId`),
+  CONSTRAINT `sevFKpat` FOREIGN KEY (`patientId`) REFERENCES `patients` (`patientId`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB;
+
 USE `echo` ;
 
 -- -----------------------------------------------------
@@ -703,38 +735,48 @@ CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `accountsUpdate`(
 	IN reTime TIME,
 	IN notEnabled BOOLEAN,
 	IN notMode VARCHAR(10),
-	IN mobile varchar(20)
+	IN mobile varchar(20),
+    	IN accountEnabled BOOLEAN
 )
 begin
 	DECLARE x1 INT;
 	SELECT accountId into x1 from accounts_view where accountId  = accId;
 	if x1 is not null then
-	set @usr = username;
-	SET @pwd = pwd;
-	SET @email = email;
-	SET @reTime = reTime;
-	SET @notEn = notEnabled;
-	SET @notMode = notMode;
-	SET @mobile = mobile;
-	set @id = accId;
-	if (pwd <> '') then
-		set @pwd = pwd;
-		SET @stmt = "UPDATE accounts SET password = ?, username=?, email = ?, reminderTime = ?, notificationEnabled = ?, notificationMode = ?, mobile = ? WHERE accountId = ?";
-		PREPARE s FROM @stmt;
-		EXECUTE s using @pwd, @usr,@email, @reTime, @notEn, @notMode, @mobile, @id;
-		select row_count() as affected_rows;
-		DEALLOCATE PREPARE s;
-	else 
-		SET @stmt = "UPDATE accounts SET username=?, email = ?,  reminderTime = ?, notificationEnabled = ?, notificationMode = ?, mobile = ? WHERE accountId = ?";
-		PREPARE s FROM @stmt;
-		EXECUTE s using @usr, @email, @reTime, @notEn, @notMode, @mobile, @id;
-		select row_count() as affected_rows;
-		DEALLOCATE PREPARE s;
-	end if;
+		set @usr = username;
+		SET @pwd = pwd;
+		SET @email = email;
+		SET @reTime = reTime;
+		SET @notEn = notEnabled;
+		SET @notMode = notMode;
+		SET @mobile = mobile;
+		SET @accEn = accountEnabled;
+		set @id = accId;
+		if (getRole() = 'patient') then
+			if (pwd <> '') then
+				set @pwd = pwd;
+				SET @stmt = "UPDATE accounts SET password = ?, username=?, email = ?, reminderTime = ?, notificationEnabled = ?, notificationMode = ?, mobile = ? WHERE accountId = ?";
+				PREPARE s FROM @stmt;
+				EXECUTE s using @pwd, @usr,@email, @reTime, @notEn, @notMode, @mobile, @id;
+				select row_count() as affected_rows;
+				DEALLOCATE PREPARE s;
+			else 
+				SET @stmt = "UPDATE accounts SET username=?, email = ?,  reminderTime = ?, notificationEnabled = ?, notificationMode = ?, mobile = ? WHERE accountId = ?";
+				PREPARE s FROM @stmt;
+				EXECUTE s using @usr, @email, @reTime, @notEn, @notMode, @mobile, @id;
+				select row_count() as affected_rows;
+				DEALLOCATE PREPARE s;
+			end if;
+		else
+			set @pwd = pwd;
+			SET @stmt = "UPDATE accounts SET password = ?, username=?, email = ?, reminderTime = ?, notificationEnabled = ?, notificationMode = ?, mobile = ?, enabled=? WHERE accountId = ?";
+			PREPARE s FROM @stmt;
+			EXECUTE s using @pwd, @usr,@email, @reTime, @notEn, @notMode, @mobile, @accEn, @id;
+			select row_count() as affected_rows;
+			DEALLOCATE PREPARE s;
+		end if;
 	else
 		signal sqlstate '22403' set message_text = 'You are not allowed to alter this account';
 	end if;
-
 END$$
 
 DELIMITER ;
@@ -2538,7 +2580,7 @@ DELIMITER ;
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`accounts_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`accounts_view` AS select `echo`.`accounts`.`accountId` AS `accountId`,`echo`.`accounts`.`username` AS `username`,`echo`.`accounts`.`password` AS `password`,`echo`.`accounts`.`role` AS `role`,`echo`.`accounts`.`email` AS `email`,`echo`.`accounts`.`enabled` AS `enabled`,`echo`.`accounts`.`reminderTime` AS `reminderTime`,`echo`.`accounts`.`notificationEnabled` AS `notificationEnabled`,`echo`.`accounts`.`notificationMode` AS `notificationMode`,`echo`.`accounts`.`mobile` AS `mobile` from `echo`.`accounts` where (case when (`getRole`() = 'admin') then (1 = 1) else (`echo`.`accounts`.`accountId` = substring_index(user(),'@',1)) end);
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`accounts_view` AS select `echo`.`accounts`.`accountId` AS `accountId`,`echo`.`accounts`.`username` AS `username`,`echo`.`accounts`.`password` AS `password`,`echo`.`accounts`.`role` AS `role`,`echo`.`accounts`.`email` AS `email`,`echo`.`accounts`.`enabled` AS `enabled`,`echo`.`accounts`.`reminderTime` AS `reminderTime`,`echo`.`accounts`.`notificationEnabled` AS `notificationEnabled`,`echo`.`accounts`.`notificationMode` AS `notificationMode`,`echo`.`accounts`.`mobile` AS `mobile`,`accounts`.`enabled` AS `enabled`,`severity`.`severity` AS `severity`,`severity`.`validFrom` AS `severityValidFrom` from ((`patients` join `accounts` on((`patients`.`patientId` = `accounts`.`accountId`))) join `severity` on((`patients`.`patientId` = `severity`.`patientId`))) where (case when (`GETROLE`() = 'admin') then (1 = 1) else ((`patients`.`patientId` = `accounts`.`accountId`) and (`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`patients_view`
