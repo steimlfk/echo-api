@@ -33,9 +33,15 @@ var DailyAnalyzer = function() {
 
         db.getConnection(function(err, connection) {
             connection.query('SELECT * FROM accounts a, dailyReports d inner join devices d on a.accountId=d.accountId where a.accountId = d.patientId and d.recordId = ?', id, function(err, result) {
-                console.log(result)
-                if (result[0].notificationEnabled == 1) {
-
+                console.log(result);
+                var event = '';
+                if (result[0].q3a == 1 || result[0].q3b == 1) {
+                    event = '1';
+                }
+                if (result[0].q3c == 1) {
+                    event = '2';
+                }
+                if (result[0].notificationEnabled == 1 && event != '') {
                     var addresses = [];
                     switch (result[0].notificationMode) {
                         case 'email':
@@ -59,6 +65,30 @@ var DailyAnalyzer = function() {
                         'arns': addresses,
                         'receivers': addresses
                     });
+
+                    switch (event) {
+                        case '1':
+                            var data = JSON.stringify({
+                                'subject': 'This is an ECHO Notification',
+                                'message': 'Call your doctor.',
+                                'to': addresses,
+                                'label': 'ECHO',
+                                'arns': addresses,
+                                'receivers': addresses
+                            });
+                            break;
+
+                        case '2':
+                            var data = JSON.stringify({
+                                'subject': 'This is an ECHO Notification',
+                                'message': 'Go to the hospital.',
+                                'to': addresses,
+                                'label': 'ECHO',
+                                'arns': addresses,
+                                'receivers': addresses
+                            });
+                            break;
+                    }
 
                     postOptions.headers['Content-Length'] = data.length;
                     postOptions.headers['Content-Type'] = 'application/json';

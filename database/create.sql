@@ -57,12 +57,12 @@ CREATE TABLE IF NOT EXISTS `echo`.`accounts` (
   `accountId` INT NOT NULL,
   `username` VARCHAR(255) NOT NULL,
   `password` VARCHAR(255) NOT NULL,
-  `role` VARCHAR(20) NOT NULL,
+  `role` ENUM('admin', 'doctor', 'patient') NOT NULL,
   `email` VARCHAR(100) NOT NULL,
   `enabled` TINYINT(1) NOT NULL DEFAULT 1,
   `reminderTime` TIME NOT NULL,
   `notificationEnabled` TINYINT(1) NOT NULL DEFAULT 1,
-  `notificationMode` VARCHAR(10) NOT NULL DEFAULT 'email',
+  `notificationMode` ENUM('email', 'sms', 'push') NOT NULL DEFAULT 'email',
   `mobile` VARCHAR(45) NULL,
   UNIQUE INDEX `email_UNIQUE` (`email` ASC),
   UNIQUE INDEX `username_UNIQUE` (`username` ASC),
@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`ccqs` (
   `symptomScore` FLOAT NULL DEFAULT NULL,
   `mentalStateScore` FLOAT NULL DEFAULT NULL,
   `functionalStateScore` FLOAT NULL DEFAULT NULL,
-  `status` VARCHAR(15) NOT NULL,
+  `status` ENUM('baseline', 'exacerbation') NOT NULL,
   PRIMARY KEY (`recordId`),
   INDEX `ccqFKpat_idx` (`patientId` ASC),
   CONSTRAINT `ccqFKpat`
@@ -153,7 +153,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`cats` (
   `q7` INT NOT NULL DEFAULT -1,
   `q8` INT NOT NULL DEFAULT -1,
   `totalCatscale` INT NULL DEFAULT 0,
-  `status` VARCHAR(15) NOT NULL,
+  `status` ENUM('baseline', 'exacerbation') NOT NULL,
   PRIMARY KEY (`recordId`),
   INDEX `catsFKpat_idx` (`patientId` ASC),
   CONSTRAINT `catsFKpat`
@@ -229,10 +229,10 @@ CREATE TABLE IF NOT EXISTS `echo`.`treatments` (
   `antipneum` TINYINT(1) NULL,
   `ltot` TINYINT(1) NULL,
   `ltotStartDate` DATE NULL DEFAULT NULL,
-  `ltotDevice` VARCHAR(50) NULL,
+  `ltotDevice` ENUM('CPAP', 'BiPAP', 'none') NULL,
   `niv` TINYINT(1) NULL,
   `ventilationStart` DATE NULL,
-  `ventilationDevice` VARCHAR(50) NULL,
+  `ventilationDevice` ENUM('Concetrator', 'Cylinder', 'Liquid', 'none') NULL,
   PRIMARY KEY (`recordId`),
   INDEX `treatFKpat_idx` (`patientId` ASC),
   CONSTRAINT `treatFKpat`
@@ -252,7 +252,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`readings` (
   `recordId` INT NOT NULL AUTO_INCREMENT,
   `patientId` INT NOT NULL,
   `diagnoseDate` DATE NULL,
-  `status` VARCHAR(15) NOT NULL,
+  `status` ENUM('baseline', 'exacerbation') NOT NULL,
   `weight` INT NULL DEFAULT NULL,
   `height` INT NULL DEFAULT NULL,
   `pxy` INT NULL DEFAULT NULL,
@@ -473,15 +473,22 @@ ENGINE = InnoDB;
 -- Table `echo`.`severity`
 -- -----------------------------------------------------
 CREATE TABLE `severity` (
+  `recordId` int(11) NOT NULL AUTO_INCREMENT,
   `patientId` int(11) NOT NULL,
   `severity` enum('A','B','C','D') NOT NULL,
-  `validFrom` date NOT NULL,
+  `validFrom` datetime NOT NULL,
   `comment` mediumtext,
   KEY `sevFKpat_idx` (`patientId`),
+  PRIMARY KEY (`recordId`),
   CONSTRAINT `sevFKpat` FOREIGN KEY (`patientId`) REFERENCES `patients` (`patientId`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB;
 
 USE `echo` ;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `echo`.`severity_view`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `echo`.`severity_view` (`patientId` INT, `severity` enum('A','B','C','D'), `validFrom` date, `comment` mediumtext);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`accounts_view`
@@ -1833,6 +1840,8 @@ BEGIN
 			set @table = 'readings_view';
 		when 'treatments' then
 			set @table = 'treatments_view';
+		when 'severity' then
+		    set @table = 'severity_view';
 		else
 			set @table = ' ';
 	end case;
@@ -1892,6 +1901,8 @@ BEGIN
 			set @table = 'readings_view';
 		when 'treatments' then
 			set @table = 'treatments_view';
+		when 'severity' then
+		    set @table = 'severity_view';
 		else
 			set @table = ' ';
 	end case;
@@ -2218,6 +2229,44 @@ END$$
 DELIMITER ;
 
 -- -----------------------------------------------------
+-- procedure severityCreate
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `severityCreate`(
+IN patId INT,
+IN date DATETIME,
+IN comment MEDIUMTEXT,
+IN severity ENUM('A', 'B', 'C', 'D')
+)
+BEGIN
+SET @doc = substring_index(user(), '@', 1);
+set @pid = patId;
+
+SET @test_stmt = 'SELECT patientId into @tmp FROM patients_view WHERE patientId = ? and doctorId = ?';
+PREPARE statement FROM @test_stmt;
+EXECUTE statement using @pid, @doc;
+DEALLOCATE PREPARE statement;
+IF @tmp IS NULL then
+	signal sqlstate '22403' set message_text = 'You are not allowed to view this patients data!';
+end if;
+
+
+set @date = date ;
+set @comment = comment ;
+set @severity = severity ;
+set @stmt = "Insert into severity(patientId,severity,validFrom,comment) VALUES (?,?,?,?)";
+
+PREPARE s FROM @stmt;
+EXECUTE s using @pid, @severity, @validFrom ,@comment;
+SELECt last_insert_id() as insertId;
+DEALLOCATE PREPARE s;
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
 -- procedure readingsCreate
 -- -----------------------------------------------------
 
@@ -2513,8 +2562,7 @@ BEGIN
   DECLARE ptr INTEGER;
   DECLARE done INT DEFAULT FALSE;
   #declare cursor
-  DECLARE cur1 CURSOR FOR SELECT accountId
-  FROM `echo`.`accounts`;
+  DECLARE cur1 CURSOR FOR SELECT DISTINCT user from mysql.procs_priv where grantor='echo_db_usr@localhost';
   #declare handle 
   DECLARE CONTINUE  HANDLER FOR NOT FOUND SET done = TRUE;
   
@@ -2576,71 +2624,6 @@ END$$
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure rebuildDb
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=CURRENT_USER PROCEDURE `rebuildDb`()
-BEGIN
-
-INSERT INTO `accounts` (`accountId`, `username`, `password`, `role`, `email`, `enabled`, `reminderTime`, `notificationEnabled`, `mobile`)
-values
-(2, 'dr.who', '$2a$10$sJyY0IDFFdDW4cIFi6nM5uTGmSu9Tpq6YrbyYSKkg.YA1Ql6LLuIC', 'doctor', 'who@dr.who', 1, '18:00', 1, '0049123456789'),
-(3, 'averel', '$2a$10$sJyY0IDFFdDW4cIFi6nM5uAjfvA80TQwF9C/mZi4RQjEmP80n6c0i', 'patient', 'av@e.rel', 1, '10:00', 1, '0049987654321'),
-(4, 'joedalton', '$2a$10$sJyY0IDFFdDW4cIFi6nM5ucCBjsL67Xuash/pKZvv760bApoe9gFe', 'patient', 'joe@dalt.on', 1, '8:45', 1, '00304525515825');
-
-insert into `patients` (`patientId`, `doctorId`, `firstName`, `lastName`, `secondName`, `socialId`, `sex`, `dateOfBirth`, `firstDiagnoseDate`, `fullAddress`,
-    `landline`, `fileId`)
-values
-(3, 2, 'averel', 'test', '', '12345', 1, now(), now(), 'abc 123', '00493654646465432', 2),
-(4, 2, 'joe', 'dalton', 'john', '234234', 1, now(), now(), 'cba 321', '0030231315648', 1);
-
-INSERT INTO `cats` (`patientId`, `diagnoseDate`, `q1`, `q2`, `q3`, `q4`, `q5`, `q6`, `q7`, `q8`, `totalCatscale`, `status`) 
-values
-(3, now(), 1, 1, 0, 0, 1, 0, 1, 1, 3, 'baseline'),
-(4, now(), 0, 1, 0, 1, 0, 1, 0, 1, 2, 'exacerbation');
-
-INSERT INTO `ccqs` (`patientId`, `diagnoseDate`, `q1`, `q2`, `q3`, `q4`, `q5`, `q6`, `q7`, `q8`, `q9`, `q10`, `status`)
-values
-(3, now(), 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 'baseline'),
-(4, now(), 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 'exacerbation');
-
-INSERT INTO `charlsons` (`patientId`, `diagnoseDate`, `myocardialInfarction`, `congestiveHeartFailure`, `peripheralVascularDisease`, 
-    `cerebrovascularDisease`, `dementia`, `chronicPulmonaryDiasease`, `connectiveTissueDisease`, `ulcerDisease`, `liverDiseaseMild`, `diabetes`,
-    `hemiplegia`, `renalDiseaseModerateOrSevere`, `diabetesWithEndOrganDamage`, `anyTumor`, `leukemia`, `malignantLymphoma`, `liverDiseaseModerateOrSevere`,
-    `metastaticSolidMalignancy`, `aids`, `noConditionAvailable`, `totalCharlson`) 
-values
-(3, now(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-(4, now(), 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0);
-
-INSERT Into `dailyReports` (`patientId`, `date`, `q1`, `q2`, `q3`, `q4`, `q5`, `q1a`, `q1b`, `q1c`, `q3a`, `q3b`, `q3c`, `satO2`, `walkingDist`,
-    `temperature`, `pefr`, `heartRate`)
-values
-(3, now(), 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 40, 2500, 36, 40, 95),
-(4, now(), 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 54, 8435, 38, 42, 78);
-
-INSERT INTO `severity` (`patientId`, `severity`, `validFrom`, `comment`)
-values
-(3, 'A', now(), 'this is a test'), 
-(4, 'C', now() - interval 1 day, 'another test');
-
-INSERT INTO `treatments` (`recordId`, `patientId`, `diagnoseDate`, `status`, `shortActingB2`, `longActingB2`, `ultraLongB2`, `steroidsInhaled`, `steroidsOral`, 
-    `sama`, `lama`, `pdef4Inhalator`, `theophyline`, `mycolytocis`, `antibiotics`, `antiflu`, `antipneum`, `ltot`, `ltotStartDate`, `ltotDevice`, `niv`, 
-    `ventilationStart`, `ventilationDevice`)
-values
-(1, 3, now() - interval 2 day, 'baseline', 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, now(), 'CPAP', 1, now(), 'Liquid'),
-(2, 4, now() - interval 1 day, 'baseline', 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, now(), 'CPAP', 1, now(), 'Liquid');
-
-CALL createAllDbUsers();
-
-CALL repairPermissions();
-
-END$$
-
-DELIMITER ;
-
--- -----------------------------------------------------
 -- View `echo`.`accounts_view`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`accounts_view`;
@@ -2687,6 +2670,13 @@ CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SEC
 DROP TABLE IF EXISTS `echo`.`charlsons_view`;
 USE `echo`;
 CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`charlsons_view` AS select `echo`.`charlsons`.`recordId` AS `recordId`,`echo`.`charlsons`.`patientId` AS `patientId`,`echo`.`charlsons`.`diagnoseDate` AS `diagnoseDate`,`echo`.`charlsons`.`myocardialInfarction` AS `myocardialInfarction`,`echo`.`charlsons`.`congestiveHeartFailure` AS `congestiveHeartFailure`,`echo`.`charlsons`.`peripheralVascularDisease` AS `peripheralVascularDisease`,`echo`.`charlsons`.`cerebrovascularDisease` AS `cerebrovascularDisease`,`echo`.`charlsons`.`dementia` AS `dementia`,`echo`.`charlsons`.`chronicPulmonaryDiasease` AS `chronicPulmonaryDiasease`,`echo`.`charlsons`.`connectiveTissueDisease` AS `connectiveTissueDisease`,`echo`.`charlsons`.`ulcerDisease` AS `ulcerDisease`,`echo`.`charlsons`.`liverDiseaseMild` AS `liverDiseaseMild`,`echo`.`charlsons`.`diabetes` AS `diabetes`,`echo`.`charlsons`.`hemiplegia` AS `hemiplegia`,`echo`.`charlsons`.`renalDiseaseModerateOrSevere` AS `renalDiseaseModerateOrSevere`,`echo`.`charlsons`.`diabetesWithEndOrganDamage` AS `diabetesWithEndOrganDamage`,`echo`.`charlsons`.`anyTumor` AS `anyTumor`,`echo`.`charlsons`.`leukemia` AS `leukemia`,`echo`.`charlsons`.`malignantLymphoma` AS `malignantLymphoma`,`echo`.`charlsons`.`liverDiseaseModerateOrSevere` AS `liverDiseaseModerateOrSevere`,`echo`.`charlsons`.`metastaticSolidMalignancy` AS `metastaticSolidMalignancy`,`echo`.`charlsons`.`aids` AS `aids`,`echo`.`charlsons`.`noConditionAvailable` AS `noConditionAvailable`,`echo`.`charlsons`.`totalCharlson` AS `totalCharlson` from `echo`.`charlsons` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`charlsons`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
+
+-- -----------------------------------------------------
+-- View `echo`.severity_view`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `echo`.`severity_view`;
+USE `echo`;
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`severity_view` AS select `echo`.`severity`.`patientId` AS `patientId`, `echo`.`severity`.`severity` AS `severity`, `echo`.`severity`.`validFrom` AS `validFrom`, `echo`.`severity`.`comment` AS `comment` from `echo`.`severity` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`severity`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`treatments_view`
@@ -3239,6 +3229,7 @@ DELIMITER ;
 
 
 GRANT EXECUTE ON procedure `echo`.`accountsCreate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`severityCreate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`charlsonUpdate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`createDbUser` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`accountsDisable` TO 'echo_db_usr'@'localhost';

@@ -3,6 +3,7 @@
 root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Project root
 root="$root/.."
+cd "${root}/tools"
 js="$(which node)"
 if [[ -n $js ]]; then
     node $root/tools/update.js
