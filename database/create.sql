@@ -488,7 +488,7 @@ USE `echo` ;
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`severity_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`severity_view` (`patientId` INT, `severity` enum('A','B','C','D'), `validFrom` date, `comment` mediumtext);
+CREATE TABLE IF NOT EXISTS `echo`.`severity_view` (`recordId` INT, `patientId` INT, `severity` enum('A','B','C','D'), `validFrom` date, `comment` mediumtext);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`accounts_view`
@@ -2676,7 +2676,7 @@ CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SEC
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`severity_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`severity_view` AS select `echo`.`severity`.`patientId` AS `patientId`, `echo`.`severity`.`severity` AS `severity`, `echo`.`severity`.`validFrom` AS `validFrom`, `echo`.`severity`.`comment` AS `comment` from `echo`.`severity` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`severity`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`severity_view` AS select `echo`.`severity`.`recordId` AS `recordId`, `echo`.`severity`.`patientId` AS `patientId`, `echo`.`severity`.`severity` AS `severity`, `echo`.`severity`.`validFrom` AS `validFrom`, `echo`.`severity`.`comment` AS `comment` from `echo`.`severity` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`severity`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`treatments_view`
