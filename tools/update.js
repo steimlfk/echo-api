@@ -21,7 +21,7 @@ exec('git pull', function(err, stdout, stderr) {
                             script = script.replace('##%%user' + (i+1) + '%%##', users[i].username).replace('##%%pw' + (i+1) + '%%##', users[i].password)
                         }
                         console.log(script)
-                        exec('mysql -u ' + db.config.connectionConfig.user + ' -p' + db.config.connectionConfig.password + " echo -e \"" + script + "\"", function (error, standOut, standErr) {
+                        exec('mysql -u ' + db.config.connectionConfig.user + ' -p' + db.config.connectionConfig.password + " echo -e '" + script + "'", function (error, standOut, standErr) {
                             if (error || standErr) {
                                 console.log('ERROR: ' + (error || standErr));
                             }

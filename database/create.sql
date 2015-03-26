@@ -42,8 +42,13 @@ id Integer
 BEGIN
 declare yesterday boolean;
 declare today boolean;
-select coalesce((select q1 from dailyReports where date >= (now() - interval 1 day))) into @today;
-select coalesce((select q1 from dailyReports where date<(now()-interval 1 day) and date >=(now()-interval 2 day))) into @yesterday;
+select coalesce((select q1 from dailyReports where date >= (now() - interval 1 day) and patientId=id)) into @today;
+select coalesce((select q1 from dailyReports where date<(now()-interval 1 day) and date >=(now()-interval 2 day) and patientId=id)) into @yesterday;
+if @today = 0 OR @yesterday = 0
+  then
+  select coalesce((select q5 from dailyReports where date >= (now() - interval 1 day) and patientId=id)) into @today;
+  select coalesce((select q5 from dailyReports where date<(now()-interval 1 day) and date >=(now()-interval 2 day) and patientId=id)) into @yesterday;
+end if;
 RETURN @today=@yesterday and @today=1;
 END$$
 DELIMITER ;
@@ -229,10 +234,10 @@ CREATE TABLE IF NOT EXISTS `echo`.`treatments` (
   `antipneum` TINYINT(1) NULL,
   `ltot` TINYINT(1) NULL,
   `ltotStartDate` DATE NULL DEFAULT NULL,
-  `ltotDevice` ENUM('CPAP', 'BiPAP', 'none') NULL,
+  `ltotDevice` ENUM('none', 'BiPAP', 'CPAP') NULL,
   `niv` TINYINT(1) NULL,
   `ventilationStart` DATE NULL,
-  `ventilationDevice` ENUM('Concetrator', 'Cylinder', 'Liquid', 'none') NULL,
+  `ventilationDevice` ENUM('none', 'Cylinder', 'Liquid', 'Concetrator') NULL,
   PRIMARY KEY (`recordId`),
   INDEX `treatFKpat_idx` (`patientId` ASC),
   CONSTRAINT `treatFKpat`
@@ -498,7 +503,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`accounts_view` (`accountId` INT, `username` I
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`patients_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`patients_view` (`patientId` INT, `doctorId` INT, `firstName` INT, `lastName` INT, `secondName` INT, `socialId` INT, `sex` INT, `dateOfBirth` INT, `firstDiagnoseDate` INT, `fileId` INT, `fullAddress` INT, `landline` INT, `email` INT, `mobile` INT);
+CREATE TABLE IF NOT EXISTS `echo`.`patients_view` (`patientId` INT, `doctorId` INT, `firstName` INT, `lastName` INT, `secondName` INT, `socialId` INT, `sex` INT, `dateOfBirth` INT, `firstDiagnoseDate` INT, `fileId` INT, `fullAddress` INT, `landline` INT, `email` INT, `mobile` INT, severity ENUM('A', 'B', 'C', 'D');
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`cats_view`
@@ -2640,7 +2645,8 @@ select `echo`.`patients`.`patientId` AS `patientId`,`echo`.`patients`.`doctorId`
 `echo`.`patients`.`lastName` AS `lastName`,`echo`.`patients`.`secondName` AS `secondName`,`echo`.`patients`.`socialId` AS `socialId`,
 `echo`.`patients`.`sex` AS `sex`,`echo`.`patients`.`dateOfBirth` AS `dateOfBirth`,`echo`.`patients`.`firstDiagnoseDate` AS `firstDiagnoseDate`,
 `echo`.`patients`.`fileId` AS `fileId`,`echo`.`patients`.`fullAddress` AS `fullAddress`,`echo`.`patients`.`landline` AS `landline`,
-`echo`.`accounts`.`email` AS `email`,`echo`.`accounts`.`mobile` AS `mobile`     from
+`echo`.`accounts`.`email` AS `email`,`echo`.`accounts`.`mobile` AS `mobile`, (SELECT `echo`.`severity`.`severity` as `severity`
+        from `severity` where ((`severity`.`patientId` = `accounts`.`accountId`)) ORDER BY id desc LIMIT 1)    from
         (`patients`
         join `accounts` ON ((`patients`.`patientId` = `accounts`.`accountId`)))
     where

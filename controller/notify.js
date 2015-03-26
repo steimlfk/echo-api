@@ -35,7 +35,7 @@ var DailyAnalyzer = function() {
             connection.query('SELECT * FROM accounts a, dailyReports d inner join devices d on a.accountId=d.accountId where a.accountId = d.patientId and d.recordId = ?', id, function(err, result) {
                 console.log(result);
                 var event = '';
-                if (result[0].q3a == 1 || result[0].q3b == 1) {
+                if (result[0].q3a == 1 || result[0].q3b == 1 || (result[0].q1 == 1 && result[0].q2 == 1 && result[0].q3 == 1)) {
                     event = '1';
                 }
                 if (result[0].q3c == 1) {
@@ -122,11 +122,9 @@ var DailyAnalyzer = function() {
             }
         };
         var date = new Date();
-        var time = date.getHours() + ':' + date.getMinutes() + ':' + '00';
         db.getConnection(function(err, connection) {
             connection.query('SELECT a.accountId, notificationEnabled, email, mobile, deviceId from accounts a ' +
-                'inner join devices on a.accountId=devices.accountId where twoDayAnalyzes(a.accountId)=1 and notificationEnabled=1 group by a.accountId;' +
-                'and reminderTime=?', time,
+                'inner join devices on a.accountId=devices.accountId where twoDayAnalyzes(a.accountId)=1 and notificationEnabled=1 group by a.accountId;',
                     function(err, result) {
                 var email = [],
                     mobile = [],
@@ -195,12 +193,13 @@ var DailyAnalyzer = function() {
             }
         };
         var date = new Date();
-        var time = date.getHours() + ':' + date.getMinutes() + ':' + '00';
+        var startTime = date.getHours() + ':' + (date.getMinutes()-15) + ':' + '00';
+        var endTime = date.getHours() + ':' + (date.getMinutes()) + ':' + '00';
         db.getConnection(function(err, connection) {
             connection.query('SELECT a.accountId, notificationEnabled, email, mobile, deviceId from accounts a ' +
                 'inner join devices on a.accountId=devices.accountId ' +
-                'inner join dailyReports d on a.accountId=patientId where d.date < (now() - interval 5 day) and reminderTime=? and notificationEnabled=1 group by a.accountId;',
-                    time, function(err, result) {
+                'inner join dailyReports d on a.accountId=patientId where d.date < (now() - interval 2 day) and reminderTime>=? and reminderTime <=? and notificationEnabled=1 group by a.accountId;',
+                    [startTime, endTime], function(err, result) {
                 var email = [],
                     mobile = [],
                     push = [];
