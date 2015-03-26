@@ -9,9 +9,11 @@
  * TODO CATCH DELETE ACCOUNT (patients table references accounts table...)
  */
 var swagger = require('swagger-node-express');
-var config = require('../config/config.js');
-var bcrypt = require('bcryptjs');
-var ssl = require('../config/ssl.js').useSsl;
+var config = require('../config.js');
+var utils = require('../utils.js');
+var async = require('async');
+
+var ssl = config.ssl.useSsl;
 
 /**
  *  GET /accounts
@@ -194,20 +196,30 @@ exports.add = function(req,res,next){
     // make NotificationMode and role lower case so the db triggers can validate the value
     var mode = i.notificationMode.toLowerCase();
     var role = i.role.toLowerCase();
-    // hash pwd
-    var salt = bcrypt.genSaltSync(10);
-    var pwd = bcrypt.hashSync(i.password, salt);
-    // query db
-    // ? from query will be replaced by values in [] - including escaping!
-    connection.query('CALL accountsCreate(?,?,?,?,?,?, ?,?,?,?)' ,
-        [config.db_pw_prefix, i.username,pwd, i.email, role, i.enabled, i.reminderTime, i.notificationEnabled,
-            mode, i.mobile], function(err, result) {
-            if (err) {
-                connection.release();
-                next(err);
-            } else {
-                // Since the SP accountsCreate created a new db user, rights have to be set for this new user
-                connection.query('CALL grantRolePermissions(?, ?)' , [parseInt(result[0][0].location), i.role], function(err, resu) {
+
+    async.parallel([
+        function (cb) {
+            utils.cryptPassword(i.password, cb);
+        },
+        function (cb) {
+            connection.query('CALL accountsCreate(?,?,?,?,?,?, ?,?,?,?)' ,
+                [config.db_pw_prefix, i.username," ", i.email, role, i.enabled, i.reminderTime, i.notificationEnabled, mode, i.mobile], cb);
+        }
+    ], function (err, result){
+        if (err) {
+            connection.release();
+            next(err);
+        } else {
+            var newId = result[1][0][0][0].location;
+            connection.changeUser({user: 'echo_db_usr', password: config.db.pwd}, function (err){
+                async.parallel([
+                    function(cb){
+                        connection.query('UPDATE accounts SET password = ? WHERE accountId = ?' , [result[0], newId], cb);
+                    },
+                    function(cb){
+                        connection.query('CALL grantRolePermissions(?, ?)' , [newId, i.role], cb);
+                    }
+                ], function(err, res0){
                     if (err) {
                         // Something went wrong - shouldnt happen
                         // future TODO: implement rollback which deletes the created account and the created db user
@@ -216,14 +228,14 @@ exports.add = function(req,res,next){
                     else {
                         // account and db user created.
                         res.statusCode = 201;
-                        res.location('/accounts/' + result[0][0].location);
+                        res.location('/accounts/' + newId);
                         res.send();
                     }
                     connection.release();
                 });
-            }
-        });
-
+            });
+        };
+    });
 };
 
 
@@ -280,8 +292,7 @@ exports.update = function(req,res,next){
     // password given? if no pw is given the SP wont change it! (SP checks if value is null)
     var pwd = null;
     if (i.password != null && i.password != ""){
-        var salt = bcrypt.genSaltSync(10);
-        pwd = bcrypt.hashSync(i.password, salt);
+        pwd = utils.cryptPasswordSync(i.password);
     }
     // make NotificationMode lower case so the db triggers can validate the value
     var mode = i.notificationMode.toLowerCase();
@@ -471,3 +482,42 @@ exports.models = {
     }
 };
 
+var old_add = function(req,res,next){
+    var connection = req.con;
+
+    // 4) create SQL Query from parameters
+    var i = req.body;
+    // make NotificationMode and role lower case so the db triggers can validate the value
+    var mode = i.notificationMode.toLowerCase();
+    var role = i.role.toLowerCase();
+    // hash pwd
+    var salt = bcrypt.genSaltSync(10);
+    var pwd = bcrypt.hashSync(i.password, salt);
+    // query db
+    // ? from query will be replaced by values in [] - including escaping!
+    connection.query('CALL accountsCreate(?,?,?,?,?,?, ?,?,?,?)' ,
+        [config.db_pw_prefix, i.username,pwd, i.email, role, i.enabled, i.reminderTime, i.notificationEnabled,
+            mode, i.mobile], function(err, result) {
+            if (err) {
+                connection.release();
+                next(err);
+            } else {
+                // Since the SP accountsCreate created a new db user, rights have to be set for this new user
+                connection.query('CALL grantRolePermissions(?, ?)' , [parseInt(result[0][0].location), i.role], function(err, resu) {
+                    if (err) {
+                        // Something went wrong - shouldnt happen
+                        // future TODO: implement rollback which deletes the created account and the created db user
+                        next(err);
+                    }
+                    else {
+                        // account and db user created.
+                        res.statusCode = 201;
+                        res.location('/accounts/' + result[0][0].location);
+                        res.send();
+                    }
+                    connection.release();
+                });
+            }
+        });
+
+};

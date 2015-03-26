@@ -1,9 +1,7 @@
 /**
  * Created by steimlfk on 05.03.15.
  */
-var mysql = require('../config/mysql');
-var config = require('../config/config');
-var db = mysql.db;
+var db = require('../utils.js').db;
 var http = require('http');
 var async = require('async');
 var querystring = require('querystring');

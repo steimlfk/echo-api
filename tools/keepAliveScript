@@ -5,7 +5,8 @@ SCRIPTPATH=`pwd -P`
 popd > /dev/null
 if [ -z $PIDS ]
 then
-    nodejs "${SCRIPTPATH}/../echo-ws.js" >> "${SCRIPTPATH}/../log" 2>&1
+    cd ${SCRIPTPATH}/..
+    nodejs "/echo-ws.js" >> "${SCRIPTPATH}/../log" 2>&1
     # nodejs ../echo-ws.js  Starts the server
     # >> ../log  Writes the output into the file "log"
     # 2>&1  redirects the output of stderr to stdout

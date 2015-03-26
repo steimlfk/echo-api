@@ -8,8 +8,7 @@
  */
 
 var swagger = require('swagger-node-express');
-var config = require('../config/config.js');
-var ssl = require('../config/ssl.js').useSsl;
+var ssl = require('../config.js').ssl.useSsl;
 
 /**
  * GET lists from CATs, CCQs, Charlsons, Treatments, Readings

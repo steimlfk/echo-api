@@ -2,14 +2,14 @@
  * Command Ressources
  */
 var swagger = require('swagger-node-express');
-var mysql = require('../config/mysql');
-var db = mysql.db;
-var config = require('../config/config.js');
+var config = require('../config.js');
 var async = require('async');
 var bcrypt = require('bcryptjs');
 
 
 exports.createPatientAndAccount = function(req,res,next) {
+    var connection = req.con;
+
     // check if account and patient data was submitted
     if (req.body.account && req.body.patient) {
 

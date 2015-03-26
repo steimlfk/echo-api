@@ -2,34 +2,36 @@
  * Imports
  */
 var express = require('express'),
-http = require('http'),
-https = require('https'),
-path = require('path'),
-passport = require('passport'),
-bodyParser = require('body-parser'),
-serveStatic = require('serve-static'),
-swagger = require("swagger-node-express"),
-session = require('cookie-session'),
-fs = require('fs'),
-schedule = require('node-schedule');
+    http = require('http'),
+    https = require('https'),
+    path = require('path'),
+    passport = require('passport'),
+    bodyParser = require('body-parser'),
+    serveStatic = require('serve-static'),
+    swagger = require('swagger-node-express'),
+    fs = require('fs'), 
+    jwt = require('jsonwebtoken'),
+    BearerStrategy = require('passport-http-bearer').Strategy,
+    schedule = require('node-schedule');
 
-var utils =				require('./controller/controller_utils');
+var ctrl_utils =				require('./health-api-middlewares');
 
 /**
  * Config & Vars
  */
 var app = express();
-var oauth2 = require('./config/oauth2'),
-	config = require('./config/config.js'),
-	ssl = require('./config/ssl.js');
+var oauth2 = require('./oauth2.js'),
+    utils = require('./utils.js'),
+	config = require('./config.js'),
+	ssl = config.ssl;
 var api_docs = "/api-docs";
 swagger.setAppHandler(app);
 swagger.configureSwaggerPaths("", api_docs, "");
 swagger.setHeaders = function setHeaders(res) {
 	res.header("Content-Type", "application/json; charset=utf-8");
 };
-var mysql = require('./config/mysql');
-var state = mysql.state;
+
+var tokensecret = config.tokensecret;
 
 var port = config.port;
 var host = config.host;
@@ -39,7 +41,27 @@ var url_port = config.url_port;
 app.set('port', port);									
 app.use(passport.initialize());
 
-var auth = require('./config/auth');
+/*
+ *  This Functions checks whether a token is valid
+ *  If the token is valid, user data will be stored in req.user
+ *
+ *  to use this strategy apply passport.authenticate(['bearer'], { session: false }) to the stack
+ */
+passport.use(new BearerStrategy({"realm" : "ECHO REST-API"}, function(accessToken, done) {
+    // check validity of given token using the secret
+    jwt.verify(accessToken, tokensecret, function(err, decoded) {
+        if (err) { return done(null, false); }
+
+        // token was valid, data from retval will be stored in req.user
+        var retval = {
+            'accountId' : decoded.accountId,
+            'role' : decoded.role
+        };
+        done(null, retval);
+
+    });
+}));
+
 
 /**
  * REST API
@@ -47,12 +69,12 @@ var auth = require('./config/auth');
 app.get('/', function(req, res){res.redirect('/docs');});
 
 //setup login-Endpoint
-app.use('/login', bodyParser.json());
+app.use('/login', bodyParser.json(), bodyParser.urlencoded({ extended: false }));
 swagger.addPost({'spec':oauth2.loginSpec,'action':oauth2.endpoint})
 
 //setup protected ECHO Endpoints
 var echo_endpoints = ['/accounts', '/patients', '/questions','/notifications','/createPatientAndAccount','/changeDoctor', '/devices'];
-var echo_middlewares = [bodyParser.json(), passport.authenticate(['bearer'], { session: false }), utils.accessControl, utils.databaseHandler];
+var echo_middlewares = [passport.authenticate(['bearer'], { session: false }), ctrl_utils.accessControl, bodyParser.json(),bodyParser.urlencoded({ extended: false }), ctrl_utils.databaseHandler];
 
 for (var i = 0; i< echo_endpoints.length; i++){
         app.use(echo_endpoints[i], echo_middlewares);
@@ -94,7 +116,7 @@ for (var i = 0; i < files.length; i++){
     };
 };
 
-app.use(utils.errorHandler);
+app.use(ctrl_utils.errorHandler);
 
 
 /**
@@ -156,7 +178,6 @@ if (ssl.useSsl){
 
 	https.createServer(options, app).listen(app.get('port'), function(){
 		console.log('ECHO REST API listening on host ' +host + ' on port ' + app.get('port'));
-		console.log('Server running in State: ' + state);
 		console.log('Server uses SSL');
 		console.log('Swagger Base: https://'+host+':'+url_port + api_docs);
 	});
@@ -179,7 +200,6 @@ else {
 
 	http.createServer(app).listen(app.get('port'), function(){
 		console.log('ECHO REST API listening on host ' +host + ' on port ' + app.get('port'));
-		console.log('Server running in State: ' + state);
 		console.log('Swagger Base: http://'+host+':'+url_port + api_docs);
 	});
 }
