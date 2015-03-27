@@ -28,9 +28,7 @@ var DailyAnalyzer = function() {
             }
         };
         console.log('catch');
-
-        db.getConnection(function(err, connection) {
-            connection.query('SELECT * FROM accounts a, dailyReports d inner join devices d on a.accountId=d.accountId where a.accountId = d.patientId and d.recordId = ?', id, function(err, result) {
+            db.query('SELECT * FROM accounts a, dailyReports d inner join devices d on a.accountId=d.accountId where a.accountId = d.patientId and d.recordId = ?', id, function(err, result) {
                 console.log(result);
                 var event = '';
                 if (result[0].q3a == 1 || result[0].q3b == 1 || (result[0].q1 == 1 && result[0].q2 == 1 && result[0].q3 == 1)) {
@@ -104,13 +102,12 @@ var DailyAnalyzer = function() {
                     console.log('E Mail was sent');
                 }
             });
-        });
 
 
     });
 
     // For sending notifications to persons who have answered the question q1 with yes two days in a row.
-    this.on('twoDayAnalyzes', function() {
+    this.on('twoDayAnalyzes', function(id) {
         var postOptions = {
             host: '',
             port: '80',
@@ -119,11 +116,9 @@ var DailyAnalyzer = function() {
                 Authorization: ''
             }
         };
-        var date = new Date();
-        db.getConnection(function(err, connection) {
-            connection.query('SELECT a.accountId, notificationEnabled, email, mobile, deviceId from accounts a ' +
-                'inner join devices on a.accountId=devices.accountId where twoDayAnalyzes(a.accountId)=1 and notificationEnabled=1 group by a.accountId;',
-                    function(err, result) {
+        db.query('SELECT a.accountId, notificationEnabled, email, mobile, deviceId from accounts a ' +
+            'inner join devices on a.accountId=devices.accountId where twoDayAnalyzes(a.accountId)=1 and notificationEnabled=1 and a.accountId=?;',
+            id, function (err, result) {
                 var email = [],
                     mobile = [],
                     push = [];
@@ -177,8 +172,7 @@ var DailyAnalyzer = function() {
                 });
                 request.write(data);
                 request.end();
-            })
-        });
+            });
     });
 
     this.on('inactiveAnalyzes', function() {
@@ -191,13 +185,12 @@ var DailyAnalyzer = function() {
             }
         };
         var date = new Date();
-        var startTime = date.getHours() + ':' + (date.getMinutes()-15) + ':' + '00';
+        var startTime = date.getHours() + ':' + (date.getMinutes() - 15) + ':' + '00';
         var endTime = date.getHours() + ':' + (date.getMinutes()) + ':' + '00';
-        db.getConnection(function(err, connection) {
-            connection.query('SELECT a.accountId, notificationEnabled, email, mobile, deviceId from accounts a ' +
-                'inner join devices on a.accountId=devices.accountId ' +
-                'inner join dailyReports d on a.accountId=patientId where d.date < (now() - interval 2 day) and reminderTime>=? and reminderTime <=? and notificationEnabled=1 group by a.accountId;',
-                    [startTime, endTime], function(err, result) {
+        db.query('SELECT a.accountId, notificationEnabled, email, mobile, deviceId from accounts a ' +
+            'inner join devices on a.accountId=devices.accountId ' +
+            'inner join dailyReports d on a.accountId=patientId where d.date < (now() - interval 2 day) and reminderTime>=? and reminderTime <=? and notificationEnabled=1 group by a.accountId;',
+            [startTime, endTime], function (err, result) {
                 var email = [],
                     mobile = [],
                     push = [];
@@ -255,9 +248,81 @@ var DailyAnalyzer = function() {
                 request.write(data);
                 request.end();
             });
-        });
     });
 
+    this.on('goldAnalyzes', function(id) {
+        var postOptions = {
+            host: '',
+            port: '80',
+            method: 'POST',
+            headers: {
+                Authorization: ''
+            }
+        };
+        db.query('SELECT ' +
+            'CASE ' +
+            'WHEN (fev1>=80 AND fev1_fvc<70 AND ((SELECT totalCatscale<10 from cats where patientId=? order by recordId desc limit 1) OR ' +
+            '(SELECT 0<=mmrc<=1 from readings where patientId=? order by recordId desc limit 1))) then \'A\' ' +
+            'WHEN (50<=fev1<80 AND fev1_fvc<70 AND ((SELECT totalCatscale>=10 from cats where patientId=? order by recordId desc limit 1) OR ' +
+            '(SELECT mmrc>=2 from readings where patientId=? order by recordId desc limit 1))) then \'B\' ' +
+            'WHEN (30<=fev1<50 AND fev1_fvc<70 AND ((SELECT totalCatscale<10 from cats where patientId=? order by recordId desc limit 1) OR ' +
+            '(SELECT 0<=mmrc<=1 from readings where patientId=? order by recordId desc limit 1))) then \'C\' ' +
+            'WHEN (fev1<30 AND fev1_fvc<70 AND ((SELECT totalCatscale>=10 from cats where patientId=? order by recordId desc limit 1) OR ' +
+            '(SELECT mmrc>=2 from readings where patientId=? order by recordId desc limit 1))) then \'D\' ' +
+            'ELSE null ' +
+            'END, severity.severity from readings ' +
+            'left join severity on severity.patientId=readings.`patientId`;',
+            id, function (err, result) {
+                var r = result[0];
+                if (r[0] == r[1]) {
+                    res.end();
+                } else {
+                    switch (r.notificationMode) {
+                        case 'email':
+                            postOptions.path = '/echo/email';
+                            var data = JSON.stringify({
+                                'subject': '',
+                                'message': 'You are dead.',
+                                'to': [r.email],
+                                'label': 'ECHO'
+                            });
+                            break;
+
+                        case 'sms':
+                            postOptions.path = '/echo/sms';
+                            var data = JSON.stringify({
+                                'subject': 'This is an ECHO Notification',
+                                'message': 'You are dead.',
+                                'label': 'ECHO',
+                                'receivers': r.mobile
+                            });
+                            break;
+
+                        case 'push':
+                            postOptions.path = '/echo/sns';
+                            var data = JSON.stringify({
+                                'subject': 'This is an ECHO Notification',
+                                'message': 'You are dead.',
+                                'label': 'ECHO',
+                                'arns': r.deviceId
+                            });
+                            break;
+                    }
+
+                    data.subject = 'Your severity changed.';
+                    data.message = 'Your severity was ' + r[1] + ' but changed to ' + r[0];
+
+                    var request = http.request(postOptions, function (res) {
+                        res.setEncoding('utf8');
+                        res.on('data', function (data) {
+                            console.log(data);
+                        })
+                    });
+                    request.write(data);
+                    request.end();
+                }
+            });
+    });
 };
 
 // extend the EventEmitter class using our Radio class

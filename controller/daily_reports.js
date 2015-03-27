@@ -254,7 +254,8 @@ exports.add = function(req,res,next){
                 // this postpones the analysis of the data until the POST is completely processed
                 process.nextTick (function (){
                     dailyAnalyzer.emit('newDailyReport', result[0][0].insertId);
-                    dailyAnalyzer.emit('twoDayAnalyzes');
+                    dailyAnalyzer.emit('twoDayAnalyzes', id);
+                    dailyAnalyzer.emit('goldAnalyzes', id);
                 });
 
                 // new ressource created

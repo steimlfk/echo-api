@@ -46,6 +46,11 @@ values
 (1, 3, now() - interval 2 day, "baseline", 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, now(), "CPAP", 1, now(), "Liquid"),
 (2, 4, now() - interval 1 day, "baseline", 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, now(), "CPAP", 1, now(), "Liquid");
 
+INSERT INTO echo.severity (recordId, patientId, severity, comment, validFrom)
+values
+(1, 3, 'B', 'first severity', now()),
+(1, 4, 'A', 'first severity', now() - interval 1 day);
+
 CALL dropAllDbUsers();
 
 CALL createAllDbUsers("##%%prefix%%##");

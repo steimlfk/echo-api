@@ -20,7 +20,6 @@ exec('git pull', function(err, stdout, stderr) {
                         for (var i = 0; i < 3; i++) {
                             script = script.replace('##%%user' + (i+1) + '%%##', users[i].username).replace('##%%pw' + (i+1) + '%%##', users[i].password)
                         }
-                        console.log(script)
                         exec('mysql -u ' + db.user + ' -p' + db.pwd + " echo -e '" + script + "'", function (error, standOut, standErr) {
                             if (error || standErr) {
                                 console.log('ERROR: ' + (error || standErr));

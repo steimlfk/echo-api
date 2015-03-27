@@ -159,7 +159,8 @@ swagger.configureDeclaration("notifications", {
 });
 
 var j = schedule.scheduleJob('*/15 * * * *', function() {
-    var notify = new require('./controller/notify.js')();
+    var analyzer = require('./controller/notify.js');
+    var notify = new analyzer();
     notify.emit('inactiveAnalyzes');
 });
 

@@ -1,5 +1,6 @@
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
-SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS;
+SET FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL,ALLOW_INVALID_DATES';
 
 -- -----------------------------------------------------
@@ -503,7 +504,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`accounts_view` (`accountId` INT, `username` I
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`patients_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`patients_view` (`patientId` INT, `doctorId` INT, `firstName` INT, `lastName` INT, `secondName` INT, `socialId` INT, `sex` INT, `dateOfBirth` INT, `firstDiagnoseDate` INT, `fileId` INT, `fullAddress` INT, `landline` INT, `email` INT, `mobile` INT, severity ENUM('A', 'B', 'C', 'D');
+CREATE TABLE IF NOT EXISTS `echo`.`patients_view` (`patientId` INT, `doctorId` INT, `firstName` INT, `lastName` INT, `secondName` INT, `socialId` INT, `sex` INT, `dateOfBirth` INT, `firstDiagnoseDate` INT, `fileId` INT, `fullAddress` INT, `landline` INT, `email` INT, `mobile` INT, severity ENUM('A', 'B', 'C', 'D'));
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`cats_view`
@@ -2646,7 +2647,7 @@ select `echo`.`patients`.`patientId` AS `patientId`,`echo`.`patients`.`doctorId`
 `echo`.`patients`.`sex` AS `sex`,`echo`.`patients`.`dateOfBirth` AS `dateOfBirth`,`echo`.`patients`.`firstDiagnoseDate` AS `firstDiagnoseDate`,
 `echo`.`patients`.`fileId` AS `fileId`,`echo`.`patients`.`fullAddress` AS `fullAddress`,`echo`.`patients`.`landline` AS `landline`,
 `echo`.`accounts`.`email` AS `email`,`echo`.`accounts`.`mobile` AS `mobile`, (SELECT `echo`.`severity`.`severity` as `severity`
-        from `severity` where ((`severity`.`patientId` = `accounts`.`accountId`)) ORDER BY id desc LIMIT 1)    from
+        from `severity` where ((`severity`.`patientId` = `accounts`.`accountId`)) ORDER BY recordId desc LIMIT 1)    from
         (`patients`
         join `accounts` ON ((`patients`.`patientId` = `accounts`.`accountId`)))
     where
