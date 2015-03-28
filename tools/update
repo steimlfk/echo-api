@@ -5,12 +5,22 @@ root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 root="$root/.."
 cd "${root}/tools"
 js="$(which node)"
+if [[ -z $1 ]]; then
+    read -p "root user of DB: " usr
+else
+    usr=$1
+fi
+if [[ -z $2 ]]; then
+    read -s -p "password: " pwd
+else
+    pwd=$2
+fi
 if [[ -n $js ]]; then
-    node $root/tools/update.js
+    node $root/tools/update.js $usr $pwd
 else
     js="$(which nodejs)"
     if [[ -n $js ]]; then
-        nodejs $root/tools/update.js
+        nodejs $root/tools/update.js $usr $pwd
     else
         echo "Please install node or nodejs, depending on your distribution"
     fi

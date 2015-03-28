@@ -5,12 +5,13 @@ exec('git pull', function(err, stdout, stderr) {
     if (err || stderr) {
         console.log('ERROR: ' + (err || stderr))
     } else {
-        var db = require('../config.js').db;
-        exec('mysql echo -u ' + db.user + ' -p' + db.pwd + " -e \"CALL dropAllDbUsers(); DROP USER 'echo_db_usr'@'localhost'; FLUSH PRIVILEGES;\"",
+        var user = process.argv[2];
+        var pw = process.argv[3];
+        exec('mysql echo -u ' + user + ' -p' + pw + " -e \"CALL dropAllDbUsers(); DROP USER 'echo_db_usr'@'localhost'; FLUSH PRIVILEGES;\"",
                 function (err, stdout, stderr) {
             if (err || stderr) console.log('ERROR: ' + (err || stderr));
             else {
-                exec('mysql -u ' + db.user + ' -p' + db.pwd + ' < ../database/create.sql', function (e, sout, serr) {
+                exec('mysql -u ' + user + ' -p' + pw + ' < ../database/create.sql', function (e, sout, serr) {
                     if (e || serr) console.log('ERROR: ' + (e || serr));
                     else {
                         var pwPrefix = require('../config.js').db_pw_prefix;
@@ -20,7 +21,7 @@ exec('git pull', function(err, stdout, stderr) {
                         for (var i = 0; i < 3; i++) {
                             script = script.replace('##%%user' + (i+1) + '%%##', users[i].username).replace('##%%pw' + (i+1) + '%%##', users[i].password)
                         }
-                        exec('mysql -u ' + db.user + ' -p' + db.pwd + " echo -e '" + script + "'", function (error, standOut, standErr) {
+                        exec('mysql -u ' + user + ' -p' + pw + " echo -e '" + script + "'", function (error, standOut, standErr) {
                             if (error || standErr) {
                                 console.log('ERROR: ' + (error || standErr));
                             }
