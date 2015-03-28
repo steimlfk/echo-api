@@ -304,7 +304,7 @@ exports.update = function(req,res,next){
             next(err);
         } else {
             var enabled = i.enabled == undefined ? result[0] : i.enabled;
-            connection.query('CALL accountsUpdate(?,?,?,?, ?,?,?,?)', [req.params.id, i.username, pwd, i.email, i.reminderTime, i.notificationEnabled, mode, i.mobile, enabled], function (err, result) {
+            connection.query('CALL accountsUpdate(?,?,?,?, ?,?,?,?, ?)', [req.params.id, i.username, pwd, i.email, i.reminderTime, i.notificationEnabled, mode, i.mobile, enabled], function (err, result) {
                 if (err) {
                     next(err);
                 } else {
