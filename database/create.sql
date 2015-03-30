@@ -2634,7 +2634,12 @@ DELIMITER ;
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`accounts_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`accounts_view` AS select `echo`.`accounts`.`accountId` AS `accountId`,`echo`.`accounts`.`username` AS `username`,`echo`.`accounts`.`password` AS `password`,`echo`.`accounts`.`role` AS `role`,`echo`.`accounts`.`email` AS `email`,`echo`.`accounts`.`enabled` AS `enabled`,`echo`.`accounts`.`reminderTime` AS `reminderTime`,`echo`.`accounts`.`notificationEnabled` AS `notificationEnabled`,`echo`.`accounts`.`notificationMode` AS `notificationMode`,`echo`.`accounts`.`mobile` AS `mobile`,`severity`.`severity` AS `severity`,`severity`.`validFrom` AS `severityValidFrom` from ((`patients` join `accounts` on((`patients`.`patientId` = `accounts`.`accountId`))) join `severity` on((`patients`.`patientId` = `severity`.`patientId`))) where (case when (`GETROLE`() = 'admin') then (1 = 1) else ((`patients`.`patientId` = `accounts`.`accountId`) and (`patients`.`doctorId` = substring_index(user(),'@',1))) end);
+select `echo`.`accounts`.`accountId` AS `accountId`,`echo`.`accounts`.`username` AS `username`,
+`echo`.`accounts`.`password` AS `password`,`echo`.`accounts`.`role` AS `role`,`echo`.`accounts`.`email` AS `email`,
+`echo`.`accounts`.`enabled` AS `enabled`,`echo`.`accounts`.`reminderTime` AS `reminderTime`,
+`echo`.`accounts`.`notificationEnabled` AS `notificationEnabled`,`echo`.`accounts`.`notificationMode` AS `notificationMode`,
+`echo`.`accounts`.`mobile` AS `mobile` from `echo`.`accounts` where (case when (`getRole`() = 'admin') then (1 = 1)
+else (`echo`.`accounts`.`accountId` = substring_index(user(),'@',1)) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`patients_view`
@@ -2646,8 +2651,9 @@ select `echo`.`patients`.`patientId` AS `patientId`,`echo`.`patients`.`doctorId`
 `echo`.`patients`.`lastName` AS `lastName`,`echo`.`patients`.`secondName` AS `secondName`,`echo`.`patients`.`socialId` AS `socialId`,
 `echo`.`patients`.`sex` AS `sex`,`echo`.`patients`.`dateOfBirth` AS `dateOfBirth`,`echo`.`patients`.`firstDiagnoseDate` AS `firstDiagnoseDate`,
 `echo`.`patients`.`fileId` AS `fileId`,`echo`.`patients`.`fullAddress` AS `fullAddress`,`echo`.`patients`.`landline` AS `landline`, `echo`.`accounts`.`enabled` AS `enabled`,
-`echo`.`accounts`.`email` AS `email`,`echo`.`accounts`.`mobile` AS `mobile`, (SELECT `echo`.`severity`.`severity` as `severity`
-        from `severity` where ((`severity`.`patientId` = `accounts`.`accountId`)) ORDER BY recordId desc LIMIT 1)    from
+`echo`.`accounts`.`email` AS `email`,`echo`.`accounts`.`mobile` AS `mobile`,
+(SELECT `echo`.`severity`.`severity` as `severity` from `severity` where ((`severity`.`patientId` = `accounts`.`accountId`)) ORDER BY recordId desc LIMIT 1)
+from
         (`patients`
         join `accounts` ON ((`patients`.`patientId` = `accounts`.`accountId`)))
     where
