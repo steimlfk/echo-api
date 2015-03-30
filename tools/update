@@ -3,7 +3,9 @@
 root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Project root
 root="$root/.."
-cd "${root}/tools"
+cd "${root}"
+git pull
+cd "tools"
 js="$(which node)"
 if [[ -z $1 ]]; then
     read -p "root user of DB: " usr
