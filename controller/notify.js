@@ -24,7 +24,7 @@ var DailyAnalyzer = function() {
             port: '80',
             method: 'POST',
             headers: {
-                Authorization: ''
+                Authorization: require('../config.js').api
             }
         };
         console.log('catch');
@@ -112,7 +112,7 @@ var DailyAnalyzer = function() {
             port: '80',
             method: 'POST',
             headers: {
-                Authorization: ''
+                Authorization: require('../config.js').api
             }
         };
         db.query('SELECT a.accountId, notificationEnabled, email, mobile, deviceId from accounts a ' +
@@ -180,7 +180,7 @@ var DailyAnalyzer = function() {
             port: '80',
             method: 'POST',
             headers: {
-                Authorization: ''
+                Authorization: require('../config.js').api
             }
         };
         db.getConnection(function(err, connection) {
@@ -258,7 +258,7 @@ var DailyAnalyzer = function() {
             port: '80',
             method: 'POST',
             headers: {
-                Authorization: ''
+                Authorization: require('../config.js').api
             }
         };
         db.query('SELECT ' +
