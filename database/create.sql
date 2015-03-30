@@ -57,6 +57,69 @@ DELIMITER ;
 GRANT EXECUTE ON function `echo`.`twoDayAnalyzes` TO 'echo_db_usr'@'localhost';
 
 -- -----------------------------------------------------
+-- function goldAnalyzes
+-- -----------------------------------------------------
+
+DELIMITER$$
+CREATE DEFINER=`echo_db_usr`@`localhost` FUNCTION `goldAnalyzes`(
+id int
+) RETURNS varchar(1) CHARSET utf8
+    DETERMINISTIC
+BEGIN
+CREATE TEMPORARY TABLE catsTemp (status varchar(30), diagnoseDate date);
+insert into catsTemp select distinct status='exacerbation', diagnoseDate from cats where patientId=id and diagnoseDate>=(now() - interval 1 year);
+select sum(status)>=2 into @cats from catsTemp;
+
+CREATE TEMPORARY TABLE ccqsTemp (status varchar(30), diagnoseDate date);
+insert into ccqsTemp select distinct status='exacerbation', diagnoseDate from ccqs where patientId=id and diagnoseDate>=(now() - interval 1 year);
+select sum(status)>=2 into @ccqs;
+
+CREATE TEMPORARY TABLE treatmentsTemp (status varchar(30), diagnoseDate date);
+insert into treatmentsTemp select distinct status='exacerbation', diagnoseDate from treatments where patientId=id and diagnoseDate>=(now() - interval 1 year);
+select sum(status)>=2 into @treatments;
+
+CREATE TEMPORARY TABLE readingsTemp (status varchar(30), diagnoseDate date);
+insert into readingsTemp select distinct status='exacerbation', diagnoseDate from readings where patientId=id and diagnoseDate>=(now() - interval 1 year);
+select sum(status)>=2 into @readingsTemp;
+
+select case
+	when (coalesce((select fev1>=80 and fev1_fvc<70 from readings where patientId=id))) then 1
+    when (coalesce((select 50<=fev1<80 and fev1_fvc<70 from readings where patientId=id))) then 2
+    when (coalesce((select 30<=fev1<50 and fev1_fvc<70 from readings where patientId=id))) then 3
+    when (coalesce((select fev1<30 and fev1_fvc<70 from readings where patientId=id))) then 4
+    else null end into @stadium;
+
+select totalCatscale>10 or mmrc>=2 into @tot from cats left join readings on cats.patientId=readings.patientId where cat.patientId=id;
+
+if (@cats or @ccqs or @treatments or @readings or 3<=@stadium<=4) then
+    if (@tot) then
+        set @severity='D';
+	else
+		set @severity='C';
+	end if;
+else
+    if (@tot) then
+        set @severity='B';
+	else
+        set @severity='A';
+	end if;
+end if;
+
+if (coalesce((select severity from severity where patientId=id order by validFrom desc limit 1))<>@severity) then
+    insert into notification (accountId, date, type, subjectsAccount)
+    values
+    (id, now(), 7, null),
+    (coalesce((select doctorId from patients where patientId=id)), now(), 8, id);
+    return @severity;
+end if;
+RETURN null;
+END$$
+
+DELIMITER ;
+
+GRANT EXECUTE ON `echo`.`goldAnalyzes` TO 'echo_db_usr'@'localhost';
+
+-- -----------------------------------------------------
 -- Table `echo`.`accounts`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `echo`.`accounts` (

@@ -61,6 +61,12 @@ exports.add = function(req,res,next){
                 next(err);
 
             } else {
+                var analyzer = require('./notify.js');
+                var dailyAnalyzer = new analyzer();
+                // this postpones the analysis of the data until the POST is completely processed
+                process.nextTick (function (){
+                    dailyAnalyzer.emit('goldAnalyzes', id);
+                });
                 // resource was created
                 // link will be provided in location header
                 res.statusCode = 201;

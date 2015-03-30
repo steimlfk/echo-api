@@ -261,22 +261,10 @@ var DailyAnalyzer = function() {
                 Authorization: require('../config.js').api
             }
         };
-        db.query('SELECT ' +
-            'CASE ' +
-            'WHEN (fev1<30 AND fev1_fvc<70 AND ((SELECT totalCatscale>=10 from cats where patientId=? order by recordId desc limit 1) OR ' +
-            '(SELECT mmrc>=2 from readings where patientId=? order by recordId desc limit 1) OR (SELECT COUNT(*)>=2 from dailyReports where patientId=? and q3=1))) then \'D\' ' +
-            'WHEN (30<=fev1<50 AND fev1_fvc<70 AND ((SELECT totalCatscale<10 from cats where patientId=? order by recordId desc limit 1) OR ' +
-            '(SELECT 0<=mmrc<=1 from readings where patientId=? order by recordId desc limit 1) OR (SELECT COUNT(*)>=2 from dailyReports where patientId=? and q3=1))) then \'C\' ' +
-            'WHEN (50<=fev1<80 AND fev1_fvc<70 AND ((SELECT totalCatscale>=10 from cats where patientId=? order by recordId desc limit 1) OR ' +
-            '(SELECT mmrc>=2 from readings where patientId=? order by recordId desc limit 1)) AND (SELECT COUNT(*)<2 from dailyReports where patientId=? and q3=1)) then \'B\' ' +
-            'WHEN (fev1>=80 AND fev1_fvc<70 AND ((SELECT totalCatscale<10 from cats where patientId=? order by recordId desc limit 1) OR ' +
-            '(SELECT 0<=mmrc<=1 from readings where patientId=? order by recordId desc limit 1)) AND (SELECT COUNT(*)<2 from dailyReports where patientId=? and q3=1)) then \'A\' ' +
-            'ELSE null ' +
-            'END, severity.severity from readings ' +
-            'left join severity on severity.patientId=readings.`patientId`;',
-            [id, id, id, id, id, id, id, id, id, id, id, id], function (err, result) {
+        db.query('SELECT goldAnalyzes(?) as new, notificationMode, email, mobile, deviceId from accounts left join devices on accounts.accountId=devices.accountId where accounts.accountId=?;',
+            [id, id], function (err, result) {
                 var r = result[0];
-                if (r === undefined || r[0] == r[1]) {
+                if (r == null) {
                     return;
                 } else {
                     switch (r.notificationMode) {
@@ -311,8 +299,8 @@ var DailyAnalyzer = function() {
                             break;
                     }
 
-                    data.subject = 'Your severity changed.';
-                    data.message = 'Your severity was ' + r[1] + ' but changed to ' + r[0];
+                    data.subject = 'The severity changed.';
+                    data.message = 'The severity of your illness changed to ' + r['new'];
 
                     var request = http.request(postOptions, function (res) {
                         res.setEncoding('utf8');

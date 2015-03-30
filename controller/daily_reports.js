@@ -255,7 +255,6 @@ exports.add = function(req,res,next){
                 process.nextTick (function (){
                     dailyAnalyzer.emit('newDailyReport', result[0][0].insertId);
                     dailyAnalyzer.emit('twoDayAnalyzes', id);
-                    dailyAnalyzer.emit('goldAnalyzes', id);
                 });
 
                 // new ressource created
