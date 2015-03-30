@@ -504,7 +504,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`accounts_view` (`accountId` INT, `username` I
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`patients_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`patients_view` (`patientId` INT, `doctorId` INT, `firstName` INT, `lastName` INT, `secondName` INT, `socialId` INT, `sex` INT, `dateOfBirth` INT, `firstDiagnoseDate` INT, `fileId` INT, `fullAddress` INT, `landline` INT, `email` INT, `mobile` INT, severity ENUM('A', 'B', 'C', 'D'));
+CREATE TABLE IF NOT EXISTS `echo`.`patients_view` (`patientId` INT, `doctorId` INT, `firstName` INT, `lastName` INT, `secondName` INT, `socialId` INT, `sex` INT, `dateOfBirth` INT, `firstDiagnoseDate` INT, `fileId` INT, `fullAddress` INT, `landline` INT, `email` INT, `mobile` INT, `severity` ENUM('A', 'B', 'C', 'D'), `enabled` BOOLEAN);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`cats_view`
@@ -2645,7 +2645,7 @@ CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SEC
 select `echo`.`patients`.`patientId` AS `patientId`,`echo`.`patients`.`doctorId` AS `doctorId`,`echo`.`patients`.`firstName` AS `firstName`,
 `echo`.`patients`.`lastName` AS `lastName`,`echo`.`patients`.`secondName` AS `secondName`,`echo`.`patients`.`socialId` AS `socialId`,
 `echo`.`patients`.`sex` AS `sex`,`echo`.`patients`.`dateOfBirth` AS `dateOfBirth`,`echo`.`patients`.`firstDiagnoseDate` AS `firstDiagnoseDate`,
-`echo`.`patients`.`fileId` AS `fileId`,`echo`.`patients`.`fullAddress` AS `fullAddress`,`echo`.`patients`.`landline` AS `landline`,
+`echo`.`patients`.`fileId` AS `fileId`,`echo`.`patients`.`fullAddress` AS `fullAddress`,`echo`.`patients`.`landline` AS `landline`, `echo`.`accounts`.`enabled` AS `enabled`
 `echo`.`accounts`.`email` AS `email`,`echo`.`accounts`.`mobile` AS `mobile`, (SELECT `echo`.`severity`.`severity` as `severity`
         from `severity` where ((`severity`.`patientId` = `accounts`.`accountId`)) ORDER BY recordId desc LIMIT 1)    from
         (`patients`
