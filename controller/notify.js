@@ -277,7 +277,7 @@ var DailyAnalyzer = function() {
             [id, id, id, id, id, id, id, id, id, id, id, id], function (err, result) {
                 var r = result[0];
                 if (r === undefined || r[0] == r[1]) {
-                    res.end();
+                    return;
                 } else {
                     switch (r.notificationMode) {
                         case 'email':
