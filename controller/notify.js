@@ -108,7 +108,7 @@ var DailyAnalyzer = function() {
     // For sending notifications to persons who have answered the question q1 with yes two days in a row.
     this.on('twoDayAnalyzes', function(id) {
         var postOptions = {
-            host: '',
+            host: require('../config.js').notificationhost,
             port: '80',
             method: 'POST',
             headers: {
@@ -176,7 +176,7 @@ var DailyAnalyzer = function() {
 
     this.on('inactiveAnalyzes', function() {
         var postOptions = {
-            host: '',
+            host: require('../config.js').notificationhost,
             port: '80',
             method: 'POST',
             headers: {
@@ -254,7 +254,7 @@ var DailyAnalyzer = function() {
 
     this.on('goldAnalyzes', function(id) {
         var postOptions = {
-            host: '',
+            host: require('../config.js').notificationhost,
             port: '80',
             method: 'POST',
             headers: {
