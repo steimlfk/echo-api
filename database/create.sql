@@ -117,7 +117,7 @@ END$$
 
 DELIMITER ;
 
-GRANT EXECUTE ON `echo`.`goldAnalyzes` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON function `echo`.`goldAnalyzes` TO 'echo_db_usr'@'localhost';
 
 -- -----------------------------------------------------
 -- Table `echo`.`accounts`
