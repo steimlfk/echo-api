@@ -28,8 +28,7 @@ var DailyAnalyzer = function() {
             }
         };
         console.log('catch');
-            db.query('SELECT * FROM accounts a, dailyReports d inner join devices d on a.accountId=d.accountId where a.accountId = d.patientId and d.recordId = ?', id, function(err, result) {
-                console.log(result);
+            db.query('SELECT * FROM accounts a inner join dailyReports d on a.accountId = d.patientId left join devices on a.accountId=devices.accountId where d.recordId = ?', id, function(err, result) {
                 var event = '';
                 if (result[0].q3a == 1 || result[0].q3b == 1 || (result[0].q1 == 1 && result[0].q2 == 1 && result[0].q3 == 1)) {
                     event = '1';
