@@ -20,7 +20,7 @@ var DailyAnalyzer = function() {
     // EventEmitters inherit a single event listener, see it in action
     this.on('newDailyReport', function(id) {
         var postOptions = {
-            host: '',
+            host: require('../config.js').notificationHost,
             port: '80',
             method: 'POST',
             headers: {
