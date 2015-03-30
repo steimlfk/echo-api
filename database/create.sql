@@ -2634,6 +2634,7 @@ DELIMITER ;
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`accounts_view`;
 USE `echo`;
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`accounts_view` AS 
 select `echo`.`accounts`.`accountId` AS `accountId`,`echo`.`accounts`.`username` AS `username`,
 `echo`.`accounts`.`password` AS `password`,`echo`.`accounts`.`role` AS `role`,`echo`.`accounts`.`email` AS `email`,
 `echo`.`accounts`.`enabled` AS `enabled`,`echo`.`accounts`.`reminderTime` AS `reminderTime`,
