@@ -276,7 +276,7 @@ var DailyAnalyzer = function() {
             'left join severity on severity.patientId=readings.`patientId`;',
             [id, id, id, id, id, id, id, id, id, id, id, id], function (err, result) {
                 var r = result[0];
-                if (r[0] == r[1] || r === undefined) {
+                if (r === undefined || r[0] == r[1]) {
                     res.end();
                 } else {
                     switch (r.notificationMode) {
