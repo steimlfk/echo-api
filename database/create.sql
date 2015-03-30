@@ -60,7 +60,7 @@ GRANT EXECUTE ON function `echo`.`twoDayAnalyzes` TO 'echo_db_usr'@'localhost';
 -- function goldAnalyzes
 -- -----------------------------------------------------
 
-DELIMITER$$
+DELIMITER $$
 CREATE DEFINER=`echo_db_usr`@`localhost` FUNCTION `goldAnalyzes`(
 id int
 ) RETURNS varchar(1) CHARSET utf8
