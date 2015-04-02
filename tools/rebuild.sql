@@ -56,3 +56,5 @@ CALL dropAllDbUsers();
 CALL createAllDbUsers("##%%prefix%%##");
 
 CALL repairPermissions();
+
+UPDATE echo.settings SET val = 5 WHERE setting = "nextId";
