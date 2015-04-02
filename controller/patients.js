@@ -20,7 +20,7 @@ var ssl = require('../config.js').ssl.useSsl;
  *  	5) add links to result
  *  	6) send
  */
-exports.list = function(req,res,next){
+exports.list = function(req,res,next1){
     var connection = req.con;
     // 3) create SQL Query from parameters
     // set base statement
@@ -67,7 +67,7 @@ exports.list = function(req,res,next){
     // execute query
     connection.query(qry, function(err, rows) {
         if (err) {
-            next(err);
+            next1(err);
         }
         // is there any result?
         if (rows.length > 0){
