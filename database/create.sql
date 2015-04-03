@@ -549,7 +549,7 @@ CREATE TABLE `severity` (
   `comment` mediumtext,
   KEY `sevFKpat_idx` (`patientId`),
   PRIMARY KEY (`recordId`),
-  CONSTRAINT `sevFKpat` FOREIGN KEY (`patientId`) REFERENCES `patients` (`patientId`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  CONSTRAINT `sevFKpat` FOREIGN KEY (`patientId`) REFERENCES `patients` (`patientId`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=InnoDB;
 
 USE `echo` ;
