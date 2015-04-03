@@ -2194,7 +2194,7 @@ BEGIN
 	SET @landline = landline;
 	PREPARE s FROM @stmt;
 	EXECUTE s using @patientId, @doctorId, @firstName, @lastName, @secondName, @socialId, @sex, @dateOfBirth,  @firstDiagnoseDate, @fullAddress, @landline, @fileId;
-	SELECt last_insert_id() as insertId;
+	SELECt @patientId as insertId;
 	DEALLOCATE PREPARE s;
 
 
