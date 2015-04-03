@@ -809,7 +809,7 @@ begin
 		end if;
         SELECT role INTO @role FROM accounts WHERE accountId = accId;
         if (@role = 'admin') then
-            @accEn = true;
+            SET @accEn = true;
         end if;
         if (pwd <> '') then
             set @pwd = pwd;
