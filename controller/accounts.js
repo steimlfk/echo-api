@@ -299,29 +299,22 @@ exports.update = function(req,res,next){
     // execute query
     // ? from query will be replaced by values in [] - including escaping!
     // any value for accountId given in the body will be ignored!
-    connection.query('SELECT enabled FROM accounts_view', function(err, result) {
+    connection.query('CALL accountsUpdate(?,?,?,?, ?,?,?,?, ?)', [req.params.id, i.username, pwd, i.email, i.reminderTime, i.notificationEnabled, mode, i.mobile, i.enabled], function (err, result) {
         if (err) {
             next(err);
         } else {
-            var enabled = i.enabled == undefined ? result[0] : i.enabled;
-            connection.query('CALL accountsUpdate(?,?,?,?, ?,?,?,?, ?)', [req.params.id, i.username, pwd, i.email, i.reminderTime, i.notificationEnabled, mode, i.mobile, enabled], function (err, result) {
-                if (err) {
-                    next(err);
-                } else {
-                    // Account was updated
-                    if (result[0][0].affected_rows > 0) {
-                        res.statusCode = 204;
-                        res.send();
-                    }
-                    else {
-                        // Account wasnt updated since it doesnt exist or isnt visible to the user
-                        res.statusCode = 404;
-                        res.send();
-                    }
-                }
-                connection.release();
-            });
+            // Account was updated
+            if (result[0][0].affected_rows > 0) {
+                res.statusCode = 204;
+                res.send();
+            }
+            else {
+                // Account wasnt updated since it doesnt exist or isnt visible to the user
+                res.statusCode = 404;
+                res.send();
+            }
         }
+        connection.release();
     });
 };
 
