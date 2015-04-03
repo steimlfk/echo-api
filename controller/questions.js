@@ -69,7 +69,7 @@ exports.list = function(req,res,next){
         if (err) {
             next(err);
         }
-        if (rows.length > 0){
+        else if (rows.length > 0){
             var result_set = [];
             async.eachSeries(rows, function(question, each_next){
                 async.waterfall([
@@ -88,19 +88,27 @@ exports.list = function(req,res,next){
                         }
                     ],
                     function(err, result){ //final waterfall
-                        if (err) {res.send (503);}
-                        result_set.push(result);
-                        each_next();
+                        if (err) {
+                            each_next(err);
+                        }
+                        else {
+                            result_set.push(result);
+                            each_next();
+                        }
                     });
             }, function(err,result){ // final eachSeries
-                if (err) {next(err);}
-                res.send(result_set);
+                if (err) {
+                    next(err);
+                }
+                else res.send(result_set);
+                connection.release();
             } );
         }
         else{
-            res.send(204);
+            res.sendStatus(204);
+            connection.release();
         }
-        connection.release();
+
     });
 };
 
@@ -147,18 +155,20 @@ function getQuestions(req, res, next, cat){
                     ],
                     function(err, result){ //final waterfall
                         if (err) {each_next(err);}
-                        result_set.push(result);
-                        each_next();
+                        else {
+                            result_set.push(result);
+                            each_next();
+                        }
                     });
             }, function(err,result){ // final eachSeries
                 if (err) {next(err);}
-                res.send(result_set);
+                else res.send(result_set);
+                connection.release();
             } );
         }
         else{
-            res.send(204);
+            res.sendStatus(204);
         }
-        connection.release();
     });
 };
 

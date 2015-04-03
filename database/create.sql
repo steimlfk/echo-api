@@ -1861,6 +1861,24 @@ BEGIN
 	deallocate PREPARE s;
   END LOOP proc_loop;
   CLOSE cur2;
+  SET @stmt = CONCAT("GRANT SELECT ON TABLE echo.questions TO '",@uid,"'@'localhost'");
+  PREPARE s from @stmt;
+  EXECUTE s;
+  deallocate PREPARE s;
+  SET @stmt = CONCAT("GRANT SELECT ON TABLE echo.answers TO '",@uid,"'@'localhost'");
+  PREPARE s from @stmt;
+  EXECUTE s;
+  deallocate PREPARE s;
+  if (ro = 'admin') then
+    SET @stmt = CONCAT("GRANT INSERT,DELETE,UPDATE ON TABLE echo.questions TO '",@uid,"'@'localhost'");
+    PREPARE s from @stmt;
+    EXECUTE s;
+    deallocate PREPARE s;
+    SET @stmt = CONCAT("GRANT INSERT,DELETE,UPDATE ON TABLE echo.answers TO '",@uid,"'@'localhost'");
+    PREPARE s from @stmt;
+    EXECUTE s;
+    deallocate PREPARE s;
+  end if;
 END$$
 
 DELIMITER ;
