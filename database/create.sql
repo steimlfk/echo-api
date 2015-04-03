@@ -691,29 +691,6 @@ END$$
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure accountsDisable
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `accountsDisable`(IN accountId INT)
-begin
-IF getRole() = 'admin' then
-	set @id = accountId;
-	SET @stmt = "UPDATE accounts SET enabled = 0 WHERE accountId = ?";
-	PREPARE s FROM @stmt;
-	EXECUTE s using @id;
-	SELECT row_count() as affected_rows;
-	DEALLOCATE PREPARE s;
-else
-	signal sqlstate '22403' set message_text = 'You are not authorized to disable an account';
-end if;
-
-END$$
-
-DELIMITER ;
-
--- -----------------------------------------------------
 -- procedure accountsList
 -- -----------------------------------------------------
 
@@ -2034,95 +2011,6 @@ END$$
 
 DELIMITER ;
 
--- -----------------------------------------------------
--- procedure patientsAndAccountCreate
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `patientsAndAccountCreate`(
-	IN pw_prefix varchar(100),
-	IN username varchar(255),
-	IN pwd VARCHAR(255),
-	IN email VARCHAR(100),
-	IN role VARCHAR(10),
-	IN enabled BOOLEAN,
-	IN reTime TIME,
-	IN notEnabled BOOLEAN,
-	IN notMode VARCHAR(10),
-	IN mobile varchar(20),
-in doctorId int ,
-in firstName VARCHAR(50) ,
-in lastName VARCHAR(50) ,
-in secondName VARCHAR(50) ,
-in socialId VARCHAR(20) ,
-in sex BOOLEAN ,
-in dateOfBirth DATE ,
-in firstDiagnoseDate DATE ,
-in fileId varchar(20) ,
-in fullAddress VARCHAR(255) ,
-in landline VARCHAR(50) 
-)
-BEGIN
-	DECLARE new_acc INT DEFAULT 0;
-	DECLARE exit handler for sqlwarning, sqlexception
-	BEGIN
-		-- WARNING
-		RESIGNAL;
-		rollback;
-	END;
-
-	if getRole() = 'doctor' and role <> 'patient' then
-		signal sqlstate '22400' set message_text = 'You are not allowed to create an account with another role than patient';
-	end if;
-
-	START TRANSACTION;
-	SET @stmt = "INSERT INTO accounts(`username`,`password`,`role`,`email`, `enabled`, `reminderTime`, `notificationEnabled`, `mobile`, `notificationMode`) VALUES(?,?, ?,?, ?,?, ?,?, ?);";
-	set @username = username;
-	SET @pwd = pwd;
-	SET @email = email;
-	SET @role = role;
-	SET @en = enabled;
-	SET @reTime = reTime;
-	SET @notEn = notEnabled;
-	SET @notMode = notMode;
-	SET @mobile = mobile;
-
-	PREPARE s FROM @stmt;
-	EXECUTE s using @username, @pwd, @role, @email, @en, @reTime, @notEn, @mobile, @notMode;
-	DEALLOCATE PREPARE s;
-	SELECT LAST_INSERT_ID() into new_acc;
-
-	SET @self = substring_index(user(), '@', 1);
-	SET @doctorId = doctorId;
-	if getRole() = 'doctor'  then
-		SET @doctorId = @self;
-	end if;
-
-	SET @stmt = "INSERT INTO patients(patientId, doctorId, firstName, lastName, secondName, socialId, sex, dateOfBirth, firstDiagnoseDate, fullAddress, landline, fileId) VALUES(?,?,?,?,?,?,?,?,?,?,?,?);";
-	SET @patientId = new_acc;
-	SET @firstName = firstName;
-	SET @lastName = lastName;
-	SET @secondName = secondName;
-	SET @socialId = socialId;
-	SET @sex = sex;
-	SET @dateOfBirth = dateOfBirth;
-	SET @firstDiagnoseDate = firstDiagnoseDate;
-	SET @fileId = fileId;
-	SET @fullAddress = fullAddress;
-	SET @landline = landline;
-	PREPARE s FROM @stmt;
-	EXECUTE s using @patientId, @doctorId, @firstName, @lastName, @secondName, @socialId, @sex, @dateOfBirth,  @firstDiagnoseDate, @fullAddress, @landline, @fileId;
-	DEALLOCATE PREPARE s;
-	COMMIT;
-
-	CALL createDbUser(new_acc, pw_prefix);
-	SELECT new_acc as location;
-
-
-END$$
-
-DELIMITER ;
 
 -- -----------------------------------------------------
 -- procedure patientsChangeDoctor
@@ -3212,7 +3100,6 @@ GRANT EXECUTE ON procedure `echo`.`accountsCreate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`severityCreate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`charlsonUpdate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`createDbUser` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`accountsDisable` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`accountsDelete` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`deleteExamRecord` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`accountsList` TO 'echo_db_usr'@'localhost';
@@ -3242,7 +3129,6 @@ GRANT EXECUTE ON procedure `echo`.`deathGet` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`deathCreate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`deathUpdate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`deathDelete` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`patientsAndAccountCreate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`patientsChangeDoctor` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`login` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`loginRefresh` TO 'echo_db_usr'@'localhost';
@@ -3262,11 +3148,9 @@ INSERT INTO `echo`.`perm_roles_views` (`role`, `view_obj`) VALUES ('patient', 'n
 
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','accountsCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','accountsDelete');
-INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','accountsDisable');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','accountsUpdate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','deviceAdd');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','deviceRemove');
-INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsAndAccountCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsChangeDoctor');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsDelete');
@@ -3288,7 +3172,6 @@ INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doc
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','deviceRemove');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','listExams');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','listSingleExam');
-INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','patientsAndAccountCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','patientsCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','patientsDelete');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','patientsRessourceUpdate');
