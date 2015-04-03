@@ -830,6 +830,10 @@ begin
 		if (getRole() = 'patient') then
             SELECT enabled INTO @accEN FROM accounts WHERE accountId = accId;
 		end if;
+        SELECT role INTO @role FROM accounts WHERE accountId = accId;
+        if (@role = 'admin') then
+            @accEn = true;
+        end if;
         if (pwd <> '') then
             set @pwd = pwd;
             SET @stmt = "UPDATE accounts SET password = ?, username=?, email = ?, reminderTime = ?, notificationEnabled = ?, notificationMode = ?, mobile = ?, enabled = ? WHERE accountId = ?";
