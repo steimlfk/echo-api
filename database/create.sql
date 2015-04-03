@@ -812,7 +812,7 @@ CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `accountsUpdate`(
 	IN notEnabled BOOLEAN,
 	IN notMode VARCHAR(10),
 	IN mobile varchar(20),
-    	IN accountEnabled BOOLEAN
+    IN accountEnabled BOOLEAN
 )
 begin
 	DECLARE x1 INT;
@@ -828,28 +828,22 @@ begin
 		SET @accEn = accountEnabled;
 		set @id = accId;
 		if (getRole() = 'patient') then
-			if (pwd <> '') then
-				set @pwd = pwd;
-				SET @stmt = "UPDATE accounts SET password = ?, username=?, email = ?, reminderTime = ?, notificationEnabled = ?, notificationMode = ?, mobile = ? WHERE accountId = ?";
-				PREPARE s FROM @stmt;
-				EXECUTE s using @pwd, @usr,@email, @reTime, @notEn, @notMode, @mobile, @id;
-				select row_count() as affected_rows;
-				DEALLOCATE PREPARE s;
-			else 
-				SET @stmt = "UPDATE accounts SET username=?, email = ?,  reminderTime = ?, notificationEnabled = ?, notificationMode = ?, mobile = ? WHERE accountId = ?";
-				PREPARE s FROM @stmt;
-				EXECUTE s using @usr, @email, @reTime, @notEn, @notMode, @mobile, @id;
-				select row_count() as affected_rows;
-				DEALLOCATE PREPARE s;
-			end if;
-		else
-			set @pwd = pwd;
-			SET @stmt = "UPDATE accounts SET password = ?, username=?, email = ?, reminderTime = ?, notificationEnabled = ?, notificationMode = ?, mobile = ?, enabled=? WHERE accountId = ?";
-			PREPARE s FROM @stmt;
-			EXECUTE s using @pwd, @usr,@email, @reTime, @notEn, @notMode, @mobile, @accEn, @id;
-			select row_count() as affected_rows;
-			DEALLOCATE PREPARE s;
+            SELECT enabled INTO @accEN FROM accounts WHERE accountId = accId;
 		end if;
+        if (pwd <> '') then
+            set @pwd = pwd;
+            SET @stmt = "UPDATE accounts SET password = ?, username=?, email = ?, reminderTime = ?, notificationEnabled = ?, notificationMode = ?, mobile = ?, enabled = ? WHERE accountId = ?";
+            PREPARE s FROM @stmt;
+            EXECUTE s using @pwd, @usr,@email, @reTime, @notEn, @notMode, @mobile, @accEn, @id;
+            select row_count() as affected_rows;
+            DEALLOCATE PREPARE s;
+        else
+            SET @stmt = "UPDATE accounts SET username=?, email = ?,  reminderTime = ?, notificationEnabled = ?, notificationMode = ?, mobile = ?, enabled = ? WHERE accountId = ?";
+            PREPARE s FROM @stmt;
+            EXECUTE s using @usr, @email, @reTime, @notEn, @notMode, @mobile, @accEn, @id;
+            select row_count() as affected_rows;
+            DEALLOCATE PREPARE s;
+        end if;
 	else
 		signal sqlstate '22403' set message_text = 'You are not allowed to alter this account';
 	end if;
