@@ -164,6 +164,17 @@ exports.errorHandler = function (err, req, res, next) {
             res.statusCode = 400;
             res.send({error: msg});
         }
+        // Error handling for ENUMs
+        else if (err.code == 'WARN_DATA_TRUNCATED'){
+            var me = 'Invalid value!'
+            if (msg.indexOf('role') > -1)  me = 'Invalid value! Please check values for role (valid are: admin,doctor,patient)';
+            if (msg.indexOf('notificationMode') > -1)  me = 'Invalid value! Please check values for notificationMode (valid are: email,sms,push)';
+            if (msg.indexOf('status') > -1)  me = 'Invalid value! Please check values for status (valid are: baseline,exacerbation)';
+            if (msg.indexOf('ltotDevice') > -1)  me = 'Invalid value! Please check values for ltotDevice (valid are: cpap,bipap)';
+            if (msg.indexOf('ventilationDevice') > -1)  me = 'Invalid value! Please check values for ventilationDevice (valid are: concetrator,cylinder,liquid)';
+            res.statusCode = 400;
+            res.send({error: me});
+        }
         // Error Handling for sql signal statements for the triggers
         else if (err.code === 'ER_SIGNAL_EXCEPTION') {
             // 22403 is equiv. to HTTP Error Code 403: Forbidden
@@ -179,7 +190,7 @@ exports.errorHandler = function (err, req, res, next) {
             }
         }
         // Error Handling Account Deletion
-        else if (err.code == 'ER_ROW_IS_REFERENCED_'){
+        else if (err.code == 'ER_ROW_IS_REFERENCED'){
             var me = 'Reference Error. Please Contact Admin!';
             if (msg.indexOf('fkDoctor') >1)   me = 'The doctor you are trying to delete has still some patients assigned to him. Reassign the patients first!';
             if (msg.indexOf('fkPatient') >1)  me = 'The patient you are trying to delete has still medical records. Delete patients data first!';

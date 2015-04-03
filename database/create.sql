@@ -282,7 +282,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`treatments` (
   `recordId` INT NOT NULL AUTO_INCREMENT,
   `patientId` INT NOT NULL,
   `diagnoseDate` DATE NULL,
-  `status` VARCHAR(15) NOT NULL,
+  `status` ENUM('baseline', 'exacerbation') NOT NULL,
   `shortActingB2` TINYINT(1) NULL,
   `longActingB2` TINYINT(1) NULL,
   `ultraLongB2` TINYINT(1) NULL,
@@ -2846,35 +2846,10 @@ USE `echo`;
 
 DELIMITER $$
 USE `echo`$$
-CREATE TRIGGER `Accounts_BINS` BEFORE INSERT ON `accounts` FOR EACH ROW
-BEGIN
-	if (new.Role != 'patient') then
-		if (new.Role != 'doctor') then
-			if (new.Role != 'admin') then
-				signal sqlstate '22400' set message_text = 'Invalid Role. Valid Values are: patient, doctor or admin';
-			end if;
-		end if;
-	end if;
-	if (new.notificationMode != 'email') then
-		if (new.notificationMode != 'sms') then
-			if (new.notificationMode != 'push') then
-				signal sqlstate '22400' set message_text = 'Invalid Notification Mode. Valid Values are: email, sms or push';
-			end if;
-		end if;
-	end if;
-END;$$
-
-USE `echo`$$
 CREATE TRIGGER `accounts_BUPD` BEFORE UPDATE ON `accounts` FOR EACH ROW
 BEGIN
 SET new.role = old.role;
-	if (new.notificationMode != 'email') then
-		if (new.notificationMode != 'sms') then
-			if (new.notificationMode != 'push') then
-				signal sqlstate '22400' set message_text = 'Invalid Notification Mode. Valid Values are: email, sms or push';
-			end if;
-		end if;
-	end if;
+
 END;$$
 
 USE `echo`$$
@@ -2916,11 +2891,6 @@ end;$$
 USE `echo`$$
 CREATE TRIGGER `ccqs_BINS` BEFORE INSERT ON `ccqs` FOR EACH ROW
 BEGIN
-if (new.status != 'exacerbation') then
-if (new.status != 'baseline') then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid Status (MUST be Baseline or Exacerbation)';
-end if;
-end if;
 if (new.q1 < 0 OR new.q2 < 0 OR new.q3 < 0 OR new.q4 < 0 OR new.q5 < 0 OR new.q6 < 0 OR new.q7 < 0 OR new.q8 < 0 OR new.q9 < 0 OR new.q10 < 0) then
 SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid answer. Answer values have to be in range [0; 6]';
 end if;
@@ -2938,11 +2908,6 @@ end;$$
 USE `echo`$$
 CREATE TRIGGER `ccqs_BUPD` BEFORE UPDATE ON `ccqs` FOR EACH ROW
 begin
-if (new.status != 'exacerbation') then
-if (new.status != 'baseline') then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid Status (MUST be Baseline or Exacerbation)';
-end if;
-end if;
 if (new.q1 < 0 OR new.q2 < 0 OR new.q3 < 0 OR new.q4 < 0 OR new.q5 < 0 OR new.q6 < 0 OR new.q7 < 0 OR new.q8 < 0 OR new.q9 < 0 OR new.q10 < 0) then
 SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid answer. Answer values have to be in range [0; 6]';
 end if;
@@ -2961,11 +2926,6 @@ end;$$
 USE `echo`$$
 CREATE TRIGGER `catscale_BINS` BEFORE INSERT ON `cats` FOR EACH ROW
 begin
-if (new.status != 'exacerbation') then
-if (new.status != 'baseline') then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid Status (MUST be baseline or exacerbation)';
-end if;
-end if;
 if (new.q1 < 0 OR new.q2 < 0 OR new.q3 < 0 OR new.q4 < 0 OR new.q5 < 0 OR new.q6 < 0 OR new.q7 < 0 OR new.q8 < 0) then
 SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid answer. Answer values have to be in range [0; 5]';
 end if;
@@ -2979,11 +2939,6 @@ end;$$
 USE `echo`$$
 CREATE TRIGGER `cats_BUPD` BEFORE UPDATE ON `cats` FOR EACH ROW
 begin
-if (new.status != 'exacerbation') then
-if (new.status != 'baseline') then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid Status (MUST be baseline or exacerbation)';
-end if;
-end if;
 if (new.q1 < 0 OR new.q2 < 0 OR new.q3 < 0 OR new.q4 < 0 OR new.q5 < 0 OR new.q6 < 0 OR new.q7 < 0 OR new.q8 < 0) then
 SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid answer. Answer values have to be in range [0; 5]';
 end if;
@@ -3179,52 +3134,12 @@ end;$$
 USE `echo`$$
 CREATE TRIGGER `treatments_BINS` BEFORE INSERT ON `treatments` FOR EACH ROW
 begin
-if (new.status != 'exacerbation') then
-if (new.status != 'baseline') then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid Status (MUST be Baseline or Exacerbation)';
-end if;
-end if;
-
-	if (new.ltotDevice != 'cpap') then
-		if (new.ltotDevice != 'bipap') then
-				signal sqlstate '22400' set message_text = 'Invalid LTOT Device. Valid Values are: cpap or bipap';
-			end if;
-	end if;
-
-	if (new.ventilationDevice != 'concetrator') then
-		if (new.ventilationDevice != 'cylinder') then
-			if (new.ventilationDevice != 'liquid') then
-				signal sqlstate '22400' set message_text = 'Invalid Ventilation Device. Valid Values are: concetrator or cylinder or liquid ';
-			end if;
-		end if;
-	end if;
-
 if (new.diagnoseDate is null) then set new.diagnoseDate = CURDATE(); end if;
 end;$$
 
 USE `echo`$$
 CREATE TRIGGER `treatments_BUPD` BEFORE UPDATE ON `treatments` FOR EACH ROW
 begin
-if (new.status != 'exacerbation') then
-if (new.status != 'baseline') then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid Status (MUST be Baseline or Exacerbation)';
-end if;
-end if;
-
-	if (new.ltotDevice != 'cpap') then
-		if (new.ltotDevice != 'bipap') then
-				signal sqlstate '22400' set message_text = 'Invalid LTOT Device. Valid Values are: cpap or bipap';
-			end if;
-	end if;
-
-	if (new.ventilationDevice != 'concetrator') then
-		if (new.ventilationDevice != 'cylinder') then
-			if (new.ventilationDevice != 'liquid') then
-				signal sqlstate '22400' set message_text = 'Invalid Ventilation Device. Valid Values are: concetrator or cylinder or liquid ';
-			end if;
-		end if;
-	end if;
-
 if (new.diagnoseDate is null) then set new.diagnoseDate = CURDATE(); end if;
 end;
 $$
@@ -3232,11 +3147,6 @@ $$
 USE `echo`$$
 CREATE TRIGGER `readings_BINS` BEFORE INSERT ON `readings` FOR EACH ROW
 begin
-if (new.status != 'exacerbation') then
-if (new.status != 'baseline') then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid Status (MUST be Baseline or Exacerbation)';
-end if;
-end if;
 if (new.mmrc < 0 or new.mmrc > 4) then 
 SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid value for mmrc. Value has to be in [0:4]';
 end if;
@@ -3249,11 +3159,6 @@ end;$$
 USE `echo`$$
 CREATE TRIGGER `readings_BUPD` BEFORE UPDATE ON `readings` FOR EACH ROW
 begin
-if (new.status != 'exacerbation') then
-if (new.status != 'baseline') then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid Status (MUST be Baseline or Exacerbation)';
-end if;
-end if;
 if (new.mmrc < 0 or new.mmrc > 4) then 
 SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid value for mmrc. Value has to be in [0:4]';
 end if;
