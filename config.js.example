@@ -4,12 +4,6 @@
  */
 
 /**
- *  API key for push/sms/email service
- */
-
-var apiKey = '';
-
-/**
  *  Host and Port Config
  */
 
