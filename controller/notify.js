@@ -76,7 +76,7 @@ var DailyAnalyzer = function() {
                         },
                         function(cb){
                             // patients notification
-                            if (service.apiKey.length > 1){
+                            if (service.apiKey.length > 1 && i.notificationEnabled){
                                 var opts = {
                                     host : postOptions.host,
                                     port : postOptions.port,
@@ -114,18 +114,18 @@ var DailyAnalyzer = function() {
                                 var request = http.request(opts, function (res) {
                                     res.setEncoding('utf8');
                                     res.on('data', function (data) {
-                                        console.log(data);
+                                        console.log(i.notificationMode + ': '+ data);
                                     })
                                 });
                                 request.write(payload);
                                 request.end();
-                                cb('patients notification was sent');
+                                cb(null, 'patients notification was sent');
                             }
-                            else cb ('omitting sending patients notification!')
+                            else cb (null, 'omitting sending patients notification!')
                         },
                         function(cb){
                             // doctors notification
-                            if (service.apiKey.length > 1){
+                            if (service.apiKey.length > 1 && i.doc_enabled){
 
                                 var opts = {
                                     host : postOptions.host,
@@ -140,7 +140,7 @@ var DailyAnalyzer = function() {
                                     'message': msgtext
                                 };
 
-                                switch (i.notificationMode) {
+                                switch (i.doc_mode) {
                                     case 'email':
                                         msg.to = [];
                                         msg.to[0] = i.doc_email;
@@ -165,14 +165,14 @@ var DailyAnalyzer = function() {
                                 var request = http.request(opts, function (res) {
                                     res.setEncoding('utf8');
                                     res.on('data', function (data) {
-                                        console.log(data);
+                                        console.log(i.doc_mode + ': ' + data);
                                     })
                                 });
                                 request.write(payload);
                                 request.end();
-                                cb('doctors notification was sent');
+                                cb(null, 'doctors notification was sent');
                             }
-                            else cb ('omitting sending patients notification!')
+                            else cb (null, 'omitting sending doctor notification!')
                         }
                     ],
                     function (err, res){
