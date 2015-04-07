@@ -91,10 +91,12 @@ var DailyAnalyzer = function() {
 
                                 switch (i.notificationMode) {
                                     case 'email':
+                                        msg.to = [];
                                         msg.to[0] = i.email;
                                         opts.path = '/echo/email';
                                         break;
                                     case 'sms':
+                                        msg.receivers = [];
                                         msg.reveivers[0] = i.mobile;
                                         msg.label ='ECHO';
                                         opts.path = '/echo/sms';
@@ -182,6 +184,7 @@ var DailyAnalyzer = function() {
 
     // For sending notifications to persons who have answered the question q1 with yes two days in a row.
     this.on('twoDayAnalyzes', function(id) {
+        return;
         if (service.apiKey.length < 2) return;
         var postOptions = {
             host: service.host,
@@ -251,6 +254,7 @@ var DailyAnalyzer = function() {
     });
 
     this.on('inactiveAnalyzes', function() {
+        return;
         var postOptions = {
             host: service.host,
             port: '80',
