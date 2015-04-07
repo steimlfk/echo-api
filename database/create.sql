@@ -38,19 +38,24 @@ GRANT EXECUTE ON function  `echo`.`getRole` TO 'echo_db_usr'@'localhost';
 DELIMITER $$
 CREATE DEFINER=`echo_db_usr`@`localhost` FUNCTION `twoDayAnalyzes`(
 id Integer
-) RETURNS tinyint(1)
+) RETURNS int(11)
     DETERMINISTIC
 BEGIN
-declare yesterday boolean;
-declare today boolean;
-select coalesce((select q1 from dailyReports where date >= (now() - interval 1 day) and patientId=id)) into @today;
-select coalesce((select q1 from dailyReports where date<(now()-interval 1 day) and date >=(now()-interval 2 day) and patientId=id)) into @yesterday;
-if @today = 0 OR @yesterday = 0
-  then
-  select coalesce((select q5 from dailyReports where date >= (now() - interval 1 day) and patientId=id)) into @today;
-  select coalesce((select q5 from dailyReports where date<(now()-interval 1 day) and date >=(now()-interval 2 day) and patientId=id)) into @yesterday;
+SELECT q1,q5 into @q1_yesterday, @q5_yesterday FROM echo.dailyReports WHERE patientId = id AND date = date_sub(CURDATE(), INTERVAL 1 DAY) ORDER BY date,recordId desc LIMIT 1;
+SELECT q1,q5 into @q1_today, @q5_today FROM echo.dailyReports WHERE patientId = id AND date = CURDATE() ORDER BY date,recordId desc LIMIT 1;
+SET @result = 0;
+if (@q1_yesterday is not null AND @q1_today is not null) then
+	if (@q1_yesterday = 1 AND @q1_today = 1) then
+		SET @result = @result +1;
+	end if;
 end if;
-RETURN @today=@yesterday and @today=1;
+
+if (@q5_yesterday is not null AND @q5_today is not null) then
+	if (@q5_yesterday = 1 AND @q5_today = 1) then
+		SET @result = @result +5;
+	end if;
+end if;
+return @result;
 END$$
 DELIMITER ;
 

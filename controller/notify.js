@@ -26,7 +26,8 @@ var DailyAnalyzer = function() {
         var qry = 'SELECT a.notificationMode, a.notificationEnabled, a.accountId, a.email, a.mobile, ' +
             'd.recordId, d.q1, d.q2, d.q3, d.q4, d.q5, d.q1a, d.q1b, d.q1c, d.q3a, d.q3b, d.q3c, ' +
             'p.firstName, p.lastName,' +
-            'doc.notificationMode AS doc_mode, doc.notificationEnabled as doc_enabled, doc.accountId as doc_id, doc.email as doc_mail, doc.mobile AS doc_mobile ' +
+            'doc.notificationMode AS doc_mode, doc.notificationEnabled as doc_enabled, doc.accountId as doc_id, doc.email as doc_email, doc.mobile AS doc_mobile, ' +
+            'twoDayAnalyzes(a.accountId) AS twoDays' +
             'FROM accounts a, dailyReports d, patients p, accounts doc '+
             'WHERE d.recordId = ? '+
             'AND a.accountId = d.patientId AND a.accountId = p.patientId AND p.doctorId = doc.accountId;';
@@ -56,6 +57,10 @@ var DailyAnalyzer = function() {
             if (result[0].q3a == 1 || result[0].q3b == 1) {
                 type = '1';
                 rule = 3;
+            }
+            if (result[0].twoDays > 0){
+                type = '1';
+                rule = 1; // or rule = 5;
             }
             if (result[0].q3c == 1) {
                 rule = 4;
@@ -183,78 +188,6 @@ var DailyAnalyzer = function() {
                     });
             }
         });
-    });
-
-
-    // For sending notifications to persons who have answered the question q1 with yes two days in a row.
-    this.on('twoDayAnalyzes', function(id) {
-        return;
-        if (service.apiKey.length < 2) return;
-        var postOptions = {
-            host: service.host,
-            port: '80',
-            method: 'POST',
-            headers: {
-                Authorization: service.apiKey
-            }
-        };
-        db.query('SELECT a.accountId, notificationEnabled, email, mobile, deviceId from accounts a ' +
-            'inner join devices on a.accountId=devices.accountId where twoDayAnalyzes(a.accountId)=1 and notificationEnabled=1 and a.accountId=?;',
-            id, function (err, result) {
-                var email = [],
-                    mobile = [],
-                    push = [];
-                for (var r in result) {
-                    switch (r.notificationMode) {
-                        case 'email':
-                            email[email.length] = r.email;
-                            break;
-
-                        case 'sms':
-                            mobile[mobile.length] = r.mobile;
-                            break;
-
-                        case 'push':
-                            push[push.length] = r.deviceId;
-                            break;
-                    }
-                }
-                var data = JSON.stringify({
-                    'subject': 'This is an ECHO Notification',
-                    'message': 'You are dead.',
-                    'to': email,
-                    'label': 'ECHO',
-                    'arns': push,
-                    'receivers': mobile
-                });
-                postOptions.path = '/echo/sns';
-                var request = http.request(postOptions, function (res) {
-                    res.setEncoding('utf8');
-                    res.on('data', function (data) {
-                        console.log(data);
-                    })
-                });
-                request.write(data);
-                request.end();
-                postOptions.path = '/echo/sms';
-                var request = http.request(postOptions, function (res) {
-                    res.setEncoding('utf8');
-                    res.on('data', function (data) {
-                        console.log(data);
-                    })
-                });
-                request.write(data);
-                request.end();
-                postOptions.path = '/echo/email';
-                var request = http.request(postOptions, function (res) {
-                    res.setEncoding('utf8');
-                    res.on('data', function (data) {
-                        console.log(data);
-                    })
-                });
-                request.write(data);
-                request.end();
-            });
     });
 
     this.on('inactiveAnalyzes', function() {
