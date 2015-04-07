@@ -1,4 +1,11 @@
-var bcrypt = require('bcrypt');
+var bcrypt;
+try {
+    bcrypt = require('bcrypt');
+}
+catch (e) {
+    bcrypt = require('bcryptjs');
+}
+
 var mysql = require('mysql');
 
 var cfg = require('./config.js');

@@ -9,7 +9,7 @@ var express = require('express'),
     bodyParser = require('body-parser'),
     serveStatic = require('serve-static'),
     swagger = require('swagger-node-express'),
-    fs = require('fs'), 
+    fs = require('fs'),
     jwt = require('jsonwebtoken'),
     BearerStrategy = require('passport-http-bearer').Strategy,
     schedule = require('node-schedule');
@@ -22,13 +22,13 @@ var ctrl_utils =				require('./health-api-middlewares');
 var app = express();
 var oauth2 = require('./oauth2.js'),
     utils = require('./utils.js'),
-	config = require('./config.js'),
-	ssl = config.ssl;
+    config = require('./config.js'),
+    ssl = config.ssl;
 var api_docs = "/api-docs";
 swagger.setAppHandler(app);
 swagger.configureSwaggerPaths("", api_docs, "");
 swagger.setHeaders = function setHeaders(res) {
-	res.header("Content-Type", "application/json; charset=utf-8");
+    res.header("Content-Type", "application/json; charset=utf-8");
 };
 
 var tokensecret = config.tokensecret;
@@ -38,7 +38,7 @@ var host = config.host;
 var url_port = config.url_port;
 
 
-app.set('port', port);									
+app.set('port', port);
 app.use(passport.initialize());
 
 /*
@@ -77,7 +77,7 @@ var echo_endpoints = ['/accounts', '/patients', '/questions','/notifications','/
 var echo_middlewares = [passport.authenticate(['bearer'], { session: false }), ctrl_utils.accessControl, bodyParser.json(),bodyParser.urlencoded({ extended: false }), ctrl_utils.databaseHandler];
 
 for (var i = 0; i< echo_endpoints.length; i++){
-        app.use(echo_endpoints[i], echo_middlewares);
+    app.use(echo_endpoints[i], echo_middlewares);
 };
 
 
@@ -125,37 +125,37 @@ app.use(ctrl_utils.errorHandler);
 //Serve up swagger ui at /docs via static route
 var docs_handler = serveStatic(__dirname + '/docs/');
 app.get(/^\/docs(\/.*)?$/, function(req, res, next) {
-	if (req.url === '/docs') { // express static barfs on root url w/o trailing slash
-		res.writeHead(302, { 'Location' : req.url + '/' });
-		res.end();
-		return;
-	}
-	// take off leading /docs so that connect locates file correctly
-	req.url = req.url.substr('/docs'.length);
-	return docs_handler(req, res, next);
+    if (req.url === '/docs') { // express static barfs on root url w/o trailing slash
+        res.writeHead(302, { 'Location' : req.url + '/' });
+        res.end();
+        return;
+    }
+    // take off leading /docs so that connect locates file correctly
+    req.url = req.url.substr('/docs'.length);
+    return docs_handler(req, res, next);
 });
 
 /**
  * Final Swagger Settings
  */
 swagger.configureDeclaration("patients", {
-	description : "CRUD Ops for Patients and Ops to answer Questions",
-	produces: ["application/json"]
+    description : "CRUD Ops for Patients and Ops to answer Questions",
+    produces: ["application/json"]
 });
 
 swagger.configureDeclaration("accounts", {
-	description : "Account Operations",
-	produces: ["application/json"]
+    description : "Account Operations",
+    produces: ["application/json"]
 });
 
 swagger.configureDeclaration("questions", {
-	description : "Ops about Creating/Getting Questions with Answers",
-	produces: ["application/json"]
+    description : "Ops about Creating/Getting Questions with Answers",
+    produces: ["application/json"]
 });
 
 swagger.configureDeclaration("notifications", {
-	description : "Ops about Notifications",
-	produces: ["application/json"]
+    description : "Ops about Notifications",
+    produces: ["application/json"]
 });
 
 var j = schedule.scheduleJob('*/30 * * * *', function() {
@@ -167,41 +167,52 @@ var j = schedule.scheduleJob('*/30 * * * *', function() {
 /**
  * Main
  */
+if (ssl.useSsl) {
+    swagger.configure("https://" + host + ":" + url_port, "0.1");
 
-if (ssl.useSsl){
-	swagger.configure("https://"+host+":"+url_port, "0.1");
+    var options = {
+        key: fs.readFileSync(__dirname + ssl.privateKey),
+        cert: fs.readFileSync(__dirname + ssl.certificate),
+        password: ssl.password
+    };
 
-	var options = {
-			key: fs.readFileSync(__dirname + ssl.privateKey),
-			cert: fs.readFileSync(__dirname + ssl.certificate),
-			password: ssl.password
-	};
+    var server = https.createServer(options, app);
+    server.on('error', function (err){
+        if (err.message.indexOf('EADDRINUSE')>1) console.error('Port in use. Server already running?');
+        else console.error(err.stack);
+        process.exit(1);
+    });
+    server.listen(app.get('port'), function () {
+        console.log('ECHO REST API listening on host ' + host + ' on port ' + app.get('port'));
+        console.log('Server uses SSL');
+        console.log('Swagger Base: https://' + host + ':' + url_port + api_docs);
+    });
 
-	https.createServer(options, app).listen(app.get('port'), function(){
-		console.log('ECHO REST API listening on host ' +host + ' on port ' + app.get('port'));
-		console.log('Server uses SSL');
-		console.log('Swagger Base: https://'+host+':'+url_port + api_docs);
-	});
+    var redirectApp = express(),
+        redirectServer = http.createServer(redirectApp);
 
-	var redirectApp = express(),
-		redirectServer = http.createServer(redirectApp);
+    redirectApp.use(function requireHTTPS(req, res, next) {
+        if (!req.secure) {
+            return res.redirect('https://' + req.headers.host + req.url);
+        }
+        next();
+    })
 
-	redirectApp.use(function requireHTTPS(req, res, next) {
-		if (!req.secure) {
-			return res.redirect('https://' + req.headers.host + req.url);
-		}
-		next();
-	})
-
-	redirectServer.listen(8080);
+    redirectServer.listen(8080);
 
 }
 else {
-	swagger.configure("http://"+host+":"+url_port, "0.1");
+    swagger.configure("http://" + host + ":" + url_port, "0.1");
 
-	http.createServer(app).listen(app.get('port'), function(){
-		console.log('ECHO REST API listening on host ' +host + ' on port ' + app.get('port'));
-		console.log('Swagger Base: http://'+host+':'+url_port + api_docs);
-	});
+    var server = http.createServer(app);
+    server.on('error', function (err){
+        if (err.message.indexOf('EADDRINUSE')>1) console.error('Port in use. Server already running?');
+        else console.error(err.stack);
+        process.exit(1);
+    });
+    server.listen(app.get('port'), function () {
+        console.log('ECHO REST API listening on host ' + host + ' on port ' + app.get('port'));
+        console.log('Swagger Base: http://' + host + ':' + url_port + api_docs);
+    });
 }
 
