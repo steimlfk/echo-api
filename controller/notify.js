@@ -102,7 +102,8 @@ var DailyAnalyzer = function() {
                                         opts.path = '/echo/sms';
                                         break;
                                     case 'push':
-                                        msg[0].arns = '';
+                                        msg.arns = [];
+                                        msg.arns[0] = '';
                                         opts.path = '/echo/sns';
                                         break;
                                 }
@@ -141,16 +142,19 @@ var DailyAnalyzer = function() {
 
                                 switch (i.notificationMode) {
                                     case 'email':
+                                        msg.to = [];
                                         msg.to[0] = i.doc_email;
                                         opts.path = '/echo/email';
                                         break;
                                     case 'sms':
+                                        msg.receivers = [];
                                         msg.reveivers[0] = i.doc_mobile;
                                         msg.label ='ECHO';
                                         opts.path = '/echo/sms';
                                         break;
                                     case 'push':
-                                        msg[0].arns = '';
+                                        msg.arns = [];
+                                        msg.arns[0] = '';
                                         opts.path = '/echo/sns';
                                         break;
                                 }
