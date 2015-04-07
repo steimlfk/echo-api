@@ -59,6 +59,16 @@ var ssl = {
     certificate: ""
 };
 
+/**
+ * Section Notification Service
+ *
+ */
+
+var service = {
+    apiKey : '',
+    host : ''
+};
+
 exports.host = host;
 exports.port = port;
 exports.url_port = url_port;
@@ -66,5 +76,4 @@ exports.db_pw_prefix = prefix;
 exports.tokensecret = tokensecret;
 exports.db = db;
 exports.ssl = ssl;
-exports.api = apiKey;
-exports.notificationhost = '';
+exports.notificationService = service;
