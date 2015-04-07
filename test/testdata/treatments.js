@@ -46,8 +46,8 @@ var newTreatment = {
     "lama": false,
     "longActingB2": false,
     "ltot": false,
-    // 'CPAP' or 'BiPAP': LTOT Device,
-    "ltotDevice": "CPAP",
+    // ['Concetrator' or 'Cylinder' or 'Liquid']:LTOT Device,
+    "ltotDevice": "Concetrator",
     "ltotStartDate": "2011-11-01",
     "mycolytocis": false,
     "niv": false,
@@ -58,8 +58,8 @@ var newTreatment = {
     "steroidsOral": false,
     "theophyline": false,
     "ultraLongB2": false,
-    //['Concetrator' or 'Cylinder' or 'Liquid']: Ventilation Device,
-    "ventilationDevice": "Concetrator",
+    //'CPAP' or 'BiPAP': Ventilation Device,
+    "ventilationDevice": "CPAP",
     "ventilationStart": "2011-01-01",
     "diagnoseDate": "2014-12-17"
 }

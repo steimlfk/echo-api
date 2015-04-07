@@ -170,8 +170,8 @@ exports.errorHandler = function (err, req, res, next) {
             if (msg.indexOf('role') > -1)  me = 'Invalid value! Please check values for role (valid are: admin,doctor,patient)';
             if (msg.indexOf('notificationMode') > -1)  me = 'Invalid value! Please check values for notificationMode (valid are: email,sms,push)';
             if (msg.indexOf('status') > -1)  me = 'Invalid value! Please check values for status (valid are: baseline,exacerbation)';
-            if (msg.indexOf('ltotDevice') > -1)  me = 'Invalid value! Please check values for ltotDevice (valid are: cpap,bipap)';
-            if (msg.indexOf('ventilationDevice') > -1)  me = 'Invalid value! Please check values for ventilationDevice (valid are: concetrator,cylinder,liquid)';
+            if (msg.indexOf('ltotDevice') > -1)  me = 'Invalid value! Please check values for ltotDevice (valid are: concetrator,cylinder,liquid)';
+            if (msg.indexOf('ventilationDevice') > -1)  me = 'Invalid value! Please check values for ventilationDevice (valid are: cpap,bipap)';
             res.statusCode = 400;
             res.send({error: me});
         }

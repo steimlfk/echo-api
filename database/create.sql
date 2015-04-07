@@ -303,10 +303,10 @@ CREATE TABLE IF NOT EXISTS `echo`.`treatments` (
   `antipneum` TINYINT(1) NULL,
   `ltot` TINYINT(1) NULL,
   `ltotStartDate` DATE NULL DEFAULT NULL,
-  `ltotDevice` ENUM('none', 'BiPAP', 'CPAP') NULL,
+  `ltotDevice` ENUM('none', 'Cylinder', 'Liquid', 'Concetrator')  NULL,
   `niv` TINYINT(1) NULL,
   `ventilationStart` DATE NULL,
-  `ventilationDevice` ENUM('none', 'Cylinder', 'Liquid', 'Concetrator') NULL,
+  `ventilationDevice` ENUM('none', 'BiPAP', 'CPAP') NULL,
   PRIMARY KEY (`recordId`),
   INDEX `treatFKpat_idx` (`patientId` ASC),
   CONSTRAINT `treatFKpat`

@@ -43,8 +43,8 @@ INSERT INTO echo.treatments (recordId, patientId, diagnoseDate, status, shortAct
     sama, lama, pdef4Inhalator, theophyline, mycolytocis, antibiotics, antiflu, antipneum, ltot, ltotStartDate, ltotDevice, niv,
     ventilationStart, ventilationDevice)
 values
-(1, 3, now() - interval 2 day, "baseline", 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, now(), "CPAP", 1, now(), "Liquid"),
-(2, 4, now() - interval 1 day, "baseline", 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, now(), "CPAP", 1, now(), "Liquid");
+(1, 3, now() - interval 2 day, "baseline", 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, now(), "Liquid", 1, now(), "CPAP"),
+(2, 4, now() - interval 1 day, "baseline", 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, now(), "Liquid", 1, now(), "CPAP");
 
 -- INSERT INTO echo.severity (recordId, patientId, severity, comment, validFrom)
 -- values

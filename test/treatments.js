@@ -358,7 +358,7 @@ describe('Treatments Record Tests:', function() {
                 });
         });
 
-        it('Doctor can get created Data (totalCatscale should be set)', function (done){
+        it('Doctor can get created Data', function (done){
             var c = data.doctor.newTreatment;
             request(url)
                 .get(exam_url)
