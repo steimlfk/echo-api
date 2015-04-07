@@ -116,7 +116,7 @@ var DailyAnalyzer = function() {
                                         console.log(data);
                                     })
                                 });
-                                request.write(data);
+                                request.write(payload);
                                 request.end();
                                 cb('patients notification was sent');
                             }
@@ -164,7 +164,7 @@ var DailyAnalyzer = function() {
                                         console.log(data);
                                     })
                                 });
-                                request.write(data);
+                                request.write(payload);
                                 request.end();
                                 cb('doctors notification was sent');
                             }
