@@ -35,7 +35,7 @@ var DailyAnalyzer = function() {
             'doc.notificationMode AS doc_mode, doc.notificationEnabled as doc_enabled, doc.accountId as doc_id, doc.email as doc_email, doc.mobile AS doc_mobile, ' +
             'pdev.deviceId as patient_device, ddev.deviceId as doc_device, ' +
             'twoDayAnalyzes(a.accountId) AS twoDays ' +
-            'FROM accounts a left join devices pdev on (a.accountId = pdev.accountId), accounts doc left join devices ddev on (doc.accountId = ddev.accountId), dailyReports d, patients p'+
+            'FROM accounts a left join devices pdev on (a.accountId = pdev.accountId), accounts doc left join devices ddev on (doc.accountId = ddev.accountId), dailyReports d, patients p '+
             'WHERE d.recordId = ? '+
             'AND a.accountId = d.patientId AND a.accountId = p.patientId AND p.doctorId = doc.accountId;';
         db.query(qry, id, function(err, result) {
@@ -79,8 +79,9 @@ var DailyAnalyzer = function() {
             }
 
             if (type > 0){
-                var notificationqry = 'INSERT INTO notifications (accountId, date, type, subjectsAccount) VALUES (?, CURDATE(), ? ,?)';
                 var i = result[0];
+                //console.log(i.recordId + ':  q1:'+ i.q1+',q2:'+ i.q2+',q3:'+ i.q3+',q4:'+ i.q4+',q5:'+ i.q5 +' --> type: '+type );
+                var notificationqry = 'INSERT INTO notifications (accountId, date, type, subjectsAccount) VALUES (?, now(), ? ,?)';
                 async.parallel([
                         function(cb) {
                             // patients notification
