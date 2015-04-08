@@ -12,6 +12,7 @@ exports.createPatientAndAccount = function(req,res,next) {
     if (req.body.account && req.body.patient) {
         req.data = req.body;
         req.body = req.body.account;
+        req.body.role = 'patient';
         next();
     }
 };
@@ -35,29 +36,63 @@ exports.changeDoctor = function(req,res,next){
 
 exports.createPatientAndAccountSpec = {
     summary : "Create Patient with Account (Roles: doctor)",
-    notes: "Instead of calling POST /account and POST /patient in a row, you can use this function to create a patients' account. Uses new SP instead of combinig the existing two methods, since there is no possiblity to delete an account if this operation fails after account creation <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>201</b>  Account is created and the location is returned in the Location Header <br>" +
-    " <b>400</b>  The provided data contains errors, e.g. Username or EMail are not unique or Invalid Value of NotificationMode or Role <br>" +
-    " <b>403</b>  The logged in user isnt allowed to create an account with this data. Possibile Reason: A doctor is only allowed to create a new patient.<br>"+
-    " <b>500</b> Internal Server Error",
+    notes: "Instead of calling POST /account and POST /patient in a row, you can use this function to create a patients' account. Uses new SP instead of combinig the existing two methods, since there is no possiblity to delete an account if this operation fails after account creation <br><br>" ,
     path : "/createPatientAndAccount",
     method: "POST",
     nickname : "addPatientWithAccount",
-    parameters : [swagger.bodyParam("PatientAndAccount", "new Patient with new Account", "PatientAndAccount")]
+    parameters : [swagger.bodyParam("PatientAndAccount", "new Patient with new Account", "PatientAndAccount")],
+    responseMessages: [
+        {
+            code: 201,
+            message: "Account and Patientdata was created and the location is returned in the Location Header"
+        },
+        {
+            code: 400,
+            message: "The provided data contains errors ",
+            responseModel : "ErrorMsg"
+        },
+        {
+            code: 401,
+            message: "The logged-in user isnt allowed to use this function ",
+            responseModel : "ErrorMsg"
+        },
+        {
+            code: 500,
+            message: "Internal Server Error",
+            responseModel : "ErrorMsg"
+        }
+    ]
 
 };
 
 exports.changeDoctorSpec = {
     summary : "Changes Doctor of Given Patient (Roles: admin)",
-    notes: "Changes Doctor of Given Patient <br><br><b>Possible Results</b>: <br>" +
-    " <b>200</b>  Doctor changed <br>" +
-    " <b>400</b>  The provided data contains errors, e.g. given doctor isnt a doctor <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "Changes Doctor of Given Patient ",
     path : "/changeDoctor",
     method: "POST",
     nickname : "changeDoc",
-    parameters : [swagger.bodyParam("ChangeDoctor", "new Patient with new Account", "ChangeDoctor")]
+    parameters : [swagger.bodyParam("ChangeDoctor", "new Patient with new Account", "ChangeDoctor")],
+    responseMessages: [
+        {
+            code: 200,
+            message: "Doctor changed"
+        },
+        {
+            code: 400,
+            message: "The provided data contains errors, e.g. given doctor isnt a doctor",
+            responseModel : "ErrorMsg"
+        },
+        {
+            code: 401,
+            message: "The logged-in user isnt allowed to use this function ",
+            responseModel : "ErrorMsg"
+        },
+        {
+            code: 500,
+            message: "Internal Server Error",
+            responseModel : "ErrorMsg"
+        }
+    ]
 
 };
 

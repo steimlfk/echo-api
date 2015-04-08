@@ -233,84 +233,67 @@ exports.add = function(req,res,next){
         });
 };
 
+var commons = require('./controller_commons');
+var respMessages = commons.respMsg("DailyReport");
 exports.listSpec = {
     summary : "Get All Daily Reports By this Patient (Roles: doctor and patient)",
     notes: "This Function lists all Daily Reports for the given patient. <br>This function passes the parameters to the SP reportList. <br><br> <b>Parameters:</b> <br><br>  " +
-    "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " +
-    "<b>Possible Results</b>: <br>" +
-    " <b>200</b>  List of Daily Reports is supplied. Format cats: [Array of daily_report Model] <br>" +
-    " <b>204</b>  List (or the current page) is currently empty <br>" +
-    " <b>403</b>  The current user isnt allowed to access the data of the given patient <br>" +
-    " <b>500</b> Internal Server Error",
+    "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> ",
     path : "/patients/{id}/daily_reports",
     method: "GET",
     type : "ListDailyReport",
     nickname : "listReport",
     parameters : [swagger.pathParam("id", "Patient who answered the Questions", "string"),
         swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
-        swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")]
+        swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")],
+    responseMessages: respMessages.list
 };
 
 
 exports.addSpec = {
     summary : "Add new Daily Reports (Roles: doctor and patient)",
-    notes: "This Function creates an new Daily Report. If the Body contains patientId, its ignored and the id from the url is taken. Also it will set the date if date is null. <br>This function passes its parameters to the SP reportCreate. <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>201</b>  Record is created and the location is returned in the Location Header <br>" +
-    " <b>400</b>  The provided data contains errors. <br>" +
-    " <b>403</b>  The logged in user isnt allowed to create a record with this data.<br>"+
-    " <b>500</b> Internal Server Error",
+    notes: "This Function creates an new Daily Report. If the Body contains patientId, its ignored and the id from the url is taken. Also it will set the date if date is null. <br>This function passes its parameters to the SP reportCreate. <br><br>" ,
     path : "/patients/{id}/daily_reports",
     method: "POST",
     nickname : "addReport",
     parameters : [swagger.bodyParam("NewDailyReport", "new Set of Daily Answers", "NewDailyReport"), swagger.pathParam("id", "Patient who answered the Questions", "string")],
+    responseMessages: respMessages.add
 };
 
 exports.listOneSpec = {
     summary : "Get specific Daily Report Record of this Patient (Roles: doctor and patient)",
     path : "/patients/{id}/daily_reports/{rid}",
-    notes: "This Function returns the requested record, if it exists and is visible to the current user. <br>This function passes the parameters to the SP reportListOne. <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>200</b>  Record is supplied <br>" +
-    " <b>403</b>  The current user isnt allowed to access the data of the given patient <br>" +
-    " <b>404</b>  The requested record doesnt exist. <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "This Function returns the requested record, if it exists and is visible to the current user. <br>This function passes the parameters to the SP reportListOne. <br><br>" ,
     method: "GET",
     type : "DailyReport",
     nickname : "listOneReport",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
         swagger.pathParam("rid", "ID of the Record", "string")],
+    responseMessages: respMessages.listOne
 };
 
 
 exports.delSpec = {
     summary : "Delete specific Daily Report Record of this Patient (Roles: doctor and patient)",
-    notes: "This Function deletes a record, which is specified by the url. (if the Body contains ids, theyre ignored) <br>This function passes its parameters to the SP reportDelete <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>204</b>  Record was deleted. <br>" +
-    " <b>404</b>  Record is either not visible to the current user or doesnt exist. <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "This Function deletes a record, which is specified by the url. (if the Body contains ids, theyre ignored) <br>This function passes its parameters to the SP reportDelete <br><br>" ,
     path : "/patients/{id}/daily_reports/{rid}",
     method: "DELETE",
     nickname : "delReport",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
         swagger.pathParam("rid", "ID of the Record", "string")],
+    responseMessages: respMessages.del
 };
 
 exports.updateSpec = {
     summary : "Update specific Daily Report Record of this Patient (Roles: doctor and patient)",
-    notes: "This Function updates a Daily Report, which is specified by the url. Any ids in the Message Body are ignored. <br>This function passes its parameters to the SP reportUpdate. <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>204</b>  Record was updated. <br>" +
-    " <b>400</b>  The provided data contains errors, e.g. a invalid value for status <br>" +
-    " <b>404</b>  Record is either not visible to the current user or doesnt exist. <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "This Function updates a Daily Report, which is specified by the url. Any ids in the Message Body are ignored. <br>This function passes its parameters to the SP reportUpdate. <br><br>" ,
     path : "/patients/{id}/daily_reports/{rid}",
     method: "PUT",
     nickname : "updateReport",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
         swagger.pathParam("rid", "ID of the Record", "string") ,
-        swagger.bodyParam("DailyReport", "updated Readings Record", "NewDailyReport")]
+        swagger.bodyParam("DailyReport", "updated Readings Record", "NewDailyReport")],
+    responseMessages: respMessages.update
 };
 
 

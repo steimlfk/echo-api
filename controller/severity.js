@@ -39,67 +39,53 @@ exports.add = function(req,res,next){
             }
         });
 };
-
+var commons = require('./controller_commons');
+var respMessages = commons.respMsg("Severity");
 exports.listSpec = {
-    summary : "Get All Severities By this Patient (Roles: doctor and patient)",
+    summary : "Get All Severities By this Patient (Roles: doctor)",
     notes: "This Function lists all Severities for the given patient. <br>This function passes the parameters to the SP severityList. <br><br> <b>Parameters:</b> <br><br>  " +
-    "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " +
-    "<b>Possible Results</b>: <br>" +
-    " <b>200</b>  List of Severities is supplied. Format cats: [Array of severity Model] <br>" +
-    " <b>204</b>  List (or the current page) is currently empty <br>" +
-    " <b>403</b>  The current user isnt allowed to access the data of the given patient <br>" +
-    " <b>500</b> Internal Server Error",
+    "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " ,
     path : "/patients/{id}/severity",
     method: "GET",
     type : "ListSeverity",
     nickname : "listSeverity",
     parameters : [swagger.pathParam("id", "Patient", "string"),
         swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
-        swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")]
+        swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")],
+    responseMessages: respMessages.list
 };
 
 exports.addSpec = {
-    summary : "Add new Severity (Roles: doctor and patient)",
-    notes: "This Function creates a new Severity. If the Body contains patientId, its ignored and the id from the url is taken. Also it will set the date if date is null. <br>This function passes its parameters to the SP severityCreate. <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>201</b>  Record is created and the location is returned in the Location Header <br>" +
-    " <b>400</b>  The provided data contains errors. <br>" +
-    " <b>403</b>  The logged in user isnt allowed to create a record with this data.<br>"+
-    " <b>500</b> Internal Server Error",
+    summary : "Add new Severity (Roles: doctor)",
+    notes: "This Function creates a new Severity. If the Body contains patientId, its ignored and the id from the url is taken. Also it will set the date if date is null. <br>This function passes its parameters to the SP severityCreate. <br><br>" ,
     path : "/patients/{id}/severity",
     method: "POST",
     nickname : "addSeverity",
-    parameters : [swagger.bodyParam("NewSeverity", "new Set of Daily Answers", "NewSeverity"), swagger.pathParam("id", "Patient", "string")]
+    parameters : [swagger.bodyParam("NewSeverity", "new Set of Daily Answers", "NewSeverity"), swagger.pathParam("id", "Patient", "string")],
+    responseMessages: respMessages.add
 };
 
 exports.listOneSpec = {
-    summary : "Get specific Severity Record of this Patient (Roles: doctor and patient)",
+    summary : "Get specific Severity Record of this Patient (Roles: doctor)",
     path : "/patients/{id}/severity/{rid}",
-    notes: "This Function returns the requested record, if it exists and is visible to the current user. <br>This function passes the parameters to the SP severityListOne. <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>200</b>  Record is supplied <br>" +
-    " <b>403</b>  The current user isnt allowed to access the data of the given patient <br>" +
-    " <b>404</b>  The requested record doesnt exist. <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "This Function returns the requested record, if it exists and is visible to the current user. <br>This function passes the parameters to the SP severityListOne. <br><br>" ,
     method: "GET",
     type : "Severity",
     nickname : "listOneSeverity",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
-        swagger.pathParam("rid", "ID of the Record", "string")]
+        swagger.pathParam("rid", "ID of the Record", "string")],
+    responseMessages: respMessages.listOne
 };
 
 exports.delSpec = {
-    summary : "Delete specific Severity Record of this Patient (Roles: doctor and patient)",
-    notes: "This Function deletes a record, which is specified by the url. (if the Body contains ids, theyre ignored) <br>This function passes its parameters to the SP severityDelete <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>204</b>  Record was deleted. <br>" +
-    " <b>404</b>  Record is either not visible to the current user or doesnt exist. <br>" +
-    " <b>500</b> Internal Server Error",
+    summary : "Delete specific Severity Record of this Patient (Roles: doctor)",
+    notes: "This Function deletes a record, which is specified by the url. (if the Body contains ids, theyre ignored) <br>This function passes its parameters to the SP severityDelete <br><br>" ,
     path : "/patients/{id}/severity/{rid}",
     method: "DELETE",
     nickname : "delSeverity",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
-        swagger.pathParam("rid", "ID of the Record", "string")]
+        swagger.pathParam("rid", "ID of the Record", "string")],
+    responseMessages: respMessages.del
 };
 
 var contents = {
@@ -111,6 +97,11 @@ var contents = {
 };
 
 exports.models = {
+    "Severity":{
+        "id" : "Severity",
+        "required": ["severity","patientId","recordId","validFrom", "comment"],
+        "properties": contents
+    },
     "NewSeverity":{
         "id" : "NewSeverity",
         "required": ["severity"],
@@ -118,7 +109,7 @@ exports.models = {
     },
     "ListSeverity":{
         "id":"ListSeverity",
-        "required": ["daily_reports"],
+        "required": ["severity"],
         "properties": { _links : { "$ref" : "CollectionLinks"}, severity : {"type" : "array", items : { "$ref" : "Severity"}}}
 
     }

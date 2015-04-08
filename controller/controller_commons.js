@@ -70,7 +70,7 @@ exports.list = function(req, res, nextOp, exam){
                 }
                 fullResult[exam] = result;
 
-               // add pagination links to result set if pagination was used
+                // add pagination links to result set if pagination was used
                 if(page != 0){
                     var links = {};
                     // create first link
@@ -166,4 +166,106 @@ exports.del = function(req, res, next, exam){
             next();
         }
     });
+};
+
+
+/**
+ *  Response Messages for Medical Records
+ *
+ */
+exports.respMsg = function(MedicalModel) {
+    var error =  {
+        code: 500,
+        message: "Internal Server Error",
+        responseModel : "ErrorMsg"
+    };
+    var wrong_role =  {
+        code: 401,
+        message: "The logged-in user isnt allowed to use this function ",
+        responseModel : "ErrorMsg"
+    };
+    var result = {
+        list : [
+            {
+                code: 200,
+                message: "List of Records is supplied.",
+                responseModel : "List"+MedicalModel
+            },
+            {
+                code: 204,
+                message: "List (or the current page) has no items"
+            },
+            {
+                code: 403,
+                message: "The current user isnt allowed to access the data of the given patient"
+            }
+        ],
+        listOne : [
+            {
+                code: 200,
+                message: "Record is supplied.",
+                responseModel : MedicalModel
+            },
+            {
+                code: 403,
+                message: "The current user isnt allowed to access the data of the given patient",
+                responseModel : "ErrorMsg"
+            },
+            {
+                code: 404,
+                message: "The requested record doesnt exist."
+            }
+        ],
+        add : [
+            {
+                code: 201,
+                message: "Record is created and the location is returned in the Location Header"
+            },
+            {
+                code: 400,
+                message: " The provided data contains errors, e.g. a invalid value for status",
+                responseModel : "ErrorMsg"
+            },
+            {
+                code: 403,
+                message: " The logged in user isnt allowed to create a record for the supplied patient",
+                responseModel : "ErrorMsg"
+            }
+        ],
+        update : [
+            {
+                code: 204,
+                message: "Record was updated"
+            },
+            {
+                code: 400,
+                message: " The provided data contains errors, e.g. a invalid value for status",
+                responseModel : "ErrorMsg"
+            },
+            {
+                code: 404,
+                message: "Record is either not visible to the current user or doesnt exist.",
+                responseModel : "ErrorMsg"
+            }
+        ],
+        del : [
+            {
+                code: 204,
+                message: "Record was deleted"
+            },
+            {
+                code: 404,
+                message: "Record is either not visible to the current user or doesnt exist.",
+                responseModel : "ErrorMsg"
+            }
+        ]
+    };
+
+    for (var k in result){
+        if (result.hasOwnProperty(k)) {
+            result[k].push(error);
+            result[k].push(wrong_role);
+        }
+    }
+    return result;
 };

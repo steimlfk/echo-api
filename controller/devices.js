@@ -57,28 +57,52 @@ exports.del =   function(req,res,next){
 exports.addSpec = {
     summary : "Adds a DeviceId for Push Notifications (Roles: all)",
     path : "/devices",
-    notes: "This Function adds a new DeviceId for the current User. The DeviceID is used to send Push Notifications from the Backend<br>This function passes its parameters to the SP deviceAdd <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>200</b>  DeviceId was added <br>" +
-    " <b>400</b>  The provided data contains errors, e.g. DeviceId is already in use <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "This Function adds a new DeviceId for the current User. The DeviceID is used to send Push Notifications from the Backend<br>This function passes its parameters to the SP deviceAdd <br><br>",
     method: "POST",
     nickname : "addDevice",
-    parameters : [swagger.bodyParam("Device", "new Device", "Device")]
+    parameters : [swagger.bodyParam("Device", "new Device", "Device")],
+    responseMessages: [
+        {
+            code: 201,
+            message: "DeviceId registered. URL in location header"
+        },
+        {
+            code: 400,
+            message: "The provided data contains errors, e.g. DeviceId is already in use ",
+            responseModel : "ErrorMsg"
+        },
+        {
+            code: 500,
+            message: "Internal Server Error",
+            responseModel : "ErrorMsg"
+        }
+    ]
 
 };
 
 exports.delSpec = {
     summary : "Deletes a DeviceId for Push Notifications (Roles: all)",
-    notes: "This Function removes a DeviceID from the current Users Account. After removing no more Push Notifications will be send to that device. <br>This function passes its parameters to the SP deviceRemove <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>204</b>  Device was removed. <br>" +
-    " <b>404</b>  Device is not known. <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "This Function removes a DeviceID from the current Users Account. After removing no more Push Notifications will be send to that device. <br>This function passes its parameters to the SP deviceRemove <br><br>",
     path : "/devices/{deviceId}",
     method: "DELETE",
     nickname : "delAccount",
-    parameters : [swagger.pathParam("deviceId", "Device to delete", "string")]
+    parameters : [swagger.pathParam("deviceId", "Device to delete", "string")],
+    responseMessages : [
+        {
+            code: 204,
+            message: "DeviceId was deleted"
+        },
+        {
+            code: 404,
+            message: "Device not knows.",
+            responseModel : "ErrorMsg"
+        },
+        {
+            code: 500,
+            message: "Internal Server Error",
+            responseModel : "ErrorMsg"
+        }
+    ]
 
 };
 

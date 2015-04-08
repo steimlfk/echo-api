@@ -81,16 +81,26 @@ for (var i = 0; i< echo_endpoints.length; i++){
 };
 
 
-var models = {CollectionLinks : {
-    id : "CollectionLinks",
-    required : ["self", "first"],
-    properties: {
-        self : {"type":"string", "description": "Link to this Collection"},
-        first : {"type":"string", "description": "Link to first Page of this Collection"},
-        next : {"type":"string", "description": "Link to next Page of this Collection"},
-        back : {"type":"string", "description": "Link to previous Page of this Collection"}
+var models = {
+    CollectionLinks : {
+        id : "CollectionLinks",
+        required : ["self", "first"],
+        properties: {
+            self : {"type":"string", "description": "Link to this Collection"},
+            first : {"type":"string", "description": "Link to first Page of this Collection"},
+            next : {"type":"string", "description": "Link to next Page of this Collection"},
+            back : {"type":"string", "description": "Link to previous Page of this Collection"}
+        }
+    },
+    ErrorMsg : {
+        id : "ErrorMsg",
+        required: ["error"],
+        properties: {
+            error : {"type":"string", "description": "Error Message"}
+        }
     }
-}};
+
+};
 swagger.addModels({models:models});
 
 // Loading Controllers
@@ -124,8 +134,8 @@ app.use('/createPatientAndAccount', [
         next();
     },
     ctrl_utils.databaseHandler,
-    require('./controller/patients.js').add,
-    ]);
+    require('./controller/patients.js').add
+]);
 
 for (var i = 0; i< echo_endpoints.length; i++){
     app.use(echo_endpoints[i], ctrl_utils.resultProcessor);

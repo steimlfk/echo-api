@@ -126,12 +126,7 @@ exports.listSpec = {
     "type 5: Your patient: %name% has 2 days to fill in a daily report!<br>" +
     "type 6: Your patient: %name% has 10 days to fill in a daily report!<br><br><br>" +
 
-    "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " +
-    "To support pagination the following links are supplied, if page is greater than zero:  <br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>200</b>  List of Patients is supplied. Format accounts: [Array of Notifications Model] <br>" +
-    " <b>204</b>  List (or the current page) is currently empty <br>" +
-    " <b>500</b> Internal Server Error",
+    "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " ,
     path : "/notifications",
     method: "GET",
     type : "ListNotification",
@@ -139,21 +134,49 @@ exports.listSpec = {
     parameters : [
         swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
         swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")
+    ],
+    responseMessages : [
+        {
+            code: 200,
+            message: "List of Notifications is supplied. ",
+            responseModel : "ListNotifications"
+        },
+        {
+            code: 204,
+            message: "List (or the current page) has no items"
+        },
+        {
+            code: 500,
+            message: "Internal Server Error",
+            responseModel : "ErrorMsg"
+        }
     ]
 
 };
 
 exports.addSpec = {
     summary : "Create Notification. DEBUG PURPOSES! (Roles: Any)",
-    notes: "This Function creates a new Notification. <br>Since the Analysispart isnt implemented yet you can create Notifications here!  <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>201</b>  Notification created. Location wont be returned, since it wouldnt be accessable! <br>" +
-    " <b>400</b>  The provided data contains errors. <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "This Function creates a new Notification. <br>Since the Analysispart isnt implemented yet you can create Notifications here!  <br><br>" ,
     path : "/notifications",
     method: "POST",
     nickname : "addNotification",
-    parameters : [swagger.bodyParam("NewNotification", "new Notification", "NewNotification")]
+    parameters : [swagger.bodyParam("NewNotification", "new Notification", "NewNotification")],
+    responseMessages: [
+        {
+            code: 201,
+            message: "Notification created. Location wont be returned, since it wouldnt be accessable!"
+        },
+        {
+            code: 400,
+            message: "The provided data contains errors. ",
+            responseModel : "ErrorMsg"
+        },
+        {
+            code: 500,
+            message: "Internal Server Error",
+            responseModel : "ErrorMsg"
+        }
+    ]
 
 };
 
