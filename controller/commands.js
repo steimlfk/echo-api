@@ -8,81 +8,11 @@ var async = require('async');
 
 
 exports.createPatientAndAccount = function(req,res,next) {
-    var connection = req.con;
-
     // check if account and patient data was submitted
     if (req.body.account && req.body.patient) {
-
-        // since its not possible to "really" delete a created account
-        // it was necessary to write a new SP to create a patient and an account
-        async.waterfall([
-                function(ccb){
-                    // 4) create SQL Query from parameters
-                    var i = req.body.account;
-                    // make NotificationMode and role lower case so the db triggers can validate the value
-                    var mode = i.notificationMode.toLowerCase();
-                    var role = i.role.toLowerCase();
-
-                    async.parallel([
-                        function (cb) {
-                            utils.cryptPassword(i.password, cb);
-                        },
-                        function (cb) {
-                            connection.query('CALL accountsCreate(?,?,?,?,?,?, ?,?,?,?)' ,
-                                [config.db_pw_prefix, i.username," ", i.email, role, i.enabled, i.reminderTime, i.notificationEnabled, mode, i.mobile], cb);
-                        }
-                    ], function (err, result){
-                        if (err) {
-                            ccb(err);
-                        } else {
-                            var newId = result[1][0][0][0].location;
-                            connection.changeUser({user: 'echo_db_usr', password: config.db.pwd}, function (err){
-                                if (err) ccb(err);
-                                else {
-                                    async.parallel([
-                                        function (cb) {
-                                            connection.query('UPDATE accounts SET password = ? WHERE accountId = ?', [result[0], newId], cb);
-                                        },
-                                        function (cb) {
-                                            connection.query('CALL grantRolePermissions(?, ?)', [newId, i.role], cb);
-                                        }
-                                    ], function (err, res0) {
-                                        if (err) {
-                                            // Something went wrong - shouldnt happen
-                                            next(err);
-                                        }
-                                        else {
-                                            ccb(null, newId);
-                                        }
-                                    });
-                                }
-                            });
-                        };
-                    });
-                },
-                function(arg1, ccb){
-                    connection.changeUser({user: req.user.accountId, password: utils.calculatePW(req.user.accountId)}, function (err){
-                        if (err) ccb(err);
-                        else {
-                            var i = req.body.patient;
-                            // set doctor id to current user if current user is doctor
-                            var doc_id = i.doctorId;
-                            if (req.user.role == 'doctor') doc_id = req.user.accountId;
-                            connection.query('CALL patientsCreate(?,?,?,?,?,?,?,?,?,?,?,?)', [arg1, doc_id, i.firstName, i.lastName, i.secondName, i.socialId, i.sex, i.dateOfBirth, i.firstDiagnoseDate, i.fileId, i.fullAddress, i.landline], ccb);
-                        };
-                    });
-                }
-            ],
-            // optional callback
-            function(err, re1){
-                connection.release();
-                if (err) next(err);
-                else {
-                    res.loc = '/patients/'+re1[0][0].insertId;
-                    next();
-                }
-            }
-        );
+        req.data = req.body;
+        req.body = req.body.account;
+        next();
     }
 };
 

@@ -115,6 +115,18 @@ for (var i = 0; i < files.length; i++){
         }
     };
 };
+
+app.use('/createPatientAndAccount', [
+    require('./controller/accounts.js').add,
+    function (req,res,next){
+        req.data.patient.accountId=res.loc.split("/").pop();
+        req.body = req.data.patient;
+        next();
+    },
+    ctrl_utils.databaseHandler,
+    require('./controller/patients.js').add,
+    ]);
+
 for (var i = 0; i< echo_endpoints.length; i++){
     app.use(echo_endpoints[i], ctrl_utils.resultProcessor);
 };
