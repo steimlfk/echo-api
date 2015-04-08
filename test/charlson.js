@@ -281,7 +281,7 @@ describe('Charlson Record Tests:', function() {
 
         it('Doctor can get Charlson Records of his patients', function (done){
             request(url)
-                .get(patData_url+'/cats')
+                .get(patData_url+'/charlsons')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(validStatusCodeForListOrEmptyList)
                 .end(function (err, res){
@@ -289,10 +289,7 @@ describe('Charlson Record Tests:', function() {
                     if (res.statusCode == 200) {
                         res.body.should.have.property('charlsons');
                         for (var i = 0; i < res.body.charlsons; i++) {
-                            res.body.ccqs[i].should.have.property('totalCharlsonScore');
-                            res.body.ccqs[i].should.have.property('symptomScore');
-                            res.body.ccqs[i].should.have.property('mentalStateScore');
-                            res.body.ccqs[i].should.have.property('functionalStateScore');
+                            res.body.charlsons[i].should.have.property('totalCharlsonScore');
                         }
                         list_length = res.body.charlsons.length;
                     }
