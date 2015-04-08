@@ -52,10 +52,10 @@ exports.add = function(req,res,next){
     var status = (i.status)? i.status.toLowerCase() : "";
     // query db
     // ? from query will be replaced by values in [] - including escaping!
-    connection.query('call treatmentCreate(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?)',
+    connection.query('call treatmentCreate(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?)',
         [id, date,status,i.antibiotics,i.antiflu,i.antipneum,i.lama,i.longActingB2,
             i.ltot,i.ltotDevice,i.ltotStart,i.mycolytocis,i.niv,i.pdef4Inhalator,i.sama,i.shortActingB2,
-            i.steroidsInhaled,i.steroidsOral,i.theophyline,i.ultraLongB2,i.ventilationDevice,i.ventilationStart],
+            i.steroidsInhaled,i.steroidsOral,i.theophyline,i.ultraLongB2,i.ventilationDevice,i.ventilationStart, i.other],
         function(err, result) {
             if (err) {
                 next(err);
@@ -101,31 +101,13 @@ exports.update = function(req,res,next){
     var status = (i.status)? i.status.toLowerCase() : "";
     // query db
     // ? from query will be replaced by values in [] - including escaping!
-    connection.query('call treatmentUpdate(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?)',
+    connection.query('call treatmentUpdate(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?)',
         [rid, id, date,status,i.antibiotics,i.antiflu,i.antipneum,i.lama,i.longActingB2,
             i.ltot,i.ltotDevice,i.ltotStart,i.mycolytocis,i.niv,i.pdef4Inhalator,i.sama,i.shortActingB2,
-            i.steroidsInhaled,i.steroidsOral,i.theophyline,i.ultraLongB2,i.ventilationDevice,i.ventilationStart],
+            i.steroidsInhaled,i.steroidsOral,i.theophyline,i.ultraLongB2,i.ventilationDevice,i.ventilationStart, i.other],
         function(err, result) {
-            if (err) {
-                // Error Handling for sql signal statements for the triggers
-                // 22400 is equiv. to HTTP Error Code 400: Bad Request (has errors, should be altered and resend)
-                if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22400'){
-                    res.statusCode = 400;
-                    res.send({error: err.message});
-                }
-                // Error Handling for sql signal statements for the triggers
-                // 22403 is equiv. to HTTP Error Code 403: Forbidden
-                else if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22403'){
-                    res.statusCode = 403;
-                    res.send({error: err.message});
-                }
-                // Error Handling: Something else went wrong!
-                else {
-                    console.error('Query error on PUT Treatment: ',err);
-                    res.statusCode = 500;
-                    res.send({error: 'Internal Server Error'});
-                }
-            } else {
+            if (err) next(err)
+            else {
                 // record  was updated
                 if (result[0][0].affected_rows > 0){
                     res.statusCode = 204;
@@ -248,7 +230,8 @@ var contents = {
     "theophyline":{"type":"boolean","description": "theophyline"},
     "ultraLongB2":{"type":"boolean","description": "ultraLongB2"},
     "ventilationDevice":{"type":"string","description" : "Ventilation Device","enum":[ "none", "CPAP", "BiPAP"]},
-    "ventilationStart":{"type":"string","format": "Date", "description": "Date of Ventilation Start"}
+    "ventilationStart":{"type":"string","format": "Date", "description": "Date of Ventilation Start"},
+    "other": {"type":"string","description" : "Other notes about treatment"}
 };
 
 exports.models = {
@@ -256,14 +239,14 @@ exports.models = {
         "id":"Treatment",
         "required": ["patientId","recordId","diagnoseDate","status","antibiotics","antiflu","antipneum","lama","longActingB2","ltot",
             "ltotDevice","ltotStart","mycolytocis","niv","pdef4Inhalator","sama","shortActingB2","steroidsInhaled",
-            "steroidsOral","theophyline","ultraLongB2","ventilationDevice","ventilationStart"],
+            "steroidsOral","theophyline","ultraLongB2","ventilationDevice","ventilationStart", "other"],
         "properties": contents
     },
     "NewTreatment":{
         "id":"NewTreatment",
         "required": ["patientId","diagnoseDate","status","antibiotics","antiflu","antipneum","lama","longActingB2","ltot",
             "ltotDevice","ltotStart","mycolytocis","niv","pdef4Inhalator","sama","shortActingB2","steroidsInhaled",
-            "steroidsOral","theophyline","ultraLongB2","ventilationDevice","ventilationStart"],
+            "steroidsOral","theophyline","ultraLongB2","ventilationDevice","ventilationStart", "other"],
         "properties": contents
     },
     "ListTreatment":{

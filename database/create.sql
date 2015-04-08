@@ -307,6 +307,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`treatments` (
   `niv` TINYINT(1) NULL,
   `ventilationStart` DATE NULL,
   `ventilationDevice` ENUM('none', 'BiPAP', 'CPAP') NULL,
+  `other` TEXT NULL,
   PRIMARY KEY (`recordId`),
   INDEX `treatFKpat_idx` (`patientId` ASC),
   CONSTRAINT `treatFKpat`
@@ -592,7 +593,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`charlsons_view` (`recordId` INT, `patientId` 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`treatments_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`treatments_view` (`patientId` INT, `diagnoseDate` INT, `status` INT, `shortActingB2` INT, `longActingB2` INT, `ultraLongB2` INT, `steroidsInhaled` INT, `steroidsOral` INT, `sama` INT, `lama` INT, `pdef4Inhalator` INT, `theophyline` INT, `mycolytocis` INT, `antibiotics` INT, `antiflu` INT, `antipneum` INT, `ltot` INT, `ltotStartDate` INT, `ltotDevice` INT, `niv` INT, `ventilationStart` INT, `ventilationDevice` INT, `recordId` INT);
+CREATE TABLE IF NOT EXISTS `echo`.`treatments_view` (`patientId` INT, `diagnoseDate` INT, `status` INT, `shortActingB2` INT, `longActingB2` INT, `ultraLongB2` INT, `steroidsInhaled` INT, `steroidsOral` INT, `sama` INT, `lama` INT, `pdef4Inhalator` INT, `theophyline` INT, `mycolytocis` INT, `antibiotics` INT, `antiflu` INT, `antipneum` INT, `ltot` INT, `ltotStartDate` INT, `ltotDevice` INT, `niv` INT, `ventilationStart` INT, `ventilationDevice` INT, `recordId` INT, `other` int);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`readings_view`
@@ -613,6 +614,150 @@ CREATE TABLE IF NOT EXISTS `echo`.`deaths_view` (`patientId` INT, `date` INT, `c
 -- Placeholder table for view `echo`.`notifications_view`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `echo`.`notifications_view` (`notificationId` INT, `accountId` INT, `date` INT, `type` INT, `subjectsAccount` INT, `message` INT);
+
+
+-- -----------------------------------------------------
+-- procedure dropAllDbUsers
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=CURRENT_USER PROCEDURE `dropAllDbUsers`()
+BEGIN
+
+  #declare variable
+  DECLARE ptr INTEGER;
+  DECLARE done INT DEFAULT FALSE;
+  #declare cursor
+  DECLARE cur1 CURSOR FOR SELECT DISTINCT user from mysql.procs_priv where grantor='echo_db_usr@localhost';
+  #declare handle
+  DECLARE CONTINUE  HANDLER FOR NOT FOUND SET done = TRUE;
+
+  #open cursor
+  OPEN cur1;
+  #starts the loop
+  accounts_loop: LOOP
+    #get the values of each column into our  variables
+    FETCH cur1 INTO ptr;
+    IF done THEN
+      LEAVE accounts_loop;
+    END IF;
+	SET @stmt = CONCAT("DROP USER '",ptr,"'@'localhost'");
+	PREPARE s from @stmt;
+	EXECUTE s;
+	deallocate PREPARE s;
+  END LOOP accounts_loop;
+  CLOSE cur1;
+
+END
+$$
+
+DELIMITER ;
+
+
+-- -----------------------------------------------------
+-- procedure createAllDbUsers
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=CURRENT_USER PROCEDURE `createAllDbUsers`(IN pw_prefix VARCHAR (100))
+BEGIN
+
+  #declare variable
+  DECLARE ptr INTEGER;
+  DECLARE done INT DEFAULT FALSE;
+  #declare cursor
+  DECLARE cur1 CURSOR FOR SELECT accountId
+  FROM `echo`.`accounts`;
+  #declare handle
+  DECLARE CONTINUE  HANDLER FOR NOT FOUND SET done = TRUE;
+
+  #open cursor
+  OPEN cur1;
+  #starts the loop
+  accounts_loop: LOOP
+    #get the values of each column into our  variables
+    FETCH cur1 INTO ptr;
+    IF done THEN
+      LEAVE accounts_loop;
+    END IF;
+	CALL createDbUser(ptr, pw_prefix);
+  END LOOP accounts_loop;
+  CLOSE cur1;
+
+END
+$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure createDbUser
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `createDbUser`(IN uid INT, IN pw_prefix VARCHAR (100))
+begin
+
+	DECLARE x1 varchar(10);
+	SELECT role into x1 FROM accounts where accountId = uid;
+
+	if x1 is not  null then
+		SET @uid = uid;
+		SET @test = CONCAT(pw_prefix,uid);
+		SET @stmt = CONCAT("CREATE USER '",@uid,"'@'localhost' IDENTIFIED BY '",@test,"'");
+		PREPARE s from @stmt;
+		EXECUTE s;
+		deallocate PREPARE s;
+		if x1 <> 'patient' then
+			SET @stmt = CONCAT("GRANT EXECUTE ON PROCEDURE `echo`.`grantRolePermissions` TO '",@uid,"'@'localhost'");
+			PREPARE s from @stmt;
+			EXECUTE s;
+			deallocate PREPARE s;
+		end if;
+
+	end if;
+END$$
+
+DELIMITER ;
+
+
+-- -----------------------------------------------------
+-- procedure repairPermissions
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=CURRENT_USER PROCEDURE `repairPermissions`()
+BEGIN
+
+  #declare variable
+  DECLARE ptr INTEGER;
+  DECLARE ro VARCHAR(10);
+  DECLARE done INT DEFAULT FALSE;
+  #declare cursor
+  DECLARE cur1 CURSOR FOR SELECT accountId,role
+  FROM `echo`.`accounts`;
+  #declare handle
+  DECLARE CONTINUE  HANDLER FOR NOT FOUND SET done = TRUE;
+
+  #open cursor
+  OPEN cur1;
+  #starts the loop
+  accounts_loop: LOOP
+    #get the values of each column into our  variables
+    FETCH cur1 INTO ptr, ro;
+    IF done THEN
+      LEAVE accounts_loop;
+    END IF;
+	CALL grantRolePermissions(ptr, ro);
+  END LOOP accounts_loop;
+  CLOSE cur1;
+
+END$$
+
+DELIMITER ;
 
 -- -----------------------------------------------------
 -- procedure accountsCreate
@@ -1189,37 +1334,6 @@ END$$
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure createDbUser
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `createDbUser`(IN uid INT, IN pw_prefix VARCHAR (100))
-begin	
-
-	DECLARE x1 varchar(10);
-	SELECT role into x1 FROM accounts where accountId = uid;
-
-	if x1 is not  null then
-		SET @uid = uid;
-		SET @test = CONCAT(pw_prefix,uid);
-		SET @stmt = CONCAT("CREATE USER '",@uid,"'@'localhost' IDENTIFIED BY '",@test,"'");
-		PREPARE s from @stmt;
-		EXECUTE s;
-		deallocate PREPARE s;
-		if x1 <> 'patient' then
-			SET @stmt = CONCAT("GRANT EXECUTE ON PROCEDURE `echo`.`grantRolePermissions` TO '",@uid,"'@'localhost'");
-			PREPARE s from @stmt;
-			EXECUTE s;
-			deallocate PREPARE s;
-		end if;
-
-	end if;
-END$$
-
-DELIMITER ;
-
--- -----------------------------------------------------
 -- procedure deathCreate
 -- -----------------------------------------------------
 
@@ -1690,7 +1804,8 @@ in steroidsOral BOOLEAN ,
 in theophyline BOOLEAN ,
 in ultraLongB2 BOOLEAN ,
 in ventilationDevice VARCHAR(50) ,
-in ventilationStart DATE 
+in ventilationStart DATE,
+in other TEXT
 )
 proc: BEGIN
 
@@ -1704,8 +1819,8 @@ proc: BEGIN
 		end if;
 	end if;
 	
-	SET @stmt = "INSERT INTO treatments (patientId, diagnoseDate, status,antibiotics,antiflu,antipneum,lama,longActingB2,ltot,ltotDevice,ltotStartDate,mycolytocis,niv,pdef4Inhalator,sama,shortActingB2,steroidsInhaled,steroidsOral,theophyline,ultraLongB2,ventilationDevice,ventilationStart) 
-VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+	SET @stmt = "INSERT INTO treatments (patientId, diagnoseDate, status,antibiotics,antiflu,antipneum,lama,longActingB2,ltot,ltotDevice,ltotStartDate,mycolytocis,niv,pdef4Inhalator,sama,shortActingB2,steroidsInhaled,steroidsOral,theophyline,ultraLongB2,ventilationDevice,ventilationStart, other)
+VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 	set @patientId = patId;
 	set @diagnoseDate = diagnoseDate;
 	set @status = status;
@@ -1728,10 +1843,10 @@ set @q16 = theophyline ;
 set @q17 = ultraLongB2 ;
 set @q18 = ventilationDevice ;
 set @q19 = ventilationStart ;
-
+set @q20 = other;
 
 	PREPARE s FROM @stmt;
-	EXECUTE s using @patientId, @diagnoseDate, @status, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10,@q11, @q12, @q13, @q14, @q15, @q16, @q17, @q18, @q19;
+	EXECUTE s using @patientId, @diagnoseDate, @status, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10,@q11, @q12, @q13, @q14, @q15, @q16, @q17, @q18, @q19, @q20;
 	SELECt last_insert_id() as insertId;
 	DEALLOCATE PREPARE s;
 
@@ -1768,12 +1883,13 @@ in steroidsOral BOOLEAN ,
 in theophyline BOOLEAN ,
 in ultraLongB2 BOOLEAN ,
 in ventilationDevice VARCHAR(50) ,
-in ventilationStart DATE 
+in ventilationStart DATE ,
+in other TEXT
 )
 BEGIN
 
 	
-	SET @stmt = "UPDATE treatments_view  SET diagnoseDate = ?, status =? ,antibiotics=?,antiflu=?,antipneum=?,lama=?,longActingB2=?,ltot=?,ltotDevice=?,ltotStartDate=?,mycolytocis=?,niv=?,pdef4Inhalator=?,sama=?,shortActingB2=?,steroidsInhaled=?,steroidsOral=?,theophyline=?,ultraLongB2=?,ventilationDevice=?,ventilationStart =?
+	SET @stmt = "UPDATE treatments_view  SET diagnoseDate = ?, status =? ,antibiotics=?,antiflu=?,antipneum=?,lama=?,longActingB2=?,ltot=?,ltotDevice=?,ltotStartDate=?,mycolytocis=?,niv=?,pdef4Inhalator=?,sama=?,shortActingB2=?,steroidsInhaled=?,steroidsOral=?,theophyline=?,ultraLongB2=?,ventilationDevice=?,ventilationStart =?, other = ?
  where  recordId =? and patientId = ?";
 	set @recId = recordId;
 	set @patientId = patId;
@@ -1798,10 +1914,10 @@ set @q16 = theophyline ;
 set @q17 = ultraLongB2 ;
 set @q18 = ventilationDevice ;
 set @q19 = ventilationStart ;
-
+set @q20 = other;
 
 	PREPARE s FROM @stmt;
-	EXECUTE s using @diagnoseDate, @status, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10,@q11, @q12, @q13, @q14, @q15, @q16, @q17, @q18, @q19, @recId, @patientId;
+	EXECUTE s using @diagnoseDate, @status, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10,@q11, @q12, @q13, @q14, @q15, @q16, @q17, @q18, @q19, @q20, @recId, @patientId;
 	SELECT ROW_COUNT() as affected_rows;
 	DEALLOCATE PREPARE s;
 
@@ -2490,117 +2606,6 @@ END$$
 
 DELIMITER ;
 
-
--- -----------------------------------------------------
--- procedure createAllDbUsers
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=CURRENT_USER PROCEDURE `createAllDbUsers`(IN pw_prefix VARCHAR (100))
-BEGIN
-
-  #declare variable
-  DECLARE ptr INTEGER;
-  DECLARE done INT DEFAULT FALSE;
-  #declare cursor
-  DECLARE cur1 CURSOR FOR SELECT accountId
-  FROM `echo`.`accounts`;
-  #declare handle 
-  DECLARE CONTINUE  HANDLER FOR NOT FOUND SET done = TRUE;
-  
-  #open cursor
-  OPEN cur1;
-  #starts the loop
-  accounts_loop: LOOP
-    #get the values of each column into our  variables
-    FETCH cur1 INTO ptr;
-    IF done THEN
-      LEAVE accounts_loop;
-    END IF;
-	CALL createDbUser(ptr, pw_prefix);
-  END LOOP accounts_loop;
-  CLOSE cur1;
-
-END
-$$
-
-DELIMITER ;
-
--- -----------------------------------------------------
--- procedure dropAllDbUsers
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=CURRENT_USER PROCEDURE `dropAllDbUsers`()
-BEGIN
-
-  #declare variable
-  DECLARE ptr INTEGER;
-  DECLARE done INT DEFAULT FALSE;
-  #declare cursor
-  DECLARE cur1 CURSOR FOR SELECT DISTINCT user from mysql.procs_priv where grantor='echo_db_usr@localhost';
-  #declare handle 
-  DECLARE CONTINUE  HANDLER FOR NOT FOUND SET done = TRUE;
-  
-  #open cursor
-  OPEN cur1;
-  #starts the loop
-  accounts_loop: LOOP
-    #get the values of each column into our  variables
-    FETCH cur1 INTO ptr;
-    IF done THEN
-      LEAVE accounts_loop;
-    END IF;
-	SET @stmt = CONCAT("DROP USER '",ptr,"'@'localhost'");
-	PREPARE s from @stmt;
-	EXECUTE s;
-	deallocate PREPARE s;
-  END LOOP accounts_loop;
-  CLOSE cur1;
-
-END
-$$
-
-DELIMITER ;
-
--- -----------------------------------------------------
--- procedure repairPermissions
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=CURRENT_USER PROCEDURE `repairPermissions`()
-BEGIN
-
-  #declare variable
-  DECLARE ptr INTEGER;
-  DECLARE ro VARCHAR(10);
-  DECLARE done INT DEFAULT FALSE;
-  #declare cursor
-  DECLARE cur1 CURSOR FOR SELECT accountId,role
-  FROM `echo`.`accounts`;
-  #declare handle 
-  DECLARE CONTINUE  HANDLER FOR NOT FOUND SET done = TRUE;
-  
-  #open cursor
-  OPEN cur1;
-  #starts the loop
-  accounts_loop: LOOP
-    #get the values of each column into our  variables
-    FETCH cur1 INTO ptr, ro;
-    IF done THEN
-      LEAVE accounts_loop;
-    END IF;
-	CALL grantRolePermissions(ptr, ro);
-  END LOOP accounts_loop;
-  CLOSE cur1;
-
-END$$
-
-DELIMITER ;
-
 -- -----------------------------------------------------
 -- View `echo`.`accounts_view`
 -- -----------------------------------------------------
@@ -2669,7 +2674,7 @@ CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SEC
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`treatments_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`treatments_view` AS select `echo`.`treatments`.`patientId` AS `patientId`,`echo`.`treatments`.`diagnoseDate` AS `diagnoseDate`,`echo`.`treatments`.`status` AS `status`,`echo`.`treatments`.`shortActingB2` AS `shortActingB2`,`echo`.`treatments`.`longActingB2` AS `longActingB2`,`echo`.`treatments`.`ultraLongB2` AS `ultraLongB2`,`echo`.`treatments`.`steroidsInhaled` AS `steroidsInhaled`,`echo`.`treatments`.`steroidsOral` AS `steroidsOral`,`echo`.`treatments`.`sama` AS `sama`,`echo`.`treatments`.`lama` AS `lama`,`echo`.`treatments`.`pdef4Inhalator` AS `pdef4Inhalator`,`echo`.`treatments`.`theophyline` AS `theophyline`,`echo`.`treatments`.`mycolytocis` AS `mycolytocis`,`echo`.`treatments`.`antibiotics` AS `antibiotics`,`echo`.`treatments`.`antiflu` AS `antiflu`,`echo`.`treatments`.`antipneum` AS `antipneum`,`echo`.`treatments`.`ltot` AS `ltot`,`echo`.`treatments`.`ltotStartDate` AS `ltotStartDate`,`echo`.`treatments`.`ltotDevice` AS `ltotDevice`,`echo`.`treatments`.`niv` AS `niv`,`echo`.`treatments`.`ventilationStart` AS `ventilationStart`,`echo`.`treatments`.`ventilationDevice` AS `ventilationDevice`,`echo`.`treatments`.`recordId` AS `recordId` from `echo`.`treatments` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`treatments`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`treatments_view` AS select `echo`.`treatments`.`patientId` AS `patientId`,`echo`.`treatments`.`diagnoseDate` AS `diagnoseDate`,`echo`.`treatments`.`status` AS `status`,`echo`.`treatments`.`shortActingB2` AS `shortActingB2`,`echo`.`treatments`.`longActingB2` AS `longActingB2`,`echo`.`treatments`.`ultraLongB2` AS `ultraLongB2`,`echo`.`treatments`.`steroidsInhaled` AS `steroidsInhaled`,`echo`.`treatments`.`steroidsOral` AS `steroidsOral`,`echo`.`treatments`.`sama` AS `sama`,`echo`.`treatments`.`lama` AS `lama`,`echo`.`treatments`.`pdef4Inhalator` AS `pdef4Inhalator`,`echo`.`treatments`.`theophyline` AS `theophyline`,`echo`.`treatments`.`mycolytocis` AS `mycolytocis`,`echo`.`treatments`.`antibiotics` AS `antibiotics`,`echo`.`treatments`.`antiflu` AS `antiflu`,`echo`.`treatments`.`antipneum` AS `antipneum`,`echo`.`treatments`.`ltot` AS `ltot`,`echo`.`treatments`.`ltotStartDate` AS `ltotStartDate`,`echo`.`treatments`.`ltotDevice` AS `ltotDevice`,`echo`.`treatments`.`niv` AS `niv`,`echo`.`treatments`.`ventilationStart` AS `ventilationStart`,`echo`.`treatments`.`ventilationDevice` AS `ventilationDevice`,`echo`.`treatments`.`recordId` AS `recordId`, `echo`.`treatments`.`other` AS `other` from `echo`.`treatments` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`treatments`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`readings_view`

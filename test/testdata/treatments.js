@@ -61,7 +61,8 @@ var newTreatment = {
     //'CPAP' or 'BiPAP': Ventilation Device,
     "ventilationDevice": "CPAP",
     "ventilationStart": "2011-01-01",
-    "diagnoseDate": "2014-12-17"
+    "diagnoseDate": "2014-12-17",
+    "other": "other mean things"
 }
 
 
