@@ -49,8 +49,8 @@ var db = {
 var ssl = {
     useSsl: false,
     password: "",
-    privateKey: "",
-    certificate: ""
+    privateKey: "/ssl/privatekey.pem",
+    certificate: "/ssl/certificate.pem"
 };
 
 /**
@@ -60,7 +60,18 @@ var ssl = {
 
 var service = {
     apiKey : '',
-    host : ''
+    host : '',
+    email : {
+        url : '/echo/email',
+        subject : 'ECHO Notification'
+    },
+    sms : {
+        url : '/echo/sms',
+        label : 'ECHO'
+    },
+    push : {
+        url : '/echo/sns'
+    }
 };
 
 exports.host = host;
@@ -71,3 +82,5 @@ exports.tokensecret = tokensecret;
 exports.db = db;
 exports.ssl = ssl;
 exports.notificationService = service;
+
+

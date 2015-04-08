@@ -23,6 +23,12 @@ postOptions.headers['Content-Type'] = 'application/json';
 var DailyAnalyzer = function() {
 
     this.on('newDailyReport', function(id) {
+        // This query fetches all information about a certain dailyReport
+        // plus it fetches all notification information (mode, enabled, mobile no, email address) from the patient and the doctor
+        // the name of the patient is also fetched
+        // deviceIds are fetched via left outer join.
+        // Careful: if there is more than one deviceId/account, only the ones from the first fetched tuple is used!
+        // twoDayAnalyzes checks if (yesterday.q1 == today.q1 OR yesterday.q5 == today.q5) (yesterday and today are dailyRecords)
         var qry = 'SELECT a.notificationMode, a.notificationEnabled, a.accountId, a.email, a.mobile, ' +
             'd.recordId, d.q1, d.q2, d.q3, d.q4, d.q5, d.q1a, d.q1b, d.q1c, d.q3a, d.q3b, d.q3c, ' +
             'p.firstName, p.lastName,' +
@@ -44,12 +50,11 @@ var DailyAnalyzer = function() {
             var rule = 0;
             /*
              Rules:
-             1) Two days in a row Q1 „yes“ 				-> Notification: Call your doctor!
+             1) Two days in a row Q1 „yes“ 				    -> Notification: Call your doctor!
              2) Q1, Q2 and Q3 answered with „yes“ 			-> Notification: Call your doctor!
-             3) Q3a or Q3b answered with „yes“ 			-> Notification: Call your doctor!
-             4) Q3c answered with yes 					-> Notification: Go to the hospital!
-             5) Two days in a row Q5 „yes“ 				-> Notification: Call your doctor!
-             6) Questions not answered for 2 or 10 days 		-> Notification: Fill in your daily Report!
+             3) Q3a or Q3b answered with „yes“ 			    -> Notification: Call your doctor!
+             4) Q3c answered with yes 					    -> Notification: Go to the hospital!
+             5) Two days in a row Q5 „yes“ 				    -> Notification: Call your doctor!
              */
             if (result[0].q1 == 1 && result[0].q2 == 1 && result[0].q3 == 1){
                 type = 1;
@@ -61,6 +66,11 @@ var DailyAnalyzer = function() {
             }
             if (result[0].twoDays > 0){
                 type = '1';
+                /*
+                if twoDays == 1 -> rule 1
+                if twoDays == 5 -> rule 5
+                if twoDays == 6 -> both apply
+                 */
                 rule = 1; // or rule = 5;
             }
             if (result[0].q3c == 1) {
@@ -69,7 +79,7 @@ var DailyAnalyzer = function() {
             }
 
             if (type > 0){
-                var notificationqry = 'INSERT INTO notifications (accountId, date, type, subjectsAccount) VALUES (?, now(), ? ,?)';
+                var notificationqry = 'INSERT INTO notifications (accountId, date, type, subjectsAccount) VALUES (?, CURDATE(), ? ,?)';
                 var i = result[0];
                 async.parallel([
                         function(cb) {
@@ -91,7 +101,6 @@ var DailyAnalyzer = function() {
                                 };
                                 var msgtext = (type == 1)? 'Please call your doctor! (' + i.doc_mobile + ')' : 'Go to the Hospital!';
                                 var msg = {
-                                    'subject': 'ECHO Notification',
                                     'message': msgtext
                                 };
 
@@ -99,18 +108,19 @@ var DailyAnalyzer = function() {
                                     case 'email':
                                         msg.to = [];
                                         msg.to[0] = i.email;
-                                        opts.path = '/echo/email';
+                                        msg.subject = service.email.subject;
+                                        opts.path = service.email.url;
                                         break;
                                     case 'sms':
                                         msg.receivers = [];
                                         msg.reveivers[0] = i.mobile;
-                                        msg.label ='ECHO';
-                                        opts.path = '/echo/sms';
+                                        msg.label = service.sms.label;
+                                        opts.path = service.sms.url;
                                         break;
                                     case 'push':
                                         msg.arns = [];
                                         msg.arns[0] = i.patient_device;
-                                        opts.path = '/echo/sns';
+                                        opts.path = service.push.url;
                                         break;
                                 }
                                 var payload = JSON.stringify(msg);
@@ -120,7 +130,7 @@ var DailyAnalyzer = function() {
                                 var request = http.request(opts, function (res) {
                                     res.setEncoding('utf8');
                                     res.on('data', function (data) {
-                                        console.log(i.notificationMode + ': '+ data);
+                                        //console.log(i.notificationMode + ': '+ data);
                                     })
                                 });
                                 request.write(payload);
@@ -142,7 +152,6 @@ var DailyAnalyzer = function() {
                                 var patient_name = i.firstName + ' ' + i.lastName;
                                 var msgtext = (type == 1)? 'Your patient ' + patient_name + ' should call you!' : 'Your patient ' + patient_name + ' should go to the hospital';
                                 var msg = {
-                                    'subject': 'ECHO Notification',
                                     'message': msgtext
                                 };
 
@@ -150,18 +159,19 @@ var DailyAnalyzer = function() {
                                     case 'email':
                                         msg.to = [];
                                         msg.to[0] = i.doc_email;
-                                        opts.path = '/echo/email';
+                                        msg.subject = service.email.subject;
+                                        opts.path = service.email.url;
                                         break;
                                     case 'sms':
                                         msg.receivers = [];
                                         msg.reveivers[0] = i.doc_mobile;
-                                        msg.label ='ECHO';
-                                        opts.path = '/echo/sms';
+                                        msg.label = service.sms.label;
+                                        opts.path = service.sms.url;
                                         break;
                                     case 'push':
                                         msg.arns = [];
                                         msg.arns[0] = i.doc_device;
-                                        opts.path = '/echo/sns';
+                                        opts.path = service.push.url;
                                         break;
                                 }
                                 var payload = JSON.stringify(msg);
@@ -171,7 +181,7 @@ var DailyAnalyzer = function() {
                                 var request = http.request(opts, function (res) {
                                     res.setEncoding('utf8');
                                     res.on('data', function (data) {
-                                        console.log(i.doc_mode + ': ' + data);
+                                        //console.log(i.doc_mode + ': ' + data);
                                     })
                                 });
                                 request.write(payload);
@@ -186,6 +196,7 @@ var DailyAnalyzer = function() {
                             console.log('ERROR while sending or storing notification!')
                             console.log(err);
                         }
+                        //else console.log(res)
                     });
             }
         });
