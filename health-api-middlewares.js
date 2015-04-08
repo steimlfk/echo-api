@@ -174,7 +174,14 @@ exports.errorHandler = function (err, req, res, next) {
             if (msg.indexOf('ventilationDevice') > -1)  me = 'Invalid value! Please check values for ventilationDevice (valid are: cpap,bipap)';
             res.statusCode = 400;
             res.send({error: me});
+        }        // Error handling for ENUMs
+        else if (err.code == 'ER_TRUNCATED_WRONG_VALUE'){
+            var me = 'Invalid date!'
+            if (msg.indexOf('date') > -1)  me = 'Invalid Format of Date! Please use YYYY-MM-DD';
+            res.statusCode = 400;
+            res.send({error: me});
         }
+
         // Error Handling for sql signal statements for the triggers
         else if (err.code === 'ER_SIGNAL_EXCEPTION') {
             // 22403 is equiv. to HTTP Error Code 403: Forbidden
