@@ -2355,7 +2355,7 @@ PREPARE statement FROM @test_stmt;
 EXECUTE statement using @pid, @doc;
 DEALLOCATE PREPARE statement;
 IF @tmp IS NULL then
-	signal sqlstate '22403' set message_text = 'You are not allowed to view this patients data!';
+	signal sqlstate '22403' set message_text = 'This patient isnt assigned to you!';
 end if;
 
 
