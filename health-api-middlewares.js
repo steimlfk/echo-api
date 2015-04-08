@@ -25,6 +25,12 @@ var exam_commons = {
     }
 };
 
+var questions_commons = {
+    methods: {
+        get: ['admin', 'doctor', 'patient']
+    }
+}
+
 // notifications dont appear in this structure because the resource /notifications can be accessed by everyone who has
 // an account. (Opposed to /accounts where some functions are only allowed to be used by an admin. Because of this
 // fact, accounts has to be specified in this structure)
@@ -91,6 +97,21 @@ var permissions= {
         methods: {
             post: ['admin']
         }
+    },
+    questions: {
+        methods: {
+            get: ['doctor', 'admin', 'patient'],
+            post: ['admin']
+        },
+        instance: {
+            methods: {
+                delete: ['admin']
+            }
+        },
+        ccq : questions_commons,
+        cat : questions_commons,
+        charlson : questions_commons,
+        daily: questions_commons
     }
 
 };

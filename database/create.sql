@@ -441,7 +441,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`answers` (
   CONSTRAINT `fk.ans.quid`
     FOREIGN KEY (`questionId`)
     REFERENCES `echo`.`questions` (`questionId`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 

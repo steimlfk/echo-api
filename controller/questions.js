@@ -1,7 +1,6 @@
 /**
  * Route: Questions
  */
-//TODO: COMPLETE DOCU!!!
 var mysql = require('../utils.js').db;
 var swagger = require('swagger-node-express');
 var db = mysql;
@@ -36,7 +35,7 @@ exports.add = function(req,res,next){
                     }
                 });
                 res.statusCode = 201;
-                res.location('questions/' + result.insertId);
+                res.location('/questions/' + result.insertId);
                 res.send();
             }
             connection.release();
@@ -54,7 +53,7 @@ exports.add = function(req,res,next){
                 next(err);
             } else {
                 res.statusCode = 201;
-                res.location('questions/' + result.insertId);
+                res.location('/questions/' + result.insertId);
                 res.send();
             }
             connection.release();
@@ -109,6 +108,20 @@ exports.list = function(req,res,next){
             connection.release();
         }
 
+    });
+};
+
+exports.del = function (req, res, next){
+    var con = req.con;
+    var qry = 'DELETE FROM questions WHERE questionId = ?';
+    con.query(qry, req.params.id, function(err, result){
+        if (err) next(err);
+        else {
+            if (result.affectedRows > 0) {
+                res.sendStatus(204)
+            }
+            else res.sendStatus (400);
+        }
     });
 };
 
@@ -181,6 +194,14 @@ exports.listSpec = {
 
 };
 
+exports.delSpec = {
+    summary : "Delete specific Questions",
+    path : "/questions/{id}",
+    method: "DELETE",
+    nickname : "delQuestion",
+    parameters : [swagger.pathParam("id", "Question to delete", "string")]
+
+};
 
 exports.addSpec = {
     summary : "Add Question",
