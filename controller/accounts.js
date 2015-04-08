@@ -74,11 +74,15 @@ exports.list = function(req,res,nextOp){
     }
     // execute query
     connection.query(qry, function(err, rows) {
+        connection.release();
         if (err) {
             // renamed next to nextOp since next wasnt visible here...
             nextOp(err);
         }
         else {
+            var fullResult = {
+                accounts: []
+            };
             // is there any result?
             // careful: rows.length > 0 if you execute a "normal" sql statement
             //			 rows[0][0].length > 0 if you execute a SP
@@ -93,6 +97,8 @@ exports.list = function(req,res,nextOp){
                     o._links.self.href = host+'/accounts/'+rows[i].accountId;
                     result.push(o);
                 }
+                fullResult.accounts = result;
+
                 // add pagination links to result set if pagination was used
                 if(req.query.page){
                     var links = {};
@@ -115,21 +121,13 @@ exports.list = function(req,res,nextOp){
                         if  (role != 'none') back += '&role='+role;
                         links.back = back
                     }
-                    // send complete result set with pagination links
-                    res.send({'accounts' : result, '_links' : links});
-
+                    // add pagination links to result
+                    fullResult._links = links;
                 }
-                // send complete result set without links
-                else res.send({'accounts' : result});
-
             }
-            else{
-                // result set from db was empty (should happen - because the own account should always be visbile)
-                res.statusCode = 204;
-                res.send();
-            }
+            res.result = fullResult;
+            nextOp();
         }
-        connection.release();
     });
 };
 
@@ -151,30 +149,29 @@ exports.listOne = function(req,res,next){
     // query db
     // ? from query will be replaced by values in [] - including escaping!
     connection.query(qry, [id], function(err, rows) {
-        // error while querying db
-        if (err) {
-            next(err);
-        }
-
-        var host = ((ssl)?'https://':'http://')+req.headers.host;
-        // is there any result?
-        // careful: rows.length > 0 if you execute a "normal" sql statement
-        //			 rows[0][0].length > 0 if you execute a SP
-        if (rows.length > 0){
-            // create self link
-            var o  = rows[0];
-            o._links = {};
-            o._links.self = {};
-            o._links.self.href = host+'/accounts/'+rows[0].accountId;
-
-            res.send(o);
-        }
-        // result set is empty
-        else{
-            res.statusCode = 404;
-            res.send();
-        }
         connection.release();
+        // error while querying db
+        if (err) next(err);
+        else {
+            var fullResult = {};
+            var host = ((ssl) ? 'https://' : 'http://') + req.headers.host;
+            // is there any result?
+            // careful: rows.length > 0 if you execute a "normal" sql statement
+            //			 rows[0][0].length > 0 if you execute a SP
+            if (rows.length > 0) {
+                // create self link
+                var o = rows[0];
+                o._links = {};
+                o._links.self = {};
+                o._links.self.href = host + '/accounts/' + rows[0].accountId;
+
+                fullResult = o;
+            }
+            // result set is empty
+            res.result = fullResult;
+            next();
+        }
+
     });
 };
 
@@ -220,6 +217,7 @@ exports.add = function(req,res,next){
                         connection.query('CALL grantRolePermissions(?, ?)' , [newId, i.role], cb);
                     }
                 ], function(err, res0){
+                    connection.release();
                     if (err) {
                         // Something went wrong - shouldnt happen
                         // future TODO: implement rollback which deletes the created account and the created db user
@@ -227,11 +225,9 @@ exports.add = function(req,res,next){
                     }
                     else {
                         // account and db user created.
-                        res.statusCode = 201;
-                        res.location('/accounts/' + newId);
-                        res.send();
+                        res.loc = '/accounts/' + newId;
+                        next();
                     }
-                    connection.release();
                 });
             });
         };
@@ -249,29 +245,18 @@ exports.add = function(req,res,next){
  *  	5) add links to result
  *  	6) send
  */
-exports.del =   function(req,res,next){
+exports.del = function(req,res,next){
     var connection = req.con;
 
     // 4) create and execute SQL Query from parameters,
     // ? from query will be replaced by values in [] - including escaping!
     connection.query('CALL accountsDelete(?)', [req.params.id], function(err, result) {
-        if (err){
-            // An error occured
-            next(err);
-        }
-        else {
-            // Account was removed
-            if (result[0][0].affected_rows > 0){
-                res.statusCode = 204;
-                res.send();
-            }
-            else {
-                // Account wasnt removed since it doesnt exist or isnt visible to the user
-                res.statusCode = 404;
-                res.send();
-            }
-        }
         connection.release();
+        if (err) next(err);
+        else {
+            res.affectedRows = result[0][0].affected_rows;
+            next();
+        }
     });
 };
 
@@ -300,21 +285,12 @@ exports.update = function(req,res,next){
     // ? from query will be replaced by values in [] - including escaping!
     // any value for accountId given in the body will be ignored!
     connection.query('CALL accountsUpdate(?,?,?,?, ?,?,?,?, ?)', [req.params.id, i.username, pwd, i.email, i.reminderTime, i.notificationEnabled, mode, i.mobile, i.enabled], function (err, result) {
-        if (err) {
-            next(err);
-        } else {
-            // Account was updated
-            if (result[0][0].affected_rows > 0) {
-                res.statusCode = 204;
-                res.send();
-            }
-            else {
-                // Account wasnt updated since it doesnt exist or isnt visible to the user
-                res.statusCode = 404;
-                res.send();
-            }
-        }
         connection.release();
+        if (err) next(err);
+        else {
+            res.affectedRows = result[0][0].affected_rows;
+            next();
+        }
     });
 };
 

@@ -66,64 +66,64 @@ exports.list = function(req,res,next1){
     }
     // execute query
     connection.query(qry, function(err, rows) {
-        if (err) {
-            next1(err);
-        }
-        // is there any result?
-        if (rows.length > 0){
-            var host = ((ssl)?'https://':'http://')+req.headers.host;
-            var result = [];
-            for (var i = 0; i < rows.length; i++){
-                var o  = rows[i];
-                o._links = {};
-                // create self link
-                o._links.self = {};
-                o._links.self.href = host+'/patients/'+rows[i].patientId;
-                result.push(o);
-            }
-            // add pagination links to result set if pagination was used
-            if(req.query.page){
-                var links = {};
-                // create "first" link
-                var first = host+'/patients?page=1&pageSize='+pageSize;
-                // if sorting was used, add it to the link
-                if (req.query.sortBy) {
-                    first += '&sortBy='+ sort;
-                    if (req.query.order) first += '&order='+ order;
-                }
-                links.first = first;
-                // create "next" link if length of result set was pagesize
-                if (rows.length == pageSize) {
-                    var next = host+'/patients?page='+(page+1)+'&pageSize='+pageSize;
-                    // if sorting was used, add it to the link
-                    if (req.query.sortBy) {
-                        next += '&sortBy='+ sort;
-                        if (req.query.order) next += '&order='+ order;
-                    }
-                    links.next = next
-                }
-                // create back link
-                if (page != 1){
-                    var back = host+'/patients?page='+(page-1)+'&pageSize='+pageSize;
-                    // if sorting was used, add it to the link
-                    if (req.query.sortBy) {
-                        back += '&sortBy='+ sort;
-                        if (req.query.order) back += '&order='+ order;
-                    }
-                    links.back = back
-                }
-                // send result with pagination links
-                res.send({'patients' : result, '_links' : links});
-            }
-            // send plain results
-            else res.send({'patients' : result});
-        }
-        else{
-            // there are no patients atm
-            res.statusCode = 204;
-            res.send();
-        }
         connection.release();
+        if (err) next1(err);
+        else {
+            var fullResult = {
+                patients:[]
+            };
+            // is there any result?
+            if (rows.length > 0) {
+                var host = ((ssl) ? 'https://' : 'http://') + req.headers.host;
+                var result = [];
+                for (var i = 0; i < rows.length; i++) {
+                    var o = rows[i];
+                    o._links = {};
+                    // create self link
+                    o._links.self = {};
+                    o._links.self.href = host + '/patients/' + rows[i].patientId;
+                    result.push(o);
+                }
+                fullResult.patients = result;
+
+                // add pagination links to result set if pagination was used
+                if (req.query.page) {
+                    var links = {};
+                    // create "first" link
+                    var first = host + '/patients?page=1&pageSize=' + pageSize;
+                    // if sorting was used, add it to the link
+                    if (req.query.sortBy) {
+                        first += '&sortBy=' + sort;
+                        if (req.query.order) first += '&order=' + order;
+                    }
+                    links.first = first;
+                    // create "next" link if length of result set was pagesize
+                    if (rows.length == pageSize) {
+                        var next = host + '/patients?page=' + (page + 1) + '&pageSize=' + pageSize;
+                        // if sorting was used, add it to the link
+                        if (req.query.sortBy) {
+                            next += '&sortBy=' + sort;
+                            if (req.query.order) next += '&order=' + order;
+                        }
+                        links.next = next
+                    }
+                    // create back link
+                    if (page != 1) {
+                        var back = host + '/patients?page=' + (page - 1) + '&pageSize=' + pageSize;
+                        // if sorting was used, add it to the link
+                        if (req.query.sortBy) {
+                            back += '&sortBy=' + sort;
+                            if (req.query.order) back += '&order=' + order;
+                        }
+                        links.back = back
+                    }
+                    // send result with pagination links
+                    fullResult._links = links;
+                }
+            }
+            res.result = fullResult;
+            next1();
+        }
     });
 };
 
@@ -143,26 +143,24 @@ exports.listOne = function(req,res,next){
     var qry =  'SELECT * FROM patients_view where patientId=?';
     // query db
     // ? from query will be replaced by values in [] - including escaping!
-    connection.query(qry, [req.params.id], function(err, rows, fields) {
-        if (err) {
-            next(err);
-        }
-        // there was a matching patient
-        if (rows.length > 0){
-            var host = ((ssl)?'https://':'http://')+req.headers.host;
-            var o  = rows[0];
-            o._links = {};
-            // add self link
-            o._links.self = {};
-            o._links.self.href = host+'/patients/'+rows[0].patientId;
-            res.send(o);
-        }
-        else{
-            // no result
-            res.statusCode = 404;
-            res.send();
-        }
+    connection.query(qry, [req.params.id], function(err, rows) {
         connection.release();
+        if (err) next(err);
+        else {// there was a matching patient
+            var fullResult = {};
+            if (rows.length > 0) {
+                var host = ((ssl) ? 'https://' : 'http://') + req.headers.host;
+                var o = rows[0];
+                o._links = {};
+                // add self link
+                o._links.self = {};
+                o._links.self.href = host + '/patients/' + rows[0].patientId;
+                fullResult = o;
+            }
+            res.result = fullResult;
+            next();
+
+        }
     });
 
 };
@@ -186,17 +184,13 @@ exports.add = function(req,res,next){
     var doc_id = i.doctorId;
     if (req.user.role == 'doctor') doc_id = req.user.accountId;
     connection.query('CALL patientsCreate(?,?,?,?,?,?,?,?,?,?,?,?)', [i.accountId, doc_id, i.firstName, i.lastName, i.secondName, i.socialId, i.sex, i.dateOfBirth, i.firstDiagnoseDate, i.fileId, i.fullAddress, i.landline], function(err, result) {
-        if (err) {
-            next(err);
-        } else {
-            // resource created
-            res.statusCode = 201;
-            res.location('/patients/' + i.accountId);
-            res.send();
-        }
         connection.release();
+        if (err) next(err);
+        else {
+            res.loc = '/patients/' + i.accountId;
+            next();
+        }
     });
-
 };
 
 /**
@@ -215,22 +209,12 @@ exports.del =   function(req,res,next){
     // 4) create and execute SQL Query from parameters,
     // ? from query will be replaced by values in [] - including escaping!
     connection.query('CALL patientsDelete(?)', req.params.id, function(err, result) {
-        if (err){
-            next(err);
-        }
-        else {
-            // patient was deleted
-            if (result[0][0].affected_rows > 0){
-                res.statusCode = 204;
-                res.send();
-            }
-            else {
-                // patient was not deleted since it was not found
-                res.statusCode = 404;
-                res.send();
-            }
-        }
         connection.release();
+        if (err) next(err);
+        else {
+            res.affectedRows = result[0][0].affected_rows > 0;
+            next();
+        }
     });
 
 };
@@ -252,21 +236,12 @@ exports.update = function(req,res,next){
     connection.query('Call patientsRessourceUpdate(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
         [req.params.id, i.doctorId, i.firstName, i.lastName, i.secondName, i.socialId, i.sex, i.dateOfBirth,
             i.firstDiagnoseDate, i.fileId, i.fullAddress, i.landline, i.email, i.mobile], function(err, result) {
-            if (err) {
-                next(err);
-            } else {
-                // patient was updated
-                if (result[0][0].affected_rows > 0){
-                    res.statusCode = 204;
-                    res.send();
-                }
-                // patient wasnt updated
-                else {
-                    res.statusCode = 404;
-                    res.send();
-                }
-            }
             connection.release();
+            if (err) next(err);
+            else {
+                res.affectedRows = result[0][0].affected_rows;
+                next();
+            }
         });
 };
 

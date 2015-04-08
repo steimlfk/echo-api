@@ -24,7 +24,7 @@ var ssl = require('../config.js').ssl.useSsl;
  *  	5) add links to result
  *  	6) send
  */
-exports.list = function(req, res, next, exam){
+exports.list = function(req, res, nextOp, exam){
     var connection = req.con;
     // 3) create SQL Query from parameters
     var qry = "call listExams(?,?,?,?)";
@@ -48,11 +48,11 @@ exports.list = function(req, res, next, exam){
         }
     }
     connection.query(qry, [exam, req.params.id, page, pageSize], function(err, rows) {
-        if (err) {
-            next(err);
-
-        }
+        connection.release();
+        if (err) nextOp(err);
         else {
+            var fullResult = {};
+            fullResult[exam] = []
             // is there any result?
             if (rows[0].length > 0){
                 var host = ((ssl)?'https://':'http://')+req.headers.host;
@@ -68,10 +68,11 @@ exports.list = function(req, res, next, exam){
                     o._links.patient.href = host+'/patients/'+req.params.id;
                     result.push(o);
                 }
-                var links;
-                // add pagination links to result set if pagination was used
+                fullResult[exam] = result;
+
+               // add pagination links to result set if pagination was used
                 if(page != 0){
-                    links = {};
+                    var links = {};
                     // create first link
                     var first = host+'/patients/'+req.params.id+'/'+exam+'?page=1&pageSize='+pageSize;
                     links.first = first;
@@ -85,21 +86,12 @@ exports.list = function(req, res, next, exam){
                         var back = host+'/patients/'+req.params.id+'/'+exam+'?page='+(page-1)+'&pageSize='+pageSize;
                         links.back = back
                     }
+                    fullResult._links = links;
                 }
-                // send result
-                var ret = {};
-                ret[exam] = result;
-                if(page != 0) ret._links = links;
-
-                res.send(ret);
             }
-            else{
-                // there was no result to send
-                res.statusCode = 204;
-                res.send();
-            }
+            res.result = fullResult;
+            nextOp();
         }
-        connection.release();
     });
 };
 
@@ -124,10 +116,10 @@ exports.listOne = function(req,res,next, exam) {
     var rid = req.params.rid;
     var qry = 'call listSingleExam(?,?,?)';
     connection.query(qry, [exam, id, rid], function (err, rows) {
-        if (err) {
-            next(err);
-        }
+        connection.release();
+        if (err) next(err);
         else {
+            var fullResult = {};
             // was there any result?
             if (rows[0].length > 0) {
                 var host = ((ssl)?'https://':'http://')+req.headers.host;
@@ -139,18 +131,12 @@ exports.listOne = function(req,res,next, exam) {
                 o._links.patient = {};
                 // create link to corresponding patient
                 o._links.patient.href = host + '/patients/' + req.params.id;
-                // send result
-                res.send(o);
+                fullResult = o;
             }
-            // there was no result
-            else {
-                res.statusCode = 404;
-                res.send();
-            }
+            res.result = fullResult;
+            next();
         }
-        connection.release();
     });
-
 };
 /**
  * DELETE single record from CATs, CCQs, Charlsons, Treatments, Readings
@@ -173,20 +159,11 @@ exports.del = function(req, res, next, exam){
     var rid = parseInt(req.params.rid);
     // query db
     connection.query('call deleteExamRecord(?, ?, ?)', [exam, id, rid], function(err, result) {
-        if (err) {
-            next(err);
-        }
-        else {
-            // was there any row to delete?
-            if (result[0][0].affected_rows > 0){
-                res.statusCode = 204;
-                res.send();
-            }
-            else {
-                res.statusCode = 404;
-                res.send();
-            }
-        }
         connection.release();
+        if (err) next(err);
+        else {
+            res.affectedRows = result[0][0].affected_rows > 0;
+            next();
+        }
     });
 };

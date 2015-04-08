@@ -31,17 +31,12 @@ exports.add = function(req,res,next){
     connection.query('call severityCreate(?,?,?,?)',
         [id, date,comment, i.severity.toUpperCase()],
         function(err, result) {
-            if (err) {
-                next(err);
-
-            } else {
-                // resource was created
-                // link will be provided in location header
-                res.statusCode = 201;
-                res.location('/patients/'+ id + '/severity/' + result[0][0].insertId);
-                res.send();
-            }
             connection.release();
+            if (err) next(err);
+            else {
+                res.loc  = '/patients/'+ id + '/severity/' + result[0][0].insertId;
+                next();
+            }
         });
 };
 

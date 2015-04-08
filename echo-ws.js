@@ -115,7 +115,9 @@ for (var i = 0; i < files.length; i++){
         }
     };
 };
-
+for (var i = 0; i< echo_endpoints.length; i++){
+    app.use(echo_endpoints[i], ctrl_utils.resultProcessor);
+};
 app.use(ctrl_utils.errorHandler);
 
 

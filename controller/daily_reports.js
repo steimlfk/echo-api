@@ -47,10 +47,12 @@ exports.list = function(req, res, next1){
     // query db
     // ? from query will be replaced by values in [] - including escaping!
     connection.query(qry, [req.params.id, page, pageSize], function(err, rows) {
-        if (err) {
-            next1(err);
-        }
+        connection.release();
+        if (err) next1(err);
         else {
+            var fullResult = {
+                daily_reports : []
+            };
             // is there any result?
             if (rows[0].length > 0){
                 var host = 'https://'+req.headers.host;
@@ -66,10 +68,11 @@ exports.list = function(req, res, next1){
                     o._links.patient.href = host+'/patients/'+req.params.id;
                     result.push(o);
                 }
-                var links;
+                fullResult.daily_reports = result;
+
                 // add pagination links to result set if pagination was used
                 if(page != 0){
-                    links = {};
+                    var links = {};
                     // create "first" link
                     var first = host+'/patients/'+req.params.id+'/'+exam+'?page=1&pageSize='+pageSize;
                     links.first = first;
@@ -83,20 +86,12 @@ exports.list = function(req, res, next1){
                         var back = host+'/patients/'+req.params.id+'/'+exam+'?page='+(page-1)+'&pageSize='+pageSize;
                         links.back = back
                     }
+                    fullResult._links = links;
                 }
-                // send complete result set with pagination links
-                var ret = {};
-                ret[exam] = result;
-                if(page != 0) ret._links = links;
-                res.send(ret);
             }
-            else{
-                // result set from db was empty
-                res.statusCode = 204;
-                res.send();
-            }
+            res.result = fullResult;
+            next1();
         }
-        connection.release();
     });
 };
 
@@ -119,10 +114,10 @@ exports.listOne = function(req,res,next){
     // query db
     // ? from query will be replaced by values in [] - including escaping!
     connection.query(qry,[id,rid], function(err, rows) {
-        if (err) {
-            next(err);
-        }
+        connection.release();
+        if (err) next(err);
         else {
+            var fullResult = {};
             // is there any result?
             if (rows[0].length > 0){
                 var host = 'https://'+req.headers.host;
@@ -134,15 +129,11 @@ exports.listOne = function(req,res,next){
                 // create corresponding patients link
                 o._links.patient = {};
                 o._links.patient.href = host+'/patients/'+req.params.id;
-                res.send(o);
+                fullResult = o;
             }
-            // there was no result from db
-            else{
-                res.statusCode = 404;
-                res.send();
-            }
+            res.result = fullResult;
+            next();
         }
-        connection.release();
     });
 };
 
@@ -164,21 +155,12 @@ exports.del = function(req, res, next){
     // query db
     // ? from query will be replaced by values in [] - including escaping!
     connection.query('call reportDelete(?, ?)', [id, rid], function(err, result) {
-        if (err) {
-            next(err);
-        } else {
-            // record was deleted
-            if (result[0][0].affected_rows > 0){
-                res.statusCode = 204;
-                res.send();
-            }
-            // record wasnt deleted
-            else {
-                res.statusCode = 404;
-                res.send();
-            }
-        }
         connection.release();
+        if (err) next(err);
+        else {
+            res.affectedRows = result[0][0].affected_rows > 0;
+            next();
+        }
     });
 };
 /**
@@ -205,21 +187,12 @@ exports.update = function(req,res,next){
         [rid, id, date,
             i.q1, i.q2, i.q3, i.q4, i.q5, i.q1a, i.q1b, i.q1c,i.q3a, i.q3b, i.q3c, i.satO2,
             i.walkingDist, i.temperature, i.pefr, i.heartRate, i.x, i.y], function(err, result) {
-            if (err) {
-                next(err);
-            } else {
-                // record  was updated
-                if (result[0][0].affected_rows > 0){
-                    res.statusCode = 204;
-                    res.send();
-                }
-                // record was not found
-                else {
-                    res.statusCode = 404;
-                    res.send();
-                }
-            }
             connection.release();
+            if (err) next(err);
+            else {
+                res.affectedRows = result[0][0].affected_rows > 0;
+                next();
+            }
         });
 };
 /**
@@ -244,10 +217,9 @@ exports.add = function(req,res,next){
         [id, date,
             i.q1, i.q2, i.q3, i.q4, i.q5, i.q1a, i.q1b, i.q1c, i.q3a, i.q3b, i.q3c, i.satO2,
             i.walkingDist, i.temperature, i.pefr, i.heartRate, i.x, i.y], function(err, result) {
-            if (err) {
-                next(err);
-
-            } else {
+            connection.release();
+            if (err) next(err);
+            else {
                 // trigger analysis
                 var analyzer = require('./notify.js');
                 var dailyAnalyzer = new analyzer();
@@ -255,13 +227,9 @@ exports.add = function(req,res,next){
                 process.nextTick (function (){
                     dailyAnalyzer.emit('newDailyReport', result[0][0].insertId);
                 });
-
-                // new ressource created
-                res.statusCode = 201;
-                res.location('/patients/'+ id + '/daily_reports/' + result[0][0].insertId);
-                res.send();
+                res.loc = '/patients/'+ id + '/daily_reports/' + result[0][0].insertId;
+                next();
             }
-            connection.release();
         });
 };
 

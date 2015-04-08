@@ -281,3 +281,43 @@ exports.databaseHandler = function(req,res,next){
     });
 };
 
+exports.resultProcessor = function (req, res, next){
+    /*
+     Naming Conventions:
+     GET -> res contains result
+     (GET /ressources: result has at most 2 members: array of ressource and _links)
+     (GET /ressources/id: result is final result )
+     POST -> res contains loc
+     PUT/DELETE -> res contains affected_rows
+     */
+    if (res.loc){
+        res.location(res.loc);
+        res.sendStatus (201);
+    }
+    else if (res.affectedRows){
+        if (res.affectedRows > 0) res.sendStatus(204);
+        else res.sendStatus(404);
+    }
+    else if (res.result){
+        var count = Object.keys(res.result).length;
+        if (count == 0) res.sendStatus (404)
+        else {
+            var arr = false;
+            var empty = true;
+            if (count <= 2) {
+                for (k in res.result)
+                    if (k.isArray && res.result.hasOwnProperty(k)) {
+                        arr = true;
+                        if (res.result.k.length > 0) empty = false;
+                    }
+            }
+            if (arr && empty) res.sendStatus(204)
+            else {
+                res.statusCode = 200;
+                res.send(res.result);
+            }
+        }
+    }
+    else next(new Error('ResultProcessor: no result found'))
+};
+

@@ -56,9 +56,9 @@ exports.add = function(req,res,next){
     // any given ID in the body will be ignored and the ids from the url are used!
     connection.query('call catCreate(?,?,?,?,?,?,?,?,?,?,?)',
         [id, date, status,	i.q1, i.q2, i.q3, i.q4, i.q5, i.q6, i.q7, i.q8], function(err, result) {
-            if (err) {
-                next(err);
-            } else {
+            connection.release();
+            if (err) next(err);
+            else {
                 var analyzer = require('./notify.js');
                 var dailyAnalyzer = new analyzer();
                 // this postpones the analysis of the data until the POST is completely processed
@@ -67,11 +67,9 @@ exports.add = function(req,res,next){
                 });
                 // resource was created
                 // link will be provided in location header
-                res.statusCode = 201;
-                res.location('/patients/'+ id + '/cats/' + result[0][0].insertId);
-                res.send();
+                res.loc = '/patients/'+ id + '/cats/' + result[0][0].insertId;
+                next();
             }
-            connection.release();
         });
 };
 
@@ -99,21 +97,12 @@ exports.update = function(req,res,next){
     // query db
     // ? from query will be replaced by values in [] - including escaping!
     connection.query('call catUpdate(?, ?,?,?,?,?,?,?,?,?,?,?)',  [rid, id, date, status, i.q1, i.q2, i.q3, i.q4, i.q5, i.q6, i.q7, i.q8], function(err, result) {
-        if (err) {
-            next(err);
-        } else {
-            // record  was updated
-            if (result[0][0].affected_rows > 0){
-                res.statusCode = 204;
-                res.send();
-            }
-            else {
-                // record wasnt updated since it doesnt exist or isnt visible to the current user
-                res.statusCode = 404;
-                res.send();
-            }
-        }
         connection.release();
+        if (err) next(err);
+        else {
+            res.affectedRows = result[0][0].affected_rows;
+            next();
+        }
     });
 };
 

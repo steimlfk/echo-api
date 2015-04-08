@@ -70,23 +70,17 @@ exports.createPatientAndAccount = function(req,res,next) {
                             if (req.user.role == 'doctor') doc_id = req.user.accountId;
                             connection.query('CALL patientsCreate(?,?,?,?,?,?,?,?,?,?,?,?)', [arg1, doc_id, i.firstName, i.lastName, i.secondName, i.socialId, i.sex, i.dateOfBirth, i.firstDiagnoseDate, i.fileId, i.fullAddress, i.landline], ccb);
                         };
-
-
                     });
                 }
             ],
             // optional callback
             function(err, re1){
-                if (err) {
-                    next(err);
-                } else {
-                    // resource was created
-                    // link will be provided in location header
-                    res.statusCode = 201;
-                    res.location('/patients/'+re1[0][0].insertId);
-                    res.send();
-                }
                 connection.release();
+                if (err) next(err);
+                else {
+                    res.loc = '/patients/'+re1[0][0].insertId;
+                    next();
+                }
             }
         );
     }
@@ -98,21 +92,12 @@ exports.changeDoctor = function(req,res,next){
     var pid = req.body.patientId;
     var did = req.body.newDoctorId;
     connection.query('call patientsChangeDoctor(?,?)',	[pid, did], function(err, result) {
-        if (err) {
-            next(err);
-        } else {
-            // doctor was changed
-            if (result[0][0].affected_rows > 0){
-                res.statusCode = 204;
-                res.send();
-            }
-            // patient wasnt found
-            else {
-                res.statusCode = 404;
-                res.send();
-            }
-        }
         connection.release();
+        if (err) next(err);
+        else {
+            res.affectedRows = result[0][0].affected_rows > 0;
+            next();
+        }
     });
 };
 

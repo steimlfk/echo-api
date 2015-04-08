@@ -22,15 +22,12 @@ exports.add = function(req,res,next){
     // 3) create SQL Query from parameters
     // ? from query will be replaced by values in [] - including escaping!
     connection.query('CALL deviceAdd(?)' , [req.body.deviceId], function(err) {
-        if (err) {
-            next(err);
-        } else {
-            // 4)
-            res.statusCode = 201;
-            res.location('/devices/' + req.body.deviceId);
-            res.send();
-        }
         connection.release();
+        if (err) next(err);
+        else {
+            res.loc = '/devices/' + req.body.deviceId;
+            next();
+        }
     });
 };
 
@@ -47,23 +44,12 @@ exports.del =   function(req,res,next){
     // 3) create and execute SQL Query from parameters,
     // ? from query will be replaced by values in [] - including escaping!
     connection.query('CALL deviceRemove(?)', [req.params.deviceId], function(err, result) {
-        if (err){
-            // An error occured
-            next(err);
-        }
-        else {
-            // 4) Device was removed -> send
-            if (result[0][0].affected_rows > 0){
-                res.statusCode = 204;
-                res.send();
-            }
-            else {
-                // Device wasnt removed since it doesnt exist
-                res.statusCode = 404;
-                res.send();
-            }
-        }
         connection.release();
+        if (err) next(err);
+        else {
+            res.affectedRows = result[0][0].affected_rows > 0;
+            next();
+        }
     });
 };
 

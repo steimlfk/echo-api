@@ -55,16 +55,12 @@ exports.add = function(req,res,next){
             i.liverDiseaseModerateOrSevere,i.malignantLymphoma,i.metastaticSolidMalignancy,
             i.myocardialInfarction,i.peripheralVascularDisease,i.renalDiseaseModerateOrSevere,
             i.ulcerDisease,i.noConditionAvailable], function(err, result) {
-            if (err) {
-                next(err);
-            } else {
-                // resource was created
-                // link will be provided in location header
-                res.statusCode = 201;
-                res.location('/patients/'+ id + '/charlsons/' + result[0][0].insertId);
-                res.send();
-            }
             connection.release();
+            if (err) next(err);
+            else {
+                res.loc  ='/patients/'+ id + '/charlsons/' + result[0][0].insertId;
+                next();
+            }
         });
 };
 
@@ -94,21 +90,13 @@ exports.update = function(req,res,next){
             i.liverDiseaseModerateOrSevere,i.malignantLymphoma,i.metastaticSolidMalignancy,
             i.myocardialInfarction,i.peripheralVascularDisease,i.renalDiseaseModerateOrSevere,
             i.ulcerDisease,i.noConditionAvailable], function(err, result) {
-            if (err) {
-                next(err);
-            } else {
-                // record  was updated
-                if (result[0][0].affected_rows > 0){
-                    res.statusCode = 204;
-                    res.send();
-                }
-                else {
-                    // record wasnt updated since it doesnt exist or isnt visible to the current user
-                    res.statusCode = 404;
-                    res.send();
-                }
-            }
             connection.release();
+            if (err) next(err);
+            else {
+                // record  was updated
+                res.affectedRows = result[0][0].affected_rows > 0;
+                next();
+            }
         });
 };
 

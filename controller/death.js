@@ -23,10 +23,10 @@ exports.list = function(req, res, next){
     // query
     var qry = 'call deathGet(?)';
     connection.query(qry, [req.params.id], function(err, rows) {
-        if (err) {
-            next(err);
-        }
+        connection.release();
+        if (err) next(err);
         else {
+            var fullResult = {};
             // row found
             if (rows[0].length > 0){
                 var host = ((ssl)?'https://':'http://')+req.headers.host;
@@ -38,15 +38,11 @@ exports.list = function(req, res, next){
                 // add patients link
                 o._links.patient = {};
                 o._links.patient.href = host+'/patients/'+req.params.id;
-                res.send(o);
+                fullResult = o;
             }
-            // row doesnt exist
-            else{
-                res.statusCode = 204;
-                res.send();
-            }
+            res.result = fullResult;
+            next();
         }
-        connection.release();
     });
 };
 
@@ -66,22 +62,12 @@ exports.del = function(req, res, next, exam){
     var i = req.body;
     var id = parseInt(req.params.id);
     connection.query('call deathDelete(?)', [id], function(err, result) {
-        if (err) {
-            next(err);
-
-        } else {
-            // death event deleted
-            if (result[0][0].affected_rows > 0){
-                res.statusCode = 204;
-                res.send();
-            }
-            // death event not found
-            else {
-                res.statusCode = 404;
-                res.send();
-            }
-        }
         connection.release();
+        if (err) next(err);
+        else {
+            res.affectedRows = result[0][0].affected_rows > 0;
+            next();
+        }
     });
 };
 
@@ -104,21 +90,12 @@ exports.update = function(req,res,next){
     var date = i.diagnoseDate || null;
     connection.query('call deathUpdate(?,?,?, ?,?,?,?)',
         [id, date,i.cardiovascular,i.respiratory,i.infectious_disease,i.malignancy,i.other], function(err, result) {
-            if (err) {
-                next(err);
-            } else {
-                // record updated
-                if (result[0][0].affected_rows > 0){
-                    res.statusCode = 204;
-                    res.send();
-                }
-                // record not found
-                else {
-                    res.statusCode = 404;
-                    res.send();
-                }
-            }
             connection.release();
+            if (err) next(err);
+            else {
+                res.affectedRows = result[0][0].affected_rows > 0;
+                next();
+            }
         });
 };
 
@@ -141,16 +118,12 @@ exports.add = function(req,res,next){
     var date = i.diagnoseDate || null;
     connection.query('call deathCreate(?,?,?, ?,?,?,?)',
         [id, date, i.cardiovascular,i.respiratory,i.infectious_disease,i.malignancy,i.other], function(err, result) {
-            if (err) {
-                next(err);
-
-            } else {
-                // resource creted
-                res.statusCode = 201;
-                res.location('/patients/'+ id + '/death');
-                res.send();
-            }
             connection.release();
+            if (err) next(err);
+            else {
+                res.loc = '/patients/'+ id + '/death';
+                next();
+            }
         });
 };
 

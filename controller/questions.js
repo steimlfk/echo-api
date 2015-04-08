@@ -66,6 +66,7 @@ exports.list = function(req,res,next){
     var qry = 'SELECT questionId,category,type,text,active FROM questions ORDER BY category,type,text';
     connection.query(qry, function(err, rows) {
         if (err) {
+            connection.release();
             next(err);
         }
         else if (rows.length > 0){
@@ -115,12 +116,11 @@ exports.del = function (req, res, next){
     var con = req.con;
     var qry = 'DELETE FROM questions WHERE questionId = ?';
     con.query(qry, req.params.id, function(err, result){
+        connection.release();
         if (err) next(err);
         else {
-            if (result.affectedRows > 0) {
-                res.sendStatus(204)
-            }
-            else res.sendStatus (400);
+            res.affectedRows = result[0][0].affected_rows > 0;
+            next();
         }
     });
 };
@@ -146,6 +146,7 @@ function getQuestions(req, res, next, cat){
     var qry = 'SELECT questionId,category,type,text,active,label FROM questions where active = 1 and category=' + db.escape(cat);
     connection.query(qry, function(err, rows) {
         if (err) {
+            connection.release();
             next(err);
         }
         if (rows.length > 0){
@@ -181,6 +182,7 @@ function getQuestions(req, res, next, cat){
         }
         else{
             res.sendStatus(204);
+            connection.release();
         }
     });
 };

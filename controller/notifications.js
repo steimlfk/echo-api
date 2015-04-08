@@ -18,7 +18,7 @@ var ssl = require('../config.js').ssl.useSsl;
  *  	4) add links to result
  *  	5) send
  */
-exports.list = function(req, res, next){
+exports.list = function(req, res, nextOp){
     var connection = req.con;
     // 3) create SQL Query from parameters
     // set base statement
@@ -50,10 +50,12 @@ exports.list = function(req, res, next){
     }
     //query db
     connection.query(qry, function(err, rows) {
-        if (err) {
-            next(err);
-        }
+        connection.release();
+        if (err) nextOp(err);
         else {
+            var fullResult = {
+                notifications : []
+            };
             if (rows.length > 0){
                 var host = ((ssl)?'https://':'http://')+req.headers.host;
                 var result = [];
@@ -66,11 +68,11 @@ exports.list = function(req, res, next){
                     delete o.subjectsAccount;
                     result.push(o);
                 }
-                var links;
+                fullResult.notifications = result;
+
                 // add pagination links to result set if pagination was used
                 if(page != 0){
-                    links = {};
-
+                    var links = {};
                     //create first link
                     var first = host+'/notifications?page=1&pageSize='+pageSize;
                     links.first = first;
@@ -84,20 +86,12 @@ exports.list = function(req, res, next){
                         var back = host+'/notifications?page='+(page-1)+'&pageSize='+pageSize;
                         links.back = back
                     }
+                    fullResult._links = links;
                 }
-                // send result
-                var ret = {};
-                ret.notifications = result;
-                if(page != 0) ret._links = links;
-                res.send(ret);
             }
-            else{
-                // no notifiactions found
-                res.statusCode = 204;
-                res.send();
-            }
+            res.result = fullResult;
+            nextOp();
         }
-        connection.release();
     });
 };
 
@@ -111,14 +105,12 @@ exports.add = function(req, res, next){
     var connection = req.con;
     var qry = 'INSERT INTO notifications SET ?';
     connection.query(qry, [req.body], function(err, rows) {
-        if (err) {
-            next(err);
-        }
-        else {
-            res.statusCode = 201;
-            res.send();
-        }
         connection.release();
+        if (err) next(err);
+        else {
+            res.loc = '/dummy_loc';
+            next();
+        }
     });
 
 };

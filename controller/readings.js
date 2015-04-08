@@ -67,10 +67,9 @@ exports.add = function(req,res,next){
             i.smoker, i.tlc,i.tlc_pre,i.tlc_pre_pro,i.tlc_pro,
             i.weight],
         function(err, result) {
-            if (err) {
-                next(err);
-
-            } else {
+            connection.release();
+            if (err) next(err);
+            else {
                 var analyzer = require('./notify.js');
                 var dailyAnalyzer = new analyzer();
                 // this postpones the analysis of the data until the POST is completely processed
@@ -79,11 +78,9 @@ exports.add = function(req,res,next){
                 });
                 // resource was created
                 // link will be provided in location header
-                res.statusCode = 201;
-                res.location('/patients/'+ id + '/readings/' + result[0][0].insertId);
-                res.send();
+                res.loc = '/patients/'+ id + '/readings/' + result[0][0].insertId;
+                next()
             }
-            connection.release();
         });
 };
 
@@ -123,21 +120,12 @@ exports.update = function(req,res,next){
             i.rv_pre_pro,i.rv_pro,i.rv_tlc,i.satO2_pro,i.smoker,
             i.tlc,i.tlc_pre,i.tlc_pre_pro,i.tlc_pro,i.weight],
         function(err, result) {
-            if (err) {
-                next(err);
-            } else {
-                // record  was updated
-                if (result[0][0].affected_rows > 0){
-                    res.statusCode = 204;
-                    res.send();
-                }
-                // record wasnt updated since it doesnt exist or isnt visible to the current user
-                else {
-                    res.statusCode = 404;
-                    res.send();
-                }
-            }
             connection.release();
+            if (err) next(err);
+            else {
+                res.affectedRows = result[0][0].affected_rows;
+                next();
+            }
         });
 };
 
