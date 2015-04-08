@@ -71,6 +71,7 @@ var permissions= {
             ccqs : exam_commons,
             charlsons : exam_commons,
             readings : exam_commons,
+            severity : exam_commons,
             treatments : exam_commons
         }
     },
