@@ -84,9 +84,28 @@ describe('CreatePatientWithAccount Tests:', function() {
 
     describe('Testing Functions as Admin (doctorId set to created doctor):', function() {
         var pat_url = null;
+
+        it('Creating should fail if role is valid but not patient', function(done) {
+            var tmp = data.admin.newData;
+            tmp.patient.doctorId = doc_id;
+            tmp.account.role = 'admin';
+            request(url)
+                .post('/createPatientAndAccount')
+                .set('Authorization', 'Bearer ' + access_token_global)
+                .send(tmp)
+                .expect(400)
+                .end(function(err, res) {
+                    if (err) {
+                        throw err;
+                    }
+                    done();
+                });
+        });
+
         it('Creating Patient with Account', function(done) {
             var tmp = data.admin.newData;
             tmp.patient.doctorId = doc_id;
+            tmp.account.role = 'patient';
             request(url)
                 .post('/createPatientAndAccount')
                 .set('Authorization', 'Bearer ' + access_token_global)
@@ -97,6 +116,25 @@ describe('CreatePatientWithAccount Tests:', function() {
                         throw err;
                     }
                     pat_url = res.headers.location;
+                    done();
+                });
+        });
+
+        it('Creating should fail if socialId is use', function(done) {
+            var tmp = data.admin.newData;
+            tmp.patient.doctorId = doc_id;
+            tmp.account.email = 'dummy-mocha@mocha.de';
+            tmp.account.username = 'dummy-mocha';
+            tmp.patient.fileId = 'dummy-file-id1'
+            request(url)
+                .post('/createPatientAndAccount')
+                .set('Authorization', 'Bearer ' + access_token_global)
+                .send(tmp)
+                .expect(400)
+                .end(function(err, res) {
+                    if (err) {
+                        throw err;
+                    }
                     done();
                 });
         });
@@ -162,7 +200,6 @@ describe('CreatePatientWithAccount Tests:', function() {
 
         });
 
-
         it('Creating Patient with Account (doctorId set to 0)', function(done) {
             var tmp = data.admin.newData;
             tmp.patient.doctorId = 0;
@@ -177,6 +214,25 @@ describe('CreatePatientWithAccount Tests:', function() {
                     }
                     pat_url = res.headers.location;
                     pat_id = parseInt(pat_url.split("/").pop());
+                    done();
+                });
+        });
+
+
+        it('Creating should fail if socialId is use', function(done) {
+            var tmp = data.admin.newData;
+            tmp.account.email = 'dummy-mocha@mocha.de';
+            tmp.account.username = 'dummy-mocha';
+            tmp.patient.fileId = 'dummy-file-id1'
+            request(url)
+                .post('/createPatientAndAccount')
+                .set('Authorization', 'Bearer ' + access_token_global)
+                .send(tmp)
+                .expect(400)
+                .end(function(err, res) {
+                    if (err) {
+                        throw err;
+                    }
                     done();
                 });
         });
