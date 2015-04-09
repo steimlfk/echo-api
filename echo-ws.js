@@ -74,7 +74,7 @@ swagger.addPost({'spec':oauth2.loginSpec,'action':oauth2.endpoint})
 
 //setup protected ECHO Endpoints
 var echo_endpoints = ['/accounts', '/patients', '/questions','/notifications','/createPatientAndAccount','/changeDoctor', '/devices'];
-var echo_middlewares = [passport.authenticate(['bearer'], { session: false }), ctrl_utils.accessControl, bodyParser.json(),bodyParser.urlencoded({ extended: false }), ctrl_utils.databaseHandler];
+var echo_middlewares = [passport.authenticate(['bearer'], { session: false }), bodyParser.json(),bodyParser.urlencoded({ extended: false }), ctrl_utils.databaseHandler];
 
 for (var i = 0; i< echo_endpoints.length; i++){
     app.use(echo_endpoints[i], echo_middlewares);
