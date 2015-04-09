@@ -162,9 +162,9 @@ exports.resultProcessor = function (req, res, next){
             var empty = true;
             if (count <= 2) {
                 for (k in res.result)
-                    if (k.isArray && res.result.hasOwnProperty(k)) {
+                    if (Array.isArray(res.result[k]) && res.result.hasOwnProperty(k)) {
                         arr = true;
-                        if (res.result.k.length > 0) empty = false;
+                        if (res.result[k].length > 0) empty = false;
                     }
             }
             if (arr && empty) res.sendStatus(204)
