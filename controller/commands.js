@@ -27,9 +27,23 @@ exports.createPatientAndAccount = function(req,res,next) {
             }
         ],
         function(err){
-            if (err) next(err)
+            if (err) {
+                // rollback if account was already created! (doctorId is part of req.body of patient)
+                if (req.body.doctorId){
+                    req.params = {};
+                    req.params.id = req.body.accountId;
+                    ctrl.databaseHandler(req, res, function(e1){
+                        req.con.changeUser({user: 'echo_db_usr', password: config.db.pwd}, function (e2){
+                            acc.del(req,res, function(e3){
+                                next(err);
+                            })
+                        });
+                    });
+                }
+                else next(err);
+            }
             else next();
-    });
+        });
 };
 
 
