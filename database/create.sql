@@ -110,7 +110,7 @@ else
 	end if;
 end if;
 
-if (coalesce((select severity from severity where patientId=id order by validFrom desc limit 1))<>@severity) then
+if (coalesce((select severity from severity where patientId=id order by diagnoseDate desc limit 1))<>@severity) then
     insert into notification (accountId, date, type, subjectsAccount)
     values
     (id, now(), 7, null),
@@ -562,7 +562,7 @@ CREATE TABLE `severity` (
   `recordId` int(11) NOT NULL AUTO_INCREMENT,
   `patientId` int(11) NOT NULL,
   `severity` enum('A','B','C','D') NOT NULL,
-  `validFrom` datetime NOT NULL,
+  `diagnoseDate` datetime NOT NULL,
   `comment` mediumtext,
   `modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   KEY `sevFKpat_idx` (`patientId`),
@@ -575,7 +575,7 @@ USE `echo` ;
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`severity_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`severity_view` (`recordId` INT, `patientId` INT, `severity` enum('A','B','C','D'), `validFrom` date, `comment` mediumtext, modified INT);
+CREATE TABLE IF NOT EXISTS `echo`.`severity_view` (`recordId` INT, `patientId` INT, `severity` enum('A','B','C','D'), `diagnoseDate` date, `comment` mediumtext, modified INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`accounts_view`
@@ -1669,7 +1669,7 @@ BEGIN
 			signal sqlstate '22403' set message_text = 'Access Forbidden, Please use your Account for the report.'; 
 		end if;
 	end if;
-		set @basic_stmt = CONCAT ('SELECT recordId, patientId, date, q1, q2, q3, q4, q5, q1a, q1b, q1c, q3a, q3b, q3c, satO2, walkingDist, temperature, pefr, heartRate, X(loc) as X, Y(loc) as Y, modified FROM dailyReports_view WHERE patientId = ?');
+		set @basic_stmt = CONCAT ('SELECT recordId, patientId, date, q1, q2, q3, q4, q5, q1a, q1b, q1c, q3a, q3b, q3c, satO2, walkingDist, temperature, pefr, heartRate, X(loc) as X, Y(loc) as Y, modified FROM dailyReports_view WHERE patientId = ? ORDER BY date,modified DESC ');
 		set @page_stmt = ' ';
 		set @pid = patId;
 
@@ -2044,7 +2044,7 @@ BEGIN
 	end case;
 	if @table != ' ' then
 		SET @doc = substring_index(user(), '@', 1);
-		set @basic_stmt = CONCAT ('SELECT * FROM ', @table,' WHERE patientId = ?');
+		set @basic_stmt = CONCAT ('SELECT * FROM ', @table,' WHERE patientId = ? ORDER BY diagnoseDate,modified DESC ');
 		set @page_stmt = ' ';
 		set @pid = patId;
 
@@ -2336,13 +2336,13 @@ IF @tmp IS NULL then
 end if;
 
 
-set @validFrom = date;
+set @diagnoseDate = date;
 set @comment = comment ;
 set @severity = severity ;
-set @stmt = "Insert into severity(patientId,severity,validFrom,comment) VALUES (?,?,?,?)";
+set @stmt = "Insert into severity(patientId,severity,diagnoseDate,comment) VALUES (?,?,?,?)";
 
 PREPARE s FROM @stmt;
-EXECUTE s using @pid, @severity, @validFrom ,@comment;
+EXECUTE s using @pid, @severity, @diagnoseDate ,@comment;
 SELECt last_insert_id() as insertId;
 DEALLOCATE PREPARE s;
 END$$
@@ -2619,7 +2619,7 @@ select `echo`.`patients`.`patientId` AS `patientId`,`echo`.`patients`.`doctorId`
 `echo`.`patients`.`sex` AS `sex`,`echo`.`patients`.`dateOfBirth` AS `dateOfBirth`,`echo`.`patients`.`firstDiagnoseDate` AS `firstDiagnoseDate`,
 `echo`.`patients`.`fileId` AS `fileId`,`echo`.`patients`.`fullAddress` AS `fullAddress`,`echo`.`patients`.`landline` AS `landline`, `echo`.`accounts`.`enabled` AS `enabled`,
 `echo`.`accounts`.`email` AS `email`,`echo`.`accounts`.`mobile` AS `mobile`, `echo`.`patients`.`modified` AS `modified`,
-(SELECT `echo`.`severity`.`severity` as `severity` from `severity` where ((`severity`.`patientId` = `accounts`.`accountId`)) ORDER BY validFrom desc LIMIT 1) AS currentSeverity
+(SELECT `echo`.`severity`.`severity` as `severity` from `severity` where ((`severity`.`patientId` = `accounts`.`accountId`)) ORDER BY diagnoseDate desc LIMIT 1) AS currentSeverity
 from
         (`patients`
         join `accounts` ON ((`patients`.`patientId` = `accounts`.`accountId`)))
@@ -2656,7 +2656,7 @@ CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SEC
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`severity_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`severity_view` AS select `echo`.`severity`.`recordId` AS `recordId`, `echo`.`severity`.`patientId` AS `patientId`, `echo`.`severity`.`severity` AS `severity`, `echo`.`severity`.`validFrom` AS `validFrom`, `echo`.`severity`.`comment` AS `comment`, `echo`.`severity`.`modified` AS `modified`  from `echo`.`severity` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`severity`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`severity_view` AS select `echo`.`severity`.`recordId` AS `recordId`, `echo`.`severity`.`patientId` AS `patientId`, `echo`.`severity`.`severity` AS `severity`, `echo`.`severity`.`diagnoseDate` AS `diagnoseDate`, `echo`.`severity`.`comment` AS `comment`, `echo`.`severity`.`modified` AS `modified`  from `echo`.`severity` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`severity`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`treatments_view`

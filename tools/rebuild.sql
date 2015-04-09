@@ -34,7 +34,7 @@ values
 (1, 3, CURDATE(), 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 40, 2500, 36, 40, 95, GeomFromText("POINT(9 49)")),
 (2, 4, CURDATE(), 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 54, 8435, 38, 42, 78, GeomFromText("POINT(9 49)"));
 
-INSERT INTO echo.severity (recordId, patientId, severity, validFrom, comment)
+INSERT INTO echo.severity (recordId, patientId, severity, diagnoseDate, comment)
 values
 (1, 3, "A", now(), "this is a test"),
 (2, 4, "C", now() - interval 1 day, "another test");
@@ -45,6 +45,11 @@ INSERT INTO echo.treatments (recordId, patientId, diagnoseDate, status, shortAct
 values
 (1, 3, CURDATE() - interval 2 day, "baseline", 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, CURDATE(), "Liquid", 1, CURDATE(), "CPAP"),
 (2, 4, CURDATE() - interval 1 day, "baseline", 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, CURDATE(), "Liquid", 1, CURDATE(), "CPAP");
+
+INSERT INTO echo.notifications (notificationId, accountId, date, type, subjectsAccount)
+VALUES
+(1, 3, CURDATE(), 1, null),
+(2, 2, CURDATE(), 3, 3);
 
 CALL dropAllDbUsers();
 
