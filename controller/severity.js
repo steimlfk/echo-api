@@ -42,7 +42,7 @@ exports.add = function(req,res,next){
 var commons = require('./controller_commons');
 var respMessages = commons.respMsg("Severity");
 exports.listSpec = {
-    summary : "Get All Severities By this Patient (Roles: doctor)",
+    summary : "Get the Severity-History this Patient (Roles: doctor)",
     notes: "This Function lists all Severities for the given patient. <br>This function passes the parameters to the SP severityList. <br><br> <b>Parameters:</b> <br><br>  " +
     "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " ,
     path : "/patients/{id}/severity",

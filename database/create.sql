@@ -1494,6 +1494,8 @@ begin
 			set @table = 'readings_view';
 		when 'treatments' then
 			set @table = 'treatments_view';
+     	when 'severity' then
+			set @table = 'severity_view';
 		else
 			set @table = ' ';
 	end case;
@@ -2334,7 +2336,7 @@ IF @tmp IS NULL then
 end if;
 
 
-set @date = date ;
+set @validFrom = date;
 set @comment = comment ;
 set @severity = severity ;
 set @stmt = "Insert into severity(patientId,severity,validFrom,comment) VALUES (?,?,?,?)";
@@ -3196,6 +3198,7 @@ INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doc
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','reportList');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','reportListOne');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','reportUpdate');
+INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','severityCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','treatmentCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','treatmentUpdate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','accountsUpdate');
