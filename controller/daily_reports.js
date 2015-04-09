@@ -7,7 +7,8 @@
  * Contains swagger specs and models
  */
 var swagger = require('swagger-node-express');
-
+var analyzer = require('./notify.js');
+var dailyAnalyzer = new analyzer();
 
 /**
  *  GET /patients/id/daily_reports
@@ -187,8 +188,6 @@ exports.add = function(req,res,next){
             if (err) next(err);
             else {
                 // trigger analysis
-                var analyzer = require('./notify.js');
-                var dailyAnalyzer = new analyzer();
                 // this postpones the analysis of the data until the POST is completely processed
                 process.nextTick (function (){
                     dailyAnalyzer.emit('newDailyReport', result[0][0].insertId);

@@ -8,6 +8,8 @@
  */
 var swagger = require('swagger-node-express');
 var commons = require('./controller_commons.js');
+var analyzer = require('./notify.js');
+var dailyAnalyzer = new analyzer();
 
 /**
  *  GET /patients/id/readings
@@ -70,8 +72,6 @@ exports.add = function(req,res,next){
             connection.release();
             if (err) next(err);
             else {
-                var analyzer = require('./notify.js');
-                var dailyAnalyzer = new analyzer();
                 // this postpones the analysis of the data until the POST is completely processed
                 process.nextTick (function (){
                     dailyAnalyzer.emit('goldAnalyzes', id);
