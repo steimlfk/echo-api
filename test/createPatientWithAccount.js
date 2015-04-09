@@ -27,6 +27,7 @@ describe('CreatePatientWithAccount Tests:', function() {
     // Internal vars for testing
     var access_token_global = null;
     var doc_url = null;
+    var doc_id = 0;
     var pat_url = null;
     // within before() you can run all the operations that are needed to setup your tests.
     // We need to login with an admin Account to run these Tests. When I'm done, I call done().
@@ -51,11 +52,7 @@ describe('CreatePatientWithAccount Tests:', function() {
                         }
 
                         res.body.should.have.property('access_token');
-                        res.body.should.have.property('expires_in');
                         res.body.should.have.property('role');
-                        res.body.should.have.property('accountId');
-                        res.body.should.have.property('refreshToken');
-                        res.body.should.have.property('token_type');
                         res.body.role.should.equal('admin');
                         access_token_global = res.body.access_token;
                         cb (null, res);
@@ -72,6 +69,7 @@ describe('CreatePatientWithAccount Tests:', function() {
                             cb (err);
                         }
                         doc_url = res.headers.location;
+                        doc_id = parseInt(doc_url.split("/").pop());
                         cb (null, res);
                     });
             }
@@ -84,22 +82,57 @@ describe('CreatePatientWithAccount Tests:', function() {
     });
 
 
-    describe('Testing Functions as Admin:', function() {
-        it('Creating Patient with Account fails', function(done) {
+    describe('Testing Functions as Admin (doctorId set to created doctor):', function() {
+        var pat_url = null;
+        it('Creating Patient with Account', function(done) {
+            var tmp = data.admin.newData;
+            tmp.patient.doctorId = doc_id;
             request(url)
                 .post('/createPatientAndAccount')
                 .set('Authorization', 'Bearer ' + access_token_global)
-                .send(data.admin.newData)
-                .expect(403)
+                .send(tmp)
+                .expect(201)
                 .end(function(err, res) {
                     if (err) {
                         throw err;
                     }
+                    pat_url = res.headers.location;
                     done();
                 });
         });
 
-
+        after('Admin Cleaning Up...', function(done){
+            var patAccURL = '/accounts/'+pat_url.split("/").pop();
+            async.series([
+                function (cb) {
+                    request(url)
+                        .del(pat_url)
+                        .set('Authorization', 'Bearer ' + access_token_global)
+                        .expect(204)
+                        .end(function(err, res) {
+                            if (err) {
+                                cb(err);
+                            }
+                            cb(null, res);
+                        });
+                },
+                function (cb) {
+                    request(url)
+                        .del(patAccURL)
+                        .set('Authorization', 'Bearer ' + access_token_global)
+                        .expect(204)
+                        .end(function(err, res) {
+                            if (err) {
+                                cb(err);
+                            }
+                            cb(null, res);
+                        });
+                }
+            ], function(err, res){
+                if (err) throw err;
+                done();
+            });
+        });
     });
 
     describe('Testing Functions as Doctor:', function() {
@@ -119,13 +152,9 @@ describe('CreatePatientWithAccount Tests:', function() {
                     if (err) {
                         throw err;
                     }
-
                     res.body.should.have.property('access_token');
-                    res.body.should.have.property('expires_in');
                     res.body.should.have.property('role');
                     res.body.should.have.property('accountId');
-                    res.body.should.have.property('refreshToken');
-                    res.body.should.have.property('token_type');
                     res.body.role.should.equal('doctor');
                     access_token = res.body.access_token;
                     done();
@@ -134,11 +163,13 @@ describe('CreatePatientWithAccount Tests:', function() {
         });
 
 
-        it('Creating Patient with Account', function(done) {
+        it('Creating Patient with Account (doctorId set to 0)', function(done) {
+            var tmp = data.admin.newData;
+            tmp.patient.doctorId = 0;
             request(url)
                 .post('/createPatientAndAccount')
                 .set('Authorization', 'Bearer ' + access_token)
-                .send(data.admin.newData)
+                .send(tmp)
                 .expect(201)
                 .end(function(err, res) {
                     if (err) {
@@ -149,7 +180,6 @@ describe('CreatePatientWithAccount Tests:', function() {
                     done();
                 });
         });
-
 
     });
 
@@ -172,11 +202,7 @@ describe('CreatePatientWithAccount Tests:', function() {
                     }
 
                     res.body.should.have.property('access_token');
-                    res.body.should.have.property('expires_in');
                     res.body.should.have.property('role');
-                    res.body.should.have.property('accountId');
-                    res.body.should.have.property('refreshToken');
-                    res.body.should.have.property('token_type');
                     res.body.role.should.equal('patient');
                     access_token = res.body.access_token;
                     done();

@@ -91,7 +91,7 @@ var permissions= {
     },
     createPatientAndAccount: {
         methods: {
-            post : ['doctor']
+            post : ['doctor','admin']
         }
     },
     changeDoctor: {

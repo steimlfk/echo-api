@@ -3,18 +3,33 @@
  */
 var swagger = require('swagger-node-express');
 var config = require('../config.js');
-var utils = require('../utils.js');
 var async = require('async');
 
 
 exports.createPatientAndAccount = function(req,res,next) {
-    // check if account and patient data was submitted
-    if (req.body.account && req.body.patient) {
-        req.data = req.body;
-        req.body = req.body.account;
-        req.body.role = 'patient';
-        next();
-    }
+    var acc = require('./accounts.js');
+    var pat = require('./patients.js');
+    var ctrl = require('../health-api-middlewares.js');
+
+    async.waterfall([
+            function (cb){
+                req.data = req.body;
+                req.body = req.body.account;
+                acc.add(req,res, cb);
+            },
+            function (cb){
+                ctrl.databaseHandler(req, res, cb);
+            },
+            function (cb){
+                req.data.patient.accountId = res.loc.split("/").pop();
+                req.body = req.data.patient;
+                pat.add(req,res, cb);
+            }
+        ],
+        function(err){
+            if (err) next(err)
+            else next();
+    });
 };
 
 
