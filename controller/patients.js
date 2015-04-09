@@ -427,7 +427,8 @@ var contents = {
     "socialId": {"type":"string","description": "Patients social ID"},
     "fileId": {"type":"string","description": "Patient File Id"},
     "fullAddress": {"type":"string","description": "Patients address"},
-    "landline": {"type":"string","description": "Patients phone number"}
+    "landline": {"type":"string","description": "Patients phone number"},
+    "currentSeverity":{"type":"string","description":"current severity level.", "enum":["A", "B", "C", "D"]}
 };
 
 exports.models = {

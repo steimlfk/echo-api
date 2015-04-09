@@ -2619,7 +2619,7 @@ select `echo`.`patients`.`patientId` AS `patientId`,`echo`.`patients`.`doctorId`
 `echo`.`patients`.`sex` AS `sex`,`echo`.`patients`.`dateOfBirth` AS `dateOfBirth`,`echo`.`patients`.`firstDiagnoseDate` AS `firstDiagnoseDate`,
 `echo`.`patients`.`fileId` AS `fileId`,`echo`.`patients`.`fullAddress` AS `fullAddress`,`echo`.`patients`.`landline` AS `landline`, `echo`.`accounts`.`enabled` AS `enabled`,
 `echo`.`accounts`.`email` AS `email`,`echo`.`accounts`.`mobile` AS `mobile`, `echo`.`patients`.`modified` AS `modified`,
-(SELECT `echo`.`severity`.`severity` as `severity` from `severity` where ((`severity`.`patientId` = `accounts`.`accountId`)) ORDER BY validFrom desc LIMIT 1) AS severity
+(SELECT `echo`.`severity`.`severity` as `severity` from `severity` where ((`severity`.`patientId` = `accounts`.`accountId`)) ORDER BY validFrom desc LIMIT 1) AS currentSeverity
 from
         (`patients`
         join `accounts` ON ((`patients`.`patientId` = `accounts`.`accountId`)))
