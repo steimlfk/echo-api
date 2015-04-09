@@ -4,12 +4,12 @@
 var swagger = require('swagger-node-express');
 var config = require('../config.js');
 var async = require('async');
+var ctrl = require('../health-api-middlewares.js');
 
 
 exports.createPatientAndAccount = function(req,res,next) {
     var acc = require('./accounts.js');
     var pat = require('./patients.js');
-    var ctrl = require('../health-api-middlewares.js');
 
     async.waterfall([
             function (cb){
@@ -48,17 +48,29 @@ exports.createPatientAndAccount = function(req,res,next) {
 
 
 exports.changeDoctor = function(req,res,next){
-    var connection = req.con;
-    var pid = req.body.patientId;
-    var did = req.body.newDoctorId;
-    connection.query('call patientsChangeDoctor(?,?)',	[pid, did], function(err, result) {
-        connection.release();
-        if (err) next(err);
-        else {
-            res.affectedRows = result[0][0].affected_rows > 0;
-            next();
-        }
-    });
+    var pat = require('./patients.js');
+    var doc_id = req.body.newDoctorId;
+    async.waterfall([
+            function (cb){
+                req.params = {};
+                req.params.id = req.body.patientId;
+                pat.listOne(req,res, cb);
+            },
+            function (cb){
+                ctrl.databaseHandler(req, res, cb);
+            },
+            function (cb){
+                req.body = res.result;
+                req.body.doctorId = doc_id;
+                pat.add(req,res, cb);
+            }
+        ],
+        function(err){
+            if (err) {
+                next(err);
+            }
+            else next();
+        });
 };
 
 

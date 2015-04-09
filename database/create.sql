@@ -2162,33 +2162,6 @@ END$$
 
 DELIMITER ;
 
-
--- -----------------------------------------------------
--- procedure patientsChangeDoctor
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `patientsChangeDoctor`(
-	IN patientId INT, 
-	in doctorId int
-)
-begin
-
-	set @pid = patientId;
-	set @did = doctorId;
-	SET @stmt = "UPDATE patients SET doctorId=? where patientId = ?";	
-	PREPARE s FROM @stmt;
-	EXECUTE s using @did, @pid;
-	select row_count() into @pat_affected;
-	DEALLOCATE PREPARE s;
-
-	SELECT @pat_affected as affected_rows;
-
-END$$
-
-DELIMITER ;
-
 -- -----------------------------------------------------
 -- procedure patientsCreate
 -- -----------------------------------------------------
@@ -2302,8 +2275,9 @@ begin
 	SET @email = email;
 	SET @mobile = mobile;
 	set @id = patientId;
+	SELECT doctorId into @docId FROM patients WHERE patiendId = @id;
 
-	SET @stmt = "UPDATE patients SET firstName=?, lastName=?, secondName=?, socialId=?, sex=?, dateOfBirth=?, firstDiagnoseDate=?, fullAddress=?, landline=?, fileId=? where patientId = ?";
+	SET @stmt = "UPDATE patients SET firstName=?, lastName=?, secondName=?, socialId=?, sex=?, dateOfBirth=?, firstDiagnoseDate=?, fullAddress=?, landline=?, fileId=?, doctorId =? where patientId = ?";
 	SET @firstName = firstName;
 	SET @lastName = lastName;
 	SET @secondName = secondName;
@@ -2314,9 +2288,10 @@ begin
 	SET @fileId = fileId;
 	SET @fullAddress = fullAddress;
 	SET @landline = landline;
+	if getRole() = 'admin' then SET @docId = doctorId; end if;
 	
 	PREPARE s FROM @stmt;
-	EXECUTE s using @firstName, @lastName, @secondName, @socialId, @sex, @dateOfBirth, @firstDiagnoseDate, @fullAddress, @landline, @fileId, @id;
+	EXECUTE s using @firstName, @lastName, @secondName, @socialId, @sex, @dateOfBirth, @firstDiagnoseDate, @fullAddress, @landline, @fileId, @docId, @id;
 	select row_count() into @pat_affected;
 	DEALLOCATE PREPARE s;
 
@@ -3170,7 +3145,6 @@ GRANT EXECUTE ON procedure `echo`.`deathGet` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`deathCreate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`deathUpdate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`deathDelete` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`patientsChangeDoctor` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`login` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`loginRefresh` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`deviceAdd` TO 'echo_db_usr'@'localhost';
@@ -3192,7 +3166,6 @@ INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('adm
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','accountsUpdate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','deviceAdd');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','deviceRemove');
-INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsChangeDoctor');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsDelete');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsRessourceUpdate');
