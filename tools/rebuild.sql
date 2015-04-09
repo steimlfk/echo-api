@@ -1,8 +1,8 @@
 INSERT INTO echo.accounts (accountId, username, password, role, email, enabled, reminderTime, notificationEnabled, mobile)
 values
-(2, "##%%user1%%##", "##%%pw1%%##", "doctor", "who@dr.who", 0, "18:00", 1, "0049123456789"),
-(3, "##%%user2%%##", "##%%pw2%%##", "patient", "av@e.rel", 0, "10:00", 1, "0049987654321"),
-(4, "##%%user3%%##", "##%%pw3%%##", "patient", "joe@dalt.on", 0, "8:45", 1, "00304525515825");
+(2, "##%%user1%%##", "##%%pw1%%##", "doctor", "who@dr.who", 1, "18:00", 0, "0049123456789"),
+(3, "##%%user2%%##", "##%%pw2%%##", "patient", "av@e.rel", 1, "10:00", 0, "0049987654321"),
+(4, "##%%user3%%##", "##%%pw3%%##", "patient", "joe@dalt.on", 1, "8:45", 0, "00304525515825");
 
 insert into echo.patients (patientId, doctorId, firstName, lastName, secondName, socialId, sex, dateOfBirth, firstDiagnoseDate, fullAddress,
     landline, fileId)
