@@ -24,29 +24,12 @@ exports.list = function(req, res, next1){
     var connection = req.con;
     // query
     var qry = 'call reportList(?, ?, ?)';
-    //extending statement if pagination is required (/accounts?page=<page>&pageSize=<pageSize>)
-    // default value for page parameter - zero means no pagination
-    var page = 0;
-    // if no pageSize is given, use default which is 20
-    var pageSize = 20;
-    // is page parameter present in url? if not ignore pageSize!
-    if (req.query.page){
-        // parsing given parameter to int to avoid sql injection
-        page = parseInt(req.query.page);
-        // if parsing failed assume pagination is wanted anyway - use 1
-        if (isNaN(page)) page = 1;
-        // pageSize given?
-        if (req.query.pageSize){
-            // parsing given parameter to int to avoid sql injection
-            pageSize = parseInt(req.query.pageSize);
-            // if parsing failed assume pagination is wanted anyway - use 20
-            if (isNaN(pageSize)) pageSize = 20;
-        }
 
-    }
+    var pagination = commons.getPaginationInfos(req.query.page, req.query.pageSize);
+
     // query db
     // ? from query will be replaced by values in [] - including escaping!
-    connection.query(qry, [req.params.id, page, pageSize], function(err, rows) {
+    connection.query(qry, [req.params.id, pagination.page, pagination.pageSize], function(err, rows) {
         connection.release();
         if (err) next1(err);
         else {
@@ -55,39 +38,23 @@ exports.list = function(req, res, next1){
             };
             // is there any result?
             if (rows[0].length > 0){
-                var host = 'https://'+req.headers.host;
                 var result = [];
                 for (var i = 0; i < rows[0].length; i++){
                     var o  = rows[0][i];
                     // add "self" to all resources
                     o._links = {};
                     o._links.self = {};
-                    o._links.self.href = host+'/patients/'+req.params.id+'/'+exam+'/'+rows[0][i].recordId;
+                    o._links.self.href = '/patients/'+req.params.id+'/'+exam+'/'+rows[0][i].recordId;
                     // create corresponding patients link
                     o._links.patient = {};
-                    o._links.patient.href = host+'/patients/'+req.params.id;
+                    o._links.patient.href = '/patients/'+req.params.id;
                     result.push(o);
                 }
                 fullResult.daily_reports = result;
 
-                // add pagination links to result set if pagination was used
-                if(page != 0){
-                    var links = {};
-                    // create "first" link
-                    var first = host+'/patients/'+req.params.id+'/'+exam+'?page=1&pageSize='+pageSize;
-                    links.first = first;
-                    // create "next" link if pageSize equals result size
-                    if (rows[0].length == pageSize) {
-                        var next = host+'/patients/'+req.params.id+'/'+exam+'?page='+(page+1)+'&pageSize='+pageSize;
-                        links.next = next
-                    }
-                    // create back link if page was not the first
-                    if (page != 1){
-                        var back = host+'/patients/'+req.params.id+'/'+exam+'?page='+(page-1)+'&pageSize='+pageSize;
-                        links.back = back
-                    }
-                    fullResult._links = links;
-                }
+                var links = commons.generateCollectionLinks(req.originalUrl.split('?')[0], pagination.page, pagination.pageSize, rows.length);
+
+                fullResult._links = links;
             }
             res.result = fullResult;
             next1();
@@ -120,15 +87,14 @@ exports.listOne = function(req,res,next){
             var fullResult = {};
             // is there any result?
             if (rows[0].length > 0){
-                var host = 'https://'+req.headers.host;
                 var o  = rows[0][0];
                 o._links = {};
                 // create self link
                 o._links.self = {};
-                o._links.self.href = host+'/patients/'+req.params.id+'/'+exam+'/'+rows[0][0].recordId;
+                o._links.self.href = '/patients/'+req.params.id+'/'+exam+'/'+rows[0][0].recordId;
                 // create corresponding patients link
                 o._links.patient = {};
-                o._links.patient.href = host+'/patients/'+req.params.id;
+                o._links.patient.href = '/patients/'+req.params.id;
                 fullResult = o;
             }
             res.result = fullResult;

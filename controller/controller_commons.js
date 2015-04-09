@@ -8,7 +8,6 @@
  */
 
 var swagger = require('swagger-node-express');
-var ssl = require('../config.js').ssl.useSsl;
 
 /**
  * GET lists from CATs, CCQs, Charlsons, Treatments, Readings
@@ -28,26 +27,10 @@ exports.list = function(req, res, nextOp, exam){
     var connection = req.con;
     // 3) create SQL Query from parameters
     var qry = "call listExams(?,?,?,?)";
-    //extending statement if pagination is required (/accounts?page=<page>&pageSize=<pageSize>)
-    // default value for page parameter - zero means no pagination
-    var page = 0;
-    // if no pageSize is given, use default which is 20
-    var pageSize = 20;
-    // is page parameter present in url? if not ignore pageSize!
-    if (req.query.page){
-        // parsing given parameter to int to avoid sql injection
-        page = parseInt(req.query.page);
-        // if parsing failed assume pagination is wanted anyway - use 1
-        if (isNaN(page)) page = 1;
-        // pageSize given?
-        if (req.query.pageSize){
-            // parsing given parameter to int to avoid sql injection
-            pageSize = parseInt(req.query.pageSize);
-            // if parsing failed assume pagination is wanted anyway - use 20
-            if (isNaN(pageSize)) pageSize = 20;
-        }
-    }
-    connection.query(qry, [exam, req.params.id, page, pageSize], function(err, rows) {
+
+    var pagination = getPaginationInfos(req.query.page, req.query.pageSize);
+
+    connection.query(qry, [exam, req.params.id, pagination.page, pagination.pageSize], function(err, rows) {
         connection.release();
         if (err) nextOp(err);
         else {
@@ -55,39 +38,23 @@ exports.list = function(req, res, nextOp, exam){
             fullResult[exam] = []
             // is there any result?
             if (rows[0].length > 0){
-                var host = ((ssl)?'https://':'http://')+req.headers.host;
                 var result = [];
                 for (var i = 0; i < rows[0].length; i++){
                     var o  = rows[0][i];
                     o._links = {};
                     // create self link
                     o._links.self = {};
-                    o._links.self.href = host+'/patients/'+req.params.id+'/'+exam+'/'+rows[0][i].recordId;
+                    o._links.self.href = '/patients/'+req.params.id+'/'+exam+'/'+rows[0][i].recordId;
                     o._links.patient = {};
                     // create link to patient
-                    o._links.patient.href = host+'/patients/'+req.params.id;
+                    o._links.patient.href = '/patients/'+req.params.id;
                     result.push(o);
                 }
                 fullResult[exam] = result;
 
-                // add pagination links to result set if pagination was used
-                if(page != 0){
-                    var links = {};
-                    // create first link
-                    var first = host+'/patients/'+req.params.id+'/'+exam+'?page=1&pageSize='+pageSize;
-                    links.first = first;
-                    if (rows[0].length == pageSize) {
-                        // create "next" link
-                        var next = host+'/patients/'+req.params.id+'/'+exam+'?page='+(page+1)+'&pageSize='+pageSize;
-                        links.next = next
-                    }
-                    if (page != 1){
-                        // create back link
-                        var back = host+'/patients/'+req.params.id+'/'+exam+'?page='+(page-1)+'&pageSize='+pageSize;
-                        links.back = back
-                    }
-                    fullResult._links = links;
-                }
+                var links = generateCollectionLinks(req.originalUrl.split('?')[0], pagination.page, pagination.pageSize, rows.length);
+
+                fullResult._links = links;
             }
             res.result = fullResult;
             nextOp();
@@ -122,15 +89,14 @@ exports.listOne = function(req,res,next, exam) {
             var fullResult = {};
             // was there any result?
             if (rows[0].length > 0) {
-                var host = ((ssl)?'https://':'http://')+req.headers.host;
                 var o = rows[0][0];
                 o._links = {};
                 o._links.self = {};
                 // create self link
-                o._links.self.href = host + '/patients/' + req.params.id + '/' + exam + '/' + rows[0][0].recordId;
+                o._links.self.href = '/patients/' + req.params.id + '/' + exam + '/' + rows[0][0].recordId;
                 o._links.patient = {};
                 // create link to corresponding patient
-                o._links.patient.href = host + '/patients/' + req.params.id;
+                o._links.patient.href = '/patients/' + req.params.id;
                 fullResult = o;
             }
             res.result = fullResult;
@@ -269,3 +235,54 @@ exports.respMsg = function(MedicalModel) {
     }
     return result;
 };
+
+
+ var generateCollectionLinks = function(url, page, pageSize, resultSize){
+    var links = {
+        self : url
+    };
+    // add pagination links to result set if pagination was used
+    if(page != 0){
+        //create first link
+        links.first = url+'?page=1&pageSize='+pageSize;
+        links.self = url+'?page='+(page)+'&pageSize='+pageSize;
+        if (resultSize == pageSize) {
+            // create next link if result set size equals pagesize
+            links.next = url+'?page='+(page+1)+'&pageSize='+pageSize;
+        }
+        if (page != 1){
+            // create back link if page number doenst equal 1
+            links.back = url+'?page='+(page-1)+'&pageSize='+pageSize;
+        }
+    }
+    return links;
+};
+exports.generateCollectionLinks = generateCollectionLinks;
+
+var getPaginationInfos = function (pg, pgS){
+    var result = {
+        page : 0,
+        pageSize : 20,
+        qry : ''
+    };
+    if (pg){
+        // parsing given parameter to int to avoid sql injection
+        result.page = parseInt(pg);
+        // if parsing failed assume pagination is wanted anyway - use 1
+        if (isNaN(result.page)) page = 1;
+        // pageSize given?
+        if (pgS){
+            // parsing given parameter to int to avoid sql injection
+            result.pageSize = parseInt(pgS);
+            // if parsing failed assume pagination is wanted anyway - use 20
+            if (isNaN(result.pageSize)) result.pageSize = 20;
+        }
+        // calculate offset parameter for sql stmt
+        var offset = (result.page*result.pageSize)-result.pageSize;
+        // extend statement
+        result.qry += ' LIMIT ' + result.pageSize + ' OFFSET ' + offset;
+
+    }
+    return result;
+};
+exports.getPaginationInfos = getPaginationInfos;

@@ -7,6 +7,8 @@
  */
 var swagger = require('swagger-node-express');
 var ssl = require('../config.js').ssl.useSsl;
+var commons = require('./controller_commons.js');
+
 
 /**
  *  GET /notifications
@@ -22,32 +24,11 @@ exports.list = function(req, res, nextOp){
     var connection = req.con;
     // 3) create SQL Query from parameters
     // set base statement
-    var qry = 'SELECT * FROM notifications_view ORDER BY date desc';
+    var qry = 'SELECT * FROM notifications_view ORDER BY date desc ';
 
-    //extending statement if pagination is required (/accounts?page=<page>&pageSize=<pageSize>)
-    // default value for page parameter - zero means no pagination
-    var page = 0;
-    // if no pageSize is given, use default which is 20
-    var pageSize = 20;
-    // is page parameter present in url? if not ignore pageSize!
-    if (req.query.page){
-        // parsing given parameter to int to avoid sql injection
-        page = parseInt(req.query.page);
-        // if parsing failed assume pagination is wanted anyway - use 1
-        if (isNaN(page)) page = 1;
-        // pageSize given?
-        if (req.query.pageSize){
-            // parsing given parameter to int to avoid sql injection
-            pageSize = parseInt(req.query.pageSize);
-            // if parsing failed assume pagination is wanted anyway - use 20
-            if (isNaN(pageSize)) pageSize = 20;
-        }
-        // calculate offset parameter for sql stmt
-        var offset = (page*pageSize)-pageSize;
-        // extend statement
-        qry += ' LIMIT ' + pageSize + ' OFFSET ' + offset;
+    var pagination = commons.getPaginationInfos(req.query.page, req.query.pageSize);
+    qry += pagination.qry;
 
-    }
     //query db
     connection.query(qry, function(err, rows) {
         connection.release();
@@ -57,37 +38,21 @@ exports.list = function(req, res, nextOp){
                 notifications : []
             };
             if (rows.length > 0){
-                var host = ((ssl)?'https://':'http://')+req.headers.host;
                 var result = [];
                 for (var i = 0; i < rows.length; i++){
                     var o  = rows[i];
                     o._links = {};
                     // create link to patients account
                     o._links.patient = {};
-                    o._links.patient.href = host+'/patients/'+rows[i].subjectsAccount;
+                    o._links.patient.href = '/patients/'+rows[i].subjectsAccount;
                     delete o.subjectsAccount;
                     result.push(o);
                 }
                 fullResult.notifications = result;
 
-                // add pagination links to result set if pagination was used
-                if(page != 0){
-                    var links = {};
-                    //create first link
-                    var first = host+'/notifications?page=1&pageSize='+pageSize;
-                    links.first = first;
-                    if (rows[0].length == pageSize) {
-                        // create next link if result set size equals pagesize
-                        var next = host+'/notifications?page='+(page+1)+'&pageSize='+pageSize;
-                        links.next = next
-                    }
-                    if (page != 1){
-                        // create back link if page number doenst equal 1
-                        var back = host+'/notifications?page='+(page-1)+'&pageSize='+pageSize;
-                        links.back = back
-                    }
-                    fullResult._links = links;
-                }
+                var links = commons.generateCollectionLinks(req.originalUrl.split('?')[0], pagination.page, pagination.pageSize, rows.length);
+
+                fullResult._links = links;
             }
             res.result = fullResult;
             nextOp();

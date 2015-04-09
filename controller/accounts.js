@@ -12,8 +12,7 @@ var swagger = require('swagger-node-express');
 var config = require('../config.js');
 var utils = require('../utils.js');
 var async = require('async');
-
-var ssl = config.ssl.useSsl;
+var commons = require('./controller_commons.js');
 
 /**
  *  GET /accounts
@@ -41,30 +40,9 @@ exports.list = function(req,res,nextOp){
         }
     }
 
-    //extending statement if pagination is required (/accounts?page=<page>&pageSize=<pageSize>)
-    // default value for page parameter - zero means no pagination
-    var page = 0;
-    // if no pageSize is given, use default which is 20
-    var pageSize = 20;
-    // is page parameter present in url? if not ignore pageSize!
-    if (req.query.page){
-        // parsing given parameter to int to avoid sql injection
-        page = parseInt(req.query.page);
-        // if parsing failed assume pagination is wanted anyway - use 1
-        if (isNaN(page)) page = 1;
-        // pageSize given?
-        if (req.query.pageSize){
-            // parsing given parameter to int to avoid sql injection
-            pageSize = parseInt(req.query.pageSize);
-            // if parsing failed assume pagination is wanted anyway - use 20
-            if (isNaN(pageSize)) pageSize = 20;
-        }
-        // calculate offset parameter for sql stmt
-        var offset = (page*pageSize)-pageSize;
-        // extend statement
-        qry += ' LIMIT ' + pageSize + ' OFFSET ' + offset;
+    var pagination = commons.getPaginationInfos(req.query.page, req.query.pageSize);
+    qry += pagination.qry;
 
-    }
     // execute query
     connection.query(qry, function(err, rows) {
         connection.release();
@@ -80,43 +58,27 @@ exports.list = function(req,res,nextOp){
             // careful: rows.length > 0 if you execute a "normal" sql statement
             //			 rows[0][0].length > 0 if you execute a SP
             if (rows.length > 0){
-                var host = ((ssl)?'https://':'http://')+req.headers.host;
                 var result = [];
                 // add "self" to all resources
                 for (var i = 0; i < rows.length; i++){
                     var o  = rows[i];
                     o._links = {};
                     o._links.self = {};
-                    o._links.self.href = host+'/accounts/'+rows[i].accountId;
+                    o._links.self.href = '/accounts/'+rows[i].accountId;
                     result.push(o);
                 }
                 fullResult.accounts = result;
 
-                // add pagination links to result set if pagination was used
-                if(req.query.page){
-                    var links = {};
-                    // create "first" link
-                    var first = host+'/accounts?page=1&pageSize='+pageSize;
-                    // if role-filtering was used, add it to the link
-                    if  (role != 'none') first += '&role='+role;
-                    links.first = first;
-                    // create "nextOp" link
-                    if (rows.length == pageSize) {
-                        var next = host+'/accounts?page='+(page+1)+'&pageSize='+pageSize;
-                        // if role-filtering was used, add it to the link
-                        if  (role != 'none') next += '&role='+role;
-                        links.next = next
-                    }
-                    // create back link
-                    if (page != 1){
-                        var back = host+'/accounts?page='+(page-1)+'&pageSize='+pageSize;
-                        // if role-filtering was used, add it to the link
-                        if  (role != 'none') back += '&role='+role;
-                        links.back = back
-                    }
-                    // add pagination links to result
-                    fullResult._links = links;
+                var links = commons.generateCollectionLinks(req.originalUrl.split('?')[0],pagination.page, pagination.pageSize, rows.length);
+                if  (role != 'none') {
+                    if (links.self) links.self += '&role='+role;
+                    if (links.first) links.first += '&role='+role;
+                    if (links.next) links.next += '&role='+role;
+                    if (links.back) links.back += '&role='+role;
                 }
+
+                fullResult._links = links;
+
             }
             res.result = fullResult;
             nextOp();
@@ -141,7 +103,6 @@ exports.listOne = function(req,res,next){
         if (err) next(err);
         else {
             var fullResult = {};
-            var host = ((ssl) ? 'https://' : 'http://') + req.headers.host;
             // is there any result?
             // careful: rows.length > 0 if you execute a "normal" sql statement
             //			 rows[0][0].length > 0 if you execute a SP
@@ -150,7 +111,7 @@ exports.listOne = function(req,res,next){
                 var o = rows[0];
                 o._links = {};
                 o._links.self = {};
-                o._links.self.href = host + '/accounts/' + rows[0].accountId;
+                o._links.self.href = '/accounts/' + rows[0].accountId;
 
                 fullResult = o;
             }

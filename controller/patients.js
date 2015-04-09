@@ -7,7 +7,7 @@
  * Contains swagger specs and models
  */
 var swagger = require('swagger-node-express');
-var ssl = require('../config.js').ssl.useSsl;
+var commons = require('./controller_commons.js');
 
 /**
  *  GET /patients
@@ -40,30 +40,9 @@ exports.list = function(req,res,next1){
         qry += order;
     }
 
-    //extending statement if pagination is required (/accounts?page=<page>&pageSize=<pageSize>)
-    // default value for page parameter - zero means no pagination
-    var page = 0;
-    // if no pageSize is given, use default which is 20
-    var pageSize = 20;
-    // is page parameter present in url? if not ignore pageSize!
-    if (req.query.page){
-        // parsing given parameter to int to avoid sql injection
-        page = parseInt(req.query.page);
-        // if parsing failed assume pagination is wanted anyway - use 1
-        if (isNaN(page)) page = 1;
-        // pageSize given?
-        if (req.query.pageSize){
-            // parsing given parameter to int to avoid sql injection
-            pageSize = parseInt(req.query.pageSize);
-            // if parsing failed assume pagination is wanted anyway - use 20
-            if (isNaN(pageSize)) pageSize = 20;
-        }
-        // calculate offset parameter for sql stmt
-        var offset = (page*pageSize)-pageSize;
-        // extend statement
-        qry += ' LIMIT ' + pageSize + ' OFFSET ' + offset;
+    var pagination = commons.getPaginationInfos(req.query.page, req.query.pageSize);
+    qry += pagination.qry;
 
-    }
     // execute query
     connection.query(qry, function(err, rows) {
         connection.release();
@@ -74,52 +53,31 @@ exports.list = function(req,res,next1){
             };
             // is there any result?
             if (rows.length > 0) {
-                var host = ((ssl) ? 'https://' : 'http://') + req.headers.host;
                 var result = [];
                 for (var i = 0; i < rows.length; i++) {
                     var o = rows[i];
                     o._links = {};
                     // create self link
                     o._links.self = {};
-                    o._links.self.href = host + '/patients/' + rows[i].patientId;
+                    o._links.self.href = '/patients/' + rows[i].patientId;
                     result.push(o);
                 }
                 fullResult.patients = result;
 
-                // add pagination links to result set if pagination was used
-                if (req.query.page) {
-                    var links = {};
-                    // create "first" link
-                    var first = host + '/patients?page=1&pageSize=' + pageSize;
-                    // if sorting was used, add it to the link
-                    if (req.query.sortBy) {
-                        first += '&sortBy=' + sort;
-                        if (req.query.order) first += '&order=' + order;
+                var links = commons.generateCollectionLinks(req.originalUrl.split('?')[0], pagination.page, pagination.pageSize, rows.length);
+                if  (req.query.sortBy) {
+                    if (links.self) links.self += '&sortBy=' + sort;
+                    if (links.first) links.first += '&sortBy=' + sort;
+                    if (links.next) links.next += '&sortBy=' + sort;
+                    if (links.back) links.back += '&sortBy=' + sort;
+                    if (req.query.order) {
+                        if (links.self) links.self += '&order=' + order;
+                        if (links.first) links.first += '&order=' + order;
+                        if (links.next) links.next += '&order=' + order;
+                        if (links.back) links.back += '&order=' + order;
                     }
-                    links.first = first;
-                    // create "next" link if length of result set was pagesize
-                    if (rows.length == pageSize) {
-                        var next = host + '/patients?page=' + (page + 1) + '&pageSize=' + pageSize;
-                        // if sorting was used, add it to the link
-                        if (req.query.sortBy) {
-                            next += '&sortBy=' + sort;
-                            if (req.query.order) next += '&order=' + order;
-                        }
-                        links.next = next
-                    }
-                    // create back link
-                    if (page != 1) {
-                        var back = host + '/patients?page=' + (page - 1) + '&pageSize=' + pageSize;
-                        // if sorting was used, add it to the link
-                        if (req.query.sortBy) {
-                            back += '&sortBy=' + sort;
-                            if (req.query.order) back += '&order=' + order;
-                        }
-                        links.back = back
-                    }
-                    // send result with pagination links
-                    fullResult._links = links;
                 }
+                fullResult._links = links;
             }
             res.result = fullResult;
             next1();
@@ -149,12 +107,11 @@ exports.listOne = function(req,res,next){
         else {// there was a matching patient
             var fullResult = {};
             if (rows.length > 0) {
-                var host = ((ssl) ? 'https://' : 'http://') + req.headers.host;
                 var o = rows[0];
                 o._links = {};
                 // add self link
                 o._links.self = {};
-                o._links.self.href = host + '/patients/' + rows[0].patientId;
+                o._links.self.href = '/patients/' + rows[0].patientId;
                 fullResult = o;
             }
             res.result = fullResult;
