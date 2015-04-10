@@ -21,7 +21,7 @@ exports.list = function(req,res,nextOp){
     var connection = req.con;
     // 3) create SQL Query from parameters
     // set base statement
-    var qry = 'SELECT accountId, username, role, email, enabled, reminderTime, notificationEnabled, notificationMode, mobile FROM accounts_view where enabled = true';
+    var qry = 'SELECT accountId, username, role, email, enabled, reminderTime, notificationEnabled, notificationMode, mobile, modified FROM accounts_view where enabled = true';
 
     // extending statement if req.query.role (/accounts?role=<role>) contains a vaild value
     // if its not valid: ignore
@@ -93,7 +93,7 @@ exports.list = function(req,res,nextOp){
 exports.listOne = function(req,res,next){
     var connection = req.con;
     // 3) create SQL Query from parameters
-    var qry = 'SELECT accountId, username, role, email, enabled, reminderTime, notificationEnabled, notificationMode, mobile FROM accounts_view where accountId = ?';
+    var qry = 'SELECT accountId, username, role, email, enabled, reminderTime, notificationEnabled, notificationMode, mobile, modified FROM accounts_view where accountId = ?';
     var id = req.params.id;
     // query db
     // ? from query will be replaced by values in [] - including escaping!
