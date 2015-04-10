@@ -1670,7 +1670,7 @@ BEGIN
 			signal sqlstate '22403' set message_text = 'Access Forbidden, Please use your Account for the report.'; 
 		end if;
 	end if;
-		set @basic_stmt = CONCAT ('SELECT recordId, patientId, date, q1, q2, q3, q4, q5, q1a, q1b, q1c, q3a, q3b, q3c, satO2, walkingDist, temperature, pefr, heartRate, X(loc) as X, Y(loc) as Y, modified FROM dailyReports_view WHERE patientId = ? ORDER BY date,modified DESC ');
+		set @basic_stmt = CONCAT ('SELECT recordId, patientId, date, q1, q2, q3, q4, q5, q1a, q1b, q1c, q3a, q3b, q3c, satO2, walkingDist, temperature, pefr, heartRate, X(loc) as X, Y(loc) as Y, modified FROM dailyReports_view d WHERE patientId = ? AND recordId IN (SELECT recordId FROM dailyReports d, (SELECT patientId, date, MAX(modified) as m FROM dailyReports GROUP BY patientId,date) as TMP WHERE d.patientId = TMP.patientId AND d.modified = TMP.m) ORDER BY date DESC ');
 		set @page_stmt = ' ';
 		set @pid = patId;
 
