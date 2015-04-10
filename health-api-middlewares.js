@@ -161,14 +161,33 @@ exports.resultProcessor = function (req, res, next){
             var arr = false;
             var empty = true;
             if (count <= 2) {
-                for (k in res.result)
+                for (var k in res.result)
                     if (Array.isArray(res.result[k]) && res.result.hasOwnProperty(k)) {
                         arr = true;
-                        if (res.result[k].length > 0) empty = false;
+                        if (res.result[k].length > 0) {
+                            empty = false;
+                            var curdate = "";
+                            for (var i in res.result[k]){
+                                var max_timestamp = 0;
+                                if (res.result[k][i].modified) {
+                                    var d = Date.parse(res.result[k][i].modified);
+                                    if (d>max_timestamp) {
+                                        max_timestamp = d;
+                                        curdate = res.result[k][i].modified;
+                                    }
+                                    delete res.result[k][i].modified;
+                                }
+                            }
+                            res.setHeader('Last-Modified' , curdate);
+                        }
                     }
             }
             if (arr && empty) res.sendStatus(204)
             else {
+                if (res.result.modified){
+                    res.setHeader('Last-Modified' , res.result.modified);
+                    delete res.result.modified;
+                }
                 res.statusCode = 200;
                 res.send(res.result);
             }
