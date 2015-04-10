@@ -292,6 +292,7 @@ describe('CAT Record Tests:', function() {
                             res.body.cats[i].should.have.property('totalCatscale');
                         }
                         list_length = res.body.cats.length;
+                        res.headers.should.have.property('last-modified');
                     }
                     else list_length = 0;
                     done();
@@ -355,6 +356,7 @@ describe('CAT Record Tests:', function() {
                     if (err) throw err;
                     res.body.should.have.property('cats');
                     res.body.cats.length.should.equal(list_length+2);
+                    res.headers.should.have.property('last-modified');
 
                     done();
                 });
@@ -371,6 +373,7 @@ describe('CAT Record Tests:', function() {
 
                     res.body.should.have.property('totalCatscale');
                     res.body.totalCatscale.should.equal(c.q1+ c.q2+ c.q3+c.q4+ c.q5+ c.q6+c.q7+ c.q8);
+                    res.headers.should.have.property('last-modified');
 
                     done();
                 });

@@ -295,6 +295,7 @@ describe('CCQ Record Tests:', function() {
                             res.body.ccqs[i].should.have.property('functionalStateScore');
                         }
                         list_length = res.body.ccqs.length;
+                        res.headers.should.have.property('last-modified');
                     }
                     else list_length = 0;
                     done();
@@ -358,7 +359,7 @@ describe('CCQ Record Tests:', function() {
                     if (err) throw err;
                     res.body.should.have.property('ccqs');
                     res.body.ccqs.length.should.equal(list_length+2);
-
+                    res.headers.should.have.property('last-modified');
                     done();
                 });
         });
@@ -380,7 +381,7 @@ describe('CCQ Record Tests:', function() {
                     res.body.symptomScore.should.equal((c.q1 + c.q2 + c.q5 + c.q6)/4);
                     res.body.mentalStateScore.should.equal((c.q3 + c.q4 )/2);
                     res.body.functionalStateScore.should.equal((c.q7 + c.q8 + c.q9 + c.q10)/4);
-
+                    res.headers.should.have.property('last-modified');
                     done();
                 });
         });

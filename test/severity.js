@@ -277,6 +277,7 @@ describe('Severity Record Tests:', function() {
                     if (res.statusCode == 200) {
                         res.body.should.have.property('severity');
                         list_length = res.body.severity.length;
+                        res.headers.should.have.property('last-modified');
                     }
                     else list_length = 0;
                     done();
@@ -308,6 +309,7 @@ describe('Severity Record Tests:', function() {
                     if (err) throw err;
                     res.body.should.have.property('severity');
                     res.body.severity.length.should.equal(list_length+1);
+                    res.headers.should.have.property('last-modified');
 
                     done();
                 });
@@ -320,6 +322,7 @@ describe('Severity Record Tests:', function() {
                 .expect(200)
                 .end(function (err, res){
                     if (err) throw err;
+                    res.headers.should.have.property('last-modified');
                     done();
                 });
         });

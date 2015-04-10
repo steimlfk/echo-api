@@ -288,7 +288,7 @@ describe('Treatments Record Tests:', function() {
                     if (err) throw err;
                     if (res.statusCode == 200) {
                         res.body.should.have.property('treatments');
-
+                        res.headers.should.have.property('Last-Modified');
                         list_length = res.body.treatments.length;
                     }
                     else list_length = 0;
@@ -353,6 +353,7 @@ describe('Treatments Record Tests:', function() {
                     if (err) throw err;
                     res.body.should.have.property('treatments');
                     res.body.treatments.length.should.equal(list_length+2);
+                    res.headers.should.have.property('last-modified');
 
                     done();
                 });
@@ -366,6 +367,7 @@ describe('Treatments Record Tests:', function() {
                 .expect(200)
                 .end(function (err, res){
                     if (err) throw err;
+                    res.headers.should.have.property('last-modified');
 
 
                     done();

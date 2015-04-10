@@ -292,6 +292,7 @@ describe('Charlson Record Tests:', function() {
                             res.body.charlsons[i].should.have.property('totalCharlsonScore');
                         }
                         list_length = res.body.charlsons.length;
+                        res.headers.should.have.property('last-modified');
                     }
                     else list_length = 0;
                     done();
@@ -325,7 +326,7 @@ describe('Charlson Record Tests:', function() {
 
                     res.body.should.have.property('charlsons');
                     res.body.charlsons.length.should.equal(list_length+1);
-
+                    res.headers.should.have.property('last-modified');
                     done();
                 });
         });
@@ -340,7 +341,7 @@ describe('Charlson Record Tests:', function() {
                     if (err) throw err;
 
                     res.body.should.have.property('totalCharlson');
-
+                    res.headers.should.have.property('last-modified');
                     done();
                 });
         });

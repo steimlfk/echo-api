@@ -338,6 +338,7 @@ describe('Patients Tests:', function() {
                         for (var i = 0; i < res.body.patients; i++) {
                             res.body.patients[i].should.have.property('doctorId');
                             res.body.patients[i].doctorId.should.equal(id);
+                            res.headers.should.have.property('last-modified');
                         }
                         list_length = res.body.patients.length;
                     }
@@ -403,7 +404,7 @@ describe('Patients Tests:', function() {
                     if (err) throw err;
                     res.body.should.have.property('patients');
                     res.body.patients.length.should.equal(list_length+1);
-
+                    res.headers.should.have.property('last-modified');
                     done();
                 });
         });
@@ -418,6 +419,7 @@ describe('Patients Tests:', function() {
 
                     res.body.should.have.property('doctorId');
                     res.body.doctorId.should.equal(parseInt(doc_url.split("/").pop()));
+                    res.headers.should.have.property('last-modified');
 
                     done();
                 });

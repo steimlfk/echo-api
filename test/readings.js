@@ -290,6 +290,7 @@ describe('Readings Record Tests:', function() {
                         res.body.should.have.property('readings');
 
                         list_length = res.body.readings.length;
+                        res.headers.should.have.property('last-modified');
                     }
                     else list_length = 0;
                     done();
@@ -353,6 +354,7 @@ describe('Readings Record Tests:', function() {
                     if (err) throw err;
                     res.body.should.have.property('readings');
                     res.body.readings.length.should.equal(list_length+2);
+                    res.headers.should.have.property('last-modified');
 
                     done();
                 });
@@ -366,7 +368,7 @@ describe('Readings Record Tests:', function() {
                 .expect(200)
                 .end(function (err, res){
                     if (err) throw err;
-
+                    res.headers.should.have.property('last-modified');
 
                     done();
                 });

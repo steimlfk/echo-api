@@ -290,6 +290,7 @@ describe('Daily Reports Tests:', function() {
                     if (res.statusCode == 200) {
                         res.body.should.have.property('daily_reports');
                         list_length = res.body.daily_reports.length;
+                        res.headers.should.have.property('last-modified');
                     }
                     else list_length = 0;
                     done();
@@ -332,7 +333,7 @@ describe('Daily Reports Tests:', function() {
                 .expect(200)
                 .end(function (err, res){
                     if (err) throw err;
-
+                    res.headers.should.have.property('last-modified');
                     done();
                 });
         });
@@ -456,7 +457,7 @@ describe('Daily Reports Tests:', function() {
                 .expect(200)
                 .end(function (err, res){
                     if (err) throw err;
-
+                    res.headers.should.have.property('last-modified');
 
                     done();
                 });

@@ -79,6 +79,7 @@ describe('Accounts Tests:', function() {
 
                     res.body.should.have.property('accounts').and.be.instanceof(Array);
                     length = res.body.accounts.length;
+                    res.headers.should.have.property('last-modified'); 
                     done();
                 });
         });
@@ -141,6 +142,8 @@ describe('Accounts Tests:', function() {
                     }
 
                     res.body.should.have.property('accounts').and.be.instanceof(Array).and.have.lengthOf(length+3);
+                    res.headers.should.have.property('last-modified'); 
+
                     done();
                 });
         });
@@ -247,6 +250,8 @@ describe('Accounts Tests:', function() {
                     res.body.email.should.equal(data.admin.updateTestDoc.email);
                     res.body.should.have.property('role');
                     res.body.role.should.equal(data.admin.newDAcc.role);
+                    res.headers.should.have.property('last-modified'); 
+
                     done();
                 });
         });
@@ -326,6 +331,7 @@ describe('Accounts Tests:', function() {
 
                     res.body.should.have.property('accounts').and.be.instanceof(Array);
                     res.body.accounts.length.should.equal(1);
+                    res.headers.should.have.property('last-modified'); 
                     done();
                 });
         });
@@ -347,6 +353,8 @@ describe('Accounts Tests:', function() {
                     res.body.should.have.property('notificationEnabled');
                     res.body.should.have.property('notificationMode');
                     res.body.should.have.property('mobile');
+                    res.headers.should.have.property('last-modified'); 
+
                     done();
                 });
         });
@@ -488,6 +496,7 @@ describe('Accounts Tests:', function() {
 
                     res.body.should.have.property('accounts').and.be.instanceof(Array);
                     res.body.accounts.length.should.equal(1);
+                    res.headers.should.have.property('last-modified'); 
                     done();
                 });
         });
@@ -509,6 +518,7 @@ describe('Accounts Tests:', function() {
                     res.body.should.have.property('notificationEnabled');
                     res.body.should.have.property('notificationMode');
                     res.body.should.have.property('mobile');
+                    res.headers.should.have.property('last-modified'); 
                     done();
                 });
         });
