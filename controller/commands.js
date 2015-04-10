@@ -62,7 +62,7 @@ exports.changeDoctor = function(req,res,next){
             function (cb){
                 req.body = res.result;
                 req.body.doctorId = doc_id;
-                pat.add(req,res, cb);
+                pat.update(req,res, cb);
             }
         ],
         function(err){
