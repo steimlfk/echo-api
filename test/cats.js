@@ -392,6 +392,18 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
+        it('Doctor cant get not existing Data', function (done){
+            var c = data.doctor.newCat;
+            request(url)
+                .get(patData_url + '/cats/42')
+                .set('Authorization', 'Bearer ' + access_token)
+                .expect(404)
+                .end(function (err, res){
+                    if (err) throw err;
+                    done();
+                });
+        });
+
         it('Doctor can delete certain CAT Records', function (done){
             async.series
             ([
