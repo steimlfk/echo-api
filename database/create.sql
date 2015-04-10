@@ -513,6 +513,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`notifications` (
   `date` DATETIME NULL,
   `type` INT NOT NULL,
   `subjectsAccount` INT NULL,
+  `message` MEDIUMTEXT NULL,
   `modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`notificationId`),
   INDEX `notFKpatient_idx` (`accountId` ASC),
@@ -2702,44 +2703,7 @@ VIEW `notifications_view` AS
         `n`.`date` AS `date`,
         `n`.`type` AS `type`,
 		`n`.`subjectsAccount` AS `subjectsAccount`,
-        (case `n`.`type`
-            when 0 then 'Please fill in your daily report.'
-            when 1 then 'Call your doctor!'
-            when 2 then 'Go to the hospital!'
-            when
-                3
-            then
-                concat('Your patient ',
-                        `p`.`firstName`,
-                        ' ',
-                        `p`.`lastName`,
-                        ' should call you')
-            when
-                4
-            then
-                concat('Your patient ',
-                        `p`.`firstName`,
-                        ' ',
-                        `p`.`lastName`,
-                        ' should go to the hospital')
-            when
-                5
-            then
-                concat('Your patient ',
-                        `p`.`firstName`,
-                        ' ',
-                        `p`.`lastName`,
-                        ' hasnt filled in his report for 2 days')
-            when
-                6
-            then
-                concat('Your patient ',
-                        `p`.`firstName`,
-                        ' ',
-                        `p`.`lastName`,
-                        ' hasnt filled in his report for 10 days')
-            else ''
-        end) AS `message`,
+		`n`.`message` AS `message`,
         `n`.`modified` AS `modified`
     from
         (`notifications` `n`

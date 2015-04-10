@@ -72,7 +72,8 @@ var DailyAnalyzer = function() {
                      if twoDays == 5 -> rule 5
                      if twoDays == 6 -> both apply
                      */
-                    rule = 1; // or rule = 5;
+                    rule = 1;
+                    if (result[0].twoDays > 1) rule = 5;
                 }
                 if (result[0].q3c == 1) {
                     rule = 4;
@@ -82,15 +83,43 @@ var DailyAnalyzer = function() {
                 if (type > 0){
                     var i = result[0];
                     //console.log(i.recordId + ':  q1:'+ i.q1+',q2:'+ i.q2+',q3:'+ i.q3+',q4:'+ i.q4+',q5:'+ i.q5 +' --> type: '+type );
-                    var notificationqry = 'INSERT INTO notifications (accountId, date, type, subjectsAccount) VALUES (?, now(), ? ,?)';
+                    var notificationqry = 'INSERT INTO notifications (accountId, date, type, subjectsAccount, message) VALUES (?, now(), ? ,?, ?)';
+                    var patient_name = i.firstName + ' ' + i.lastName;
+                    var pattext = (type == 1)? 'Please call your doctor! (' + i.doc_mobile + ')' : 'Go to the Hospital!';
+                    var doctext = (type == 1)? "Your patient ' + patient_name + ' should call you! \n" : "Your patient " + patient_name + " should go to the hospital.\n";
+                    switch (rule){
+                        case 2: {
+                            doctext +=  "In his report your patient said that his shortness of breath increased, that his cough increased and that his sputum changed to";
+                            var sputum = 'unknown';
+                            if (i.q3a) sputum = 'yellow';
+                            if (i.q3b) sputum = 'green';
+                            doctext += sputum + '';
+                        } break;
+                        case 3: {
+                            doctext +=  "In his report your patient said that his sputum changed to";
+                            var sputum = 'unknown';
+                            if (i.q3a) sputum = 'yellow';
+                            if (i.q3b) sputum = 'green';
+                            doctext += sputum + '';
+                        } break;
+                        case 4: {
+                            doctext +=  "In his report your patient said that his sputum is bloody!";
+                        } break;
+                        case 1: {
+                            doctext +=  "In his reports your patient said that his shortness of breath increased in two days in a row!";
+                        } break;
+                        case 5: {
+                            doctext +=  "In his reports your patient said that he increased his medication two days in a row!";
+                        } break;
+                    };
                     async.parallel([
                             function(cb) {
                                 // patients notification
-                                db.query(notificationqry, [i.accountId, type, null], cb);
+                                db.query(notificationqry, [i.accountId, type, null, pattext], cb);
                             },
                             function(cb) {
                                 // doctors notification
-                                db.query(notificationqry, [i.doc_id, type+2, i.accountId], cb);
+                                db.query(notificationqry, [i.doc_id, type+2, i.accountId, doctext], cb);
                             },
                             function(cb){
                                 // patients notification
@@ -101,11 +130,9 @@ var DailyAnalyzer = function() {
                                         method : postOptions.method,
                                         headers : postOptions.headers
                                     };
-                                    var msgtext = (type == 1)? 'Please call your doctor! (' + i.doc_mobile + ')' : 'Go to the Hospital!';
                                     var msg = {
-                                        'message': msgtext
+                                        'message': pattext
                                     };
-
                                     switch (i.notificationMode) {
                                         case 'email':
                                             msg.to = [];
@@ -151,10 +178,8 @@ var DailyAnalyzer = function() {
                                         method : postOptions.method,
                                         headers : postOptions.headers
                                     };
-                                    var patient_name = i.firstName + ' ' + i.lastName;
-                                    var msgtext = (type == 1)? 'Your patient ' + patient_name + ' should call you!' : 'Your patient ' + patient_name + ' should go to the hospital';
                                     var msg = {
-                                        'message': msgtext
+                                        'message': doctext
                                     };
 
                                     switch (i.doc_mode) {
