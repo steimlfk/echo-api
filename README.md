@@ -17,7 +17,7 @@ You can start the following programs:
 
 1. Install nodejs (https://nodejs.org)
 
-2. Install MySQL
+2. Install MySQL (> 5.6.5!)
 
 3. Checkout this repo
 
