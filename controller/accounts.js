@@ -167,6 +167,7 @@ exports.add = function(req,res,next){
                     else {
                         // account and db user created.
                         res.loc = '/accounts/' + newId;
+                        res.modified = result[1][0][0][0].modified;
                         next();
                     }
                 });

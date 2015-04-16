@@ -819,7 +819,7 @@ BEGIN
 	EXECUTE s using @nextId, @username, @pwd, @role, @email, @en, @reTime, @notEn, @mobile, @notMode;
 	DEALLOCATE PREPARE s;
 	CALL createDbUser(@nextId, pw_prefix);
-	SELECT @nextId as location;
+	SELECT @nextId as location, now() as modified;
 
 END$$
 
@@ -1038,7 +1038,7 @@ proc: BEGIN
 
 	PREPARE s FROM @stmt;
 	EXECUTE s using @patientId, @diagnoseDate, @status, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8;
-	SELECt last_insert_id() as insertId;
+	SELECt last_insert_id() as insertId, now() as modified;
 	DEALLOCATE PREPARE s;
 
 END$$
@@ -1141,7 +1141,7 @@ proc: BEGIN
 
 	PREPARE s FROM @stmt;
 	EXECUTE s using @patientId, @diagnoseDate, @status, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10;
-	SELECt last_insert_id() as insertId;
+	SELECt last_insert_id() as insertId, now() as modified;
 	DEALLOCATE PREPARE s;
 
 END$$
@@ -1268,7 +1268,7 @@ set @q20 = noConditionAvailable ;
 
 	PREPARE s FROM @stmt;
 	EXECUTE s using @patientId, @diagnoseDate, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10,@q11, @q12, @q13, @q14, @q15, @q16, @q17, @q18, @q19, @q20;
-	SELECt last_insert_id() as insertId;	
+	SELECt last_insert_id() as insertId, now() as modified;
 	DEALLOCATE PREPARE s;
 
 END$$
@@ -1385,7 +1385,7 @@ BEGIN
 
 	PREPARE s FROM @stmt;
 	EXECUTE s using @pid, @date, @cardiovascular ,@respiratory, @infectious_disease,@malignancy,@other;
-	SELECt last_insert_id() as insertId;
+	SELECt last_insert_id() as insertId, now() as modified;
 	DEALLOCATE PREPARE s;
 
 
@@ -1529,7 +1529,8 @@ BEGIN
 	SET @test_stmt = 'INSERT INTO devices(accountId, deviceId) VALUES (?,?)';
 	PREPARE statement FROM @test_stmt;
 	EXECUTE statement using @id, @deviceId;
-	DEALLOCATE PREPARE statement;		
+	DEALLOCATE PREPARE statement;
+	SELECT now() as modified;
 END$$
 
 DELIMITER ;
@@ -1619,7 +1620,7 @@ set @loc = CONCAT("POINT(", x , " ", y, ")");
 
 	PREPARE s FROM @stmt;
 	EXECUTE s using @patientId,@date,@q1,@q2,@q3,@q4,@q5,@q1a,@q1b,@q1c,@q3a,@q3b,@q3c,@satO2,@walkingDist,@temperature,@pefr,@heartRate, @loc;
-	SELECt last_insert_id() as insertId;
+	SELECt last_insert_id() as insertId, now() as modified;
 	DEALLOCATE PREPARE s;
 
 END$$
@@ -1862,7 +1863,7 @@ set @q20 = other;
 
 	PREPARE s FROM @stmt;
 	EXECUTE s using @patientId, @diagnoseDate, @status, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10,@q11, @q12, @q13, @q14, @q15, @q16, @q17, @q18, @q19, @q20;
-	SELECt last_insert_id() as insertId;
+	SELECt last_insert_id() as insertId, now() as modified;
 	DEALLOCATE PREPARE s;
 
 END$$
@@ -2207,7 +2208,7 @@ BEGIN
 	SET @landline = landline;
 	PREPARE s FROM @stmt;
 	EXECUTE s using @patientId, @doctorId, @firstName, @lastName, @secondName, @socialId, @sex, @dateOfBirth,  @firstDiagnoseDate, @fullAddress, @landline, @fileId;
-	SELECt @patientId as insertId;
+	SELECt @patientId as insertId, now() as modified;
 	DEALLOCATE PREPARE s;
 
 
@@ -2344,7 +2345,7 @@ set @stmt = "Insert into severity(patientId,severity,diagnoseDate,comment) VALUE
 
 PREPARE s FROM @stmt;
 EXECUTE s using @pid, @severity, @diagnoseDate ,@comment;
-SELECt last_insert_id() as insertId;
+SELECt last_insert_id() as insertId, now() as modified;
 DEALLOCATE PREPARE s;
 END$$
 
@@ -2469,7 +2470,7 @@ set @q44 = weight ;
 
 	PREPARE s FROM @stmt;
 	EXECUTE s using @patientId, @diagnoseDate, @status, @q1,@q2,@q3,@q4,@q5,@q6,@q7,@q8,@q9,@q10,@q11,@q12,@q13,@q14,@q15,@q16,@q17,@q18,@q19,@q20,@q21,@q22,@q23,@q24,@q25,@q26,@q27,@q28,@q29,@q30,@q31,@q33,@q34,@q35,@q36,@q37,@q38,@q39,@q40,@q41,@q42,@q43,@q44;
-	SELECt last_insert_id() as insertId;
+	SELECt last_insert_id() as insertId, now() as modified;
 	DEALLOCATE PREPARE s;
 
 END$$

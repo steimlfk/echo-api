@@ -59,6 +59,7 @@ exports.add = function(req,res,next){
             if (err) next(err);
             else {
                 res.loc  ='/patients/'+ id + '/charlsons/' + result[0][0].insertId;
+                res.modified = result[0][0].modified;
                 next();
             }
         });

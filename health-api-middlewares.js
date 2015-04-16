@@ -147,6 +147,7 @@ exports.resultProcessor = function (req, res, next){
      PUT/DELETE -> res contains affected_rows
      */
     if (res.loc){
+        if (res.modified) res.setHeader('Last-Modified' , res.modified);
         res.location(res.loc);
         res.sendStatus (201);
     }

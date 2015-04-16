@@ -122,6 +122,7 @@ exports.add = function(req,res,next){
             if (err) next(err);
             else {
                 res.loc = '/patients/'+ id + '/death';
+                res.modified = result[0][0].modified;
                 next();
             }
         });

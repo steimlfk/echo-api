@@ -65,6 +65,7 @@ exports.add = function(req,res,next){
             // resource was created
             // link will be provided in location header
             res.loc='/patients/'+ id + '/ccqs/' + result[0][0].insertId;
+            res.modified = result[0][0].modified;
             next();
         }
 

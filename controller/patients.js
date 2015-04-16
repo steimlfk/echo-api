@@ -145,6 +145,7 @@ exports.add = function(req,res,next){
         if (err) next(err);
         else {
             res.loc = '/patients/' + i.accountId;
+            res.modified = result[0][0].modified;
             next();
         }
     });

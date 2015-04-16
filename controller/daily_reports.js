@@ -193,6 +193,7 @@ exports.add = function(req,res,next){
                     dailyAnalyzer.emit('newDailyReport', result[0][0].insertId);
                 });
                 res.loc = '/patients/'+ id + '/daily_reports/' + result[0][0].insertId;
+                res.modified = result[0][0].modified;
                 next();
             }
         });
