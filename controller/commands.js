@@ -5,18 +5,17 @@ var swagger = require('swagger-node-express');
 var config = require('../config.js');
 var async = require('async');
 var ctrl = require('../health-api-middlewares.js');
-
+var acc = require('./accounts.js');
+var pat = require('./patients.js');
 
 exports.createPatientAndAccount = function(req,res,next) {
-    var acc = require('./accounts.js');
-    var pat = require('./patients.js');
-
     async.waterfall([
             function (cb){
                 req.data = req.body;
                 req.body = req.body.account;
                 acc.add(req,res, cb);
             },
+            // reset db connection since acc.add closed it!
             function (cb){
                 ctrl.databaseHandler(req, res, cb);
             },
@@ -48,7 +47,6 @@ exports.createPatientAndAccount = function(req,res,next) {
 
 
 exports.changeDoctor = function(req,res,next){
-    var pat = require('./patients.js');
     var doc_id = req.body.newDoctorId;
     async.waterfall([
             function (cb){
@@ -141,51 +139,7 @@ exports.models = {
     "ExtraPatient":{
         "id": "Patient",
         "required":["dateOfBirth","firstDiagnoseDate", "firstName","lastName","sex","fileId", "mobile", "email", "fullAddress", "socialId"],
-        "properties":{
-            "lastName": {
-                "type":"string",
-                "description": "Patients Last Name"
-            },
-            "firstName": {
-                "type":"string",
-                "description": "Patient's first Name"
-            },
-            "secondName": {
-                "type":"string",
-                "description": "Patients second Name"
-            },
-            "dateOfBirth": {
-                "type":"string",
-                "format":"date",
-                "description": "Date of Birth"
-            },
-            "sex": {
-                "type":"string",
-                "enum": ["0","1"] ,
-                "description": "Sex (1 is male)"
-            },
-            "firstDiagnoseDate": {
-                "type":"string",
-                "format":"date",
-                "description": "Date of First Diagnoe"
-            },
-            "socialId": {
-                "type":"string",
-                "description": "Patients social ID"
-            },
-            "fileId": {
-                "type":"string",
-                "description": "Patient File Id"
-            },
-            "fullAddress": {
-                "type":"string",
-                "description": "Patients address"
-            },
-            "landline": {
-                "type":"string",
-                "description": "Patients phone number"
-            }
-        }
+        "properties": pat.contents
     },
     "PatientAndAccount":{
         "id" : "PatientAndAccount",

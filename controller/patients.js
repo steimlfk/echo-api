@@ -372,7 +372,7 @@ exports.updateSpec = {
 
 };
 
-var contents = {
+var  contents =  {
     "doctorId": {"type":"integer", "format" : "int32", "description": "Identifier of the Responsible Doctor"},
     "accountId": { "type":"integer","format": "int32","description": "Unique Identifier and ID of the corresponding Account"},
     "lastName": {"type":"string","description": "Patients Last Name"},
@@ -387,6 +387,7 @@ var contents = {
     "landline": {"type":"string","description": "Patients phone number"},
     "currentSeverity":{"type":"string","description":"current severity level.", "enum":["A", "B", "C", "D"]}
 };
+exports.contents = contents;
 
 exports.models = {
     "Patient":{
