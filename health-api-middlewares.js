@@ -21,6 +21,7 @@ exports.errorHandler = function (err, req, res, next) {
         console.error('Body: ');
         console.error(req.body);
 
+
         /*
          *  DB ERRORS
          */

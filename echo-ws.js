@@ -9,6 +9,7 @@ var express = require('express'),
     bodyParser = require('body-parser'),
     serveStatic = require('serve-static'),
     swagger = require('swagger-node-express'),
+    swaggerValidate = require('swagger-validate'),
     fs = require('fs'),
     jwt = require('jsonwebtoken'),
     BearerStrategy = require('passport-http-bearer').Strategy,
@@ -61,7 +62,6 @@ passport.use(new BearerStrategy({"realm" : "ECHO REST-API"}, function(accessToke
 
     });
 }));
-
 
 /**
  * REST API
@@ -130,7 +130,6 @@ for (var i = 0; i< echo_endpoints.length; i++){
     app.use(echo_endpoints[i], ctrl_utils.resultProcessor);
 };
 app.use(ctrl_utils.errorHandler);
-
 
 /**
  * Swagger UI

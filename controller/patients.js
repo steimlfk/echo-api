@@ -398,7 +398,7 @@ exports.models = {
     },
     "NewPatient":{
         "id": "Patient",
-        "required":["dateOfBirth","accountId","doctorId","firstDiagnoseDate", "firstName","lastName","sex","fileId", "mobile", "email", "fullAddress", "socialId"],
+        "required":["dateOfBirth","accountId","doctorId","firstDiagnoseDate", "firstName","lastName","sex","fileId", "fullAddress", "socialId"],
         "properties":contents
     },
     "ListPatient":{
