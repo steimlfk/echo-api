@@ -239,20 +239,23 @@ exports.respMsg = function(MedicalModel) {
 
  var generateCollectionLinks = function(url, page, pageSize, resultSize){
     var links = {
-        self : url
+        self : { href : url }
     };
     // add pagination links to result set if pagination was used
     if(page != 0){
         //create first link
-        links.first = url+'?page=1&pageSize='+pageSize;
-        links.self = url+'?page='+(page)+'&pageSize='+pageSize;
+        links.first = {};
+        links.first.href = url+'?page=1&pageSize='+pageSize;
+        links.self.href = url+'?page='+(page)+'&pageSize='+pageSize;
         if (resultSize == pageSize) {
             // create next link if result set size equals pagesize
-            links.next = url+'?page='+(page+1)+'&pageSize='+pageSize;
+            links.next = {};
+            links.next.href = url+'?page='+(page+1)+'&pageSize='+pageSize;
         }
         if (page != 1){
             // create back link if page number doenst equal 1
-            links.back = url+'?page='+(page-1)+'&pageSize='+pageSize;
+            links.back = {};
+            links.back.href = url+'?page='+(page-1)+'&pageSize='+pageSize;
         }
     }
     return links;
