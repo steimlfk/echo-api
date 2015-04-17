@@ -2699,8 +2699,6 @@ CREATE
     SQL SECURITY DEFINER
 VIEW `notifications_view` AS
     select 
-        `n`.`notificationId` AS `notificationId`,
-        `n`.`accountId` AS `accountId`,
         `n`.`date` AS `date`,
         `n`.`type` AS `type`,
 		`n`.`subjectsAccount` AS `subjectsAccount`,
