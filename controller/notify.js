@@ -206,7 +206,7 @@ var DailyAnalyzer = function() {
         });
     });
 
-    this.on('inactiveAnalyzes', function() {
+    this.on('oneDayInactiveAnalyzes', function() {
         return;
         var postOptions = {
             host: service.host,
@@ -222,7 +222,7 @@ var DailyAnalyzer = function() {
             var endTime = date.getHours() + ':' + (date.getMinutes()) + ':' + '00';
             connection.query('SELECT a.accountId, notificationEnabled, email, mobile, deviceId from accounts a ' +
                 'inner join devices on a.accountId=devices.accountId ' +
-                'inner join dailyReports d on a.accountId=patientId where d.date < (now() - interval 2 day) and reminderTime>=? and reminderTime <=? and notificationEnabled=1 group by a.accountId;',
+                'inner join dailyReports d on a.accountId=patientId where d.date < (now() - interval 1 day) and reminderTime>=? and reminderTime <=? and notificationEnabled=1 group by a.accountId;',
                 [startTime, endTime], function (err, result) {
                     connection.release();
                     var email = [],
