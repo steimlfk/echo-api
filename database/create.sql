@@ -71,7 +71,7 @@ insert into exTemp select distinct status='exacerbation', diagnoseDate from cats
 insert into exTemp select distinct status='exacerbation', diagnoseDate from ccqs where patientId=id and diagnoseDate>=(now() - interval 1 year);
 insert into exTemp select distinct status='exacerbation', diagnoseDate from treatments where patientId=id and diagnoseDate>=(now() - interval 1 year);
 insert into exTemp select distinct status='exacerbation', diagnoseDate from readings where patientId=id and diagnoseDate>=(now() - interval 1 year);
-select sum(status) into @exacerbation from exTemp group on diagnoseDate;
+select sum(status) into @exacerbation from exTemp group by diagnoseDate;
 
 select case
 	when (coalesce((select fev1>=80 and fev1_fvc<70 from readings where patientId=id))) then 1
@@ -82,9 +82,10 @@ select case
 
 select totalCatscale is not null into @catExists from cats where patientId=id and diagnoseDate>=(now() - interval 1 year);
 if @catExists then
-    select coalesce(totalCatscale from cats where patientId=id order by diagnoseDate desc limit 1) into @tot;
+    select coalesce((select totalCatscale from cats where patientId=id order by diagnoseDate desc limit 1)) into @tot;
 else
-    select coalesce(mmrc from readings where patientId=id order by diagnoseDate desc limit 1) into @tot;
+    select coalesce((select mmrc from readings where patientId=id order by diagnoseDate desc limit 1)) into @tot;
+end if;
 
 if @exacerbation>=2 then
     if (@tot>10 and @catExists or @tot>=2) then
@@ -105,10 +106,15 @@ if (coalesce((select severity from severity where patientId=id order by validFro
     values
     (id, now(), 7, null),
     (coalesce((select doctorId from patients where patientId=id)), now(), 8, id);
-    insert into severity (patientId, severity, validFrom, comment)
-    values
-    (id, @severity, now(), if @catExists then concat('Exacerbation:',@exacerbation,';Stadium:',@stadium,';CAT:',@tot)
-        else concat('Exacerbation:',@exacerbation,';Stadium:',@stadium,';MMRC:',@tot);
+    if @catExists then
+        insert into severity (patientId, severity, validFrom, comment)
+        values
+        (id, @severity, now(), (select concat('Exacerbations:', @exacerbation, ';Stadium:', @stadium, ';CAT-Scale:', @tot)));
+    else
+        insert into severity (patientId, severity, validFrom, comment)
+        values
+        (id, @severity, now(), (select concat('Exacerbations:', @exacerbation, ';Stadium:', @stadium, ';MMRC:', @tot)));
+    end if;
     return @severity;
 end if;
 RETURN null;
