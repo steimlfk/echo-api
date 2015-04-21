@@ -4,117 +4,136 @@
 var swagger = require('swagger-node-express');
 var config = require('../config.js');
 var async = require('async');
-var bcrypt = require('bcryptjs');
+var ctrl = require('../health-api-middlewares.js');
 
 
 exports.createPatientAndAccount = function(req,res,next) {
-    var connection = req.con;
+    var acc = require('./accounts.js');
+    var pat = require('./patients.js');
 
-    // check if account and patient data was submitted
-    if (req.body.account && req.body.patient) {
-
-        // since its not possible to "really" delete a created account
-        // it was necessary to write a new SP to create a patient and an account
-        async.waterfall([
-                function(cb){
-                    // shorter vars
-                    var i = req.body.account;
-                    var j = req.body.patient;
-                    // hash pw
-                    var salt = bcrypt.genSaltSync(10);
-                    var pwd = bcrypt.hashSync(i.password, salt);
-                    // set doctorid if current role is doctor
-                    var doc_id = i.doctorId;
-                    if (req.user.role == 'doctor') doc_id = req.user.accountId;
-                    // query db
-                    connection.query('CALL patientsAndAccountCreate(?,?,? ,?,?,? ,?,?,? ,?, ?,?,?, ?,?,?, ?,?,?, ?,?)' ,
-                        [ config.db_pw_prefix, i.username, pwd,
-                            i.email, i.role, i.enabled,
-                            i.reminderTime, i.notificationEnabled, i.notificationMode,
-                            i.mobile,
-                            doc_id, j.firstName, j.lastName,
-                            j.secondName, j.socialId, j.sex,
-                            j.dateOfBirth, j.firstDiagnoseDate, j.fileId,
-                            j.fullAddress, j.landline],
-                        cb);
-                },
-                function(arg1, fields, ccb){
-                    // grant rights if create was successfull
-                    var i = req.body.account;
-                    connection.query('CALL grantRolePermissions(?, ?)' , [parseInt(arg1[0][0].location), i.role], function (err, result){
-                        if (err) ccb(err);
-                        else ccb (null, arg1[0][0].location);
+    async.waterfall([
+            function (cb){
+                req.data = req.body;
+                req.body = req.body.account;
+                acc.add(req,res, cb);
+            },
+            function (cb){
+                ctrl.databaseHandler(req, res, cb);
+            },
+            function (cb){
+                req.data.patient.accountId = res.loc.split("/").pop();
+                req.body = req.data.patient;
+                pat.add(req,res, cb);
+            }
+        ],
+        function(err){
+            if (err) {
+                // rollback if account was already created! (doctorId is part of req.body of patient)
+                if (req.body.doctorId){
+                    req.params = {};
+                    req.params.id = req.body.accountId;
+                    ctrl.databaseHandler(req, res, function(e1){
+                        req.con.changeUser({user: 'echo_db_usr', password: config.db.pwd}, function (e2){
+                            acc.del(req,res, function(e3){
+                                next(err);
+                            })
+                        });
                     });
                 }
-            ],
-            // optional callback
-            function(err, re1){
-                if (err) {
-                    next(err);
-                } else {
-                    // resource was created
-                    // link will be provided in location header
-                    res.statusCode = 201;
-                    res.location('/patients/' + re1);
-                    res.send();
-                }
-                connection.release();
+                else next(err);
             }
-        );
-    }
+            else next();
+        });
 };
 
 
 exports.changeDoctor = function(req,res,next){
-    var connection = req.con;
-    var pid = req.body.patientId;
-    var did = req.body.newDoctorId;
-    connection.query('call patientsChangeDoctor(?,?)',	[pid, did], function(err, result) {
-        if (err) {
-            next(err);
-        } else {
-            // doctor was changed
-            if (result[0][0].affected_rows > 0){
-                res.statusCode = 204;
-                res.send();
+    var pat = require('./patients.js');
+    var doc_id = req.body.newDoctorId;
+    async.waterfall([
+            function (cb){
+                req.params = {};
+                req.params.id = req.body.patientId;
+                pat.listOne(req,res, cb);
+            },
+            function (cb){
+                ctrl.databaseHandler(req, res, cb);
+            },
+            function (cb){
+                req.body = res.result;
+                req.body.doctorId = doc_id;
+                pat.add(req,res, cb);
             }
-            // patient wasnt found
-            else {
-                res.statusCode = 404;
-                res.send();
+        ],
+        function(err){
+            if (err) {
+                next(err);
             }
-        }
-        connection.release();
-    });
+            else next();
+        });
 };
 
 
 
-exports.createSpec = {
+exports.createPatientAndAccountSpec = {
     summary : "Create Patient with Account (Roles: doctor)",
-    notes: "Instead of calling POST /account and POST /patient in a row, you can use this function to create a patients' account. Uses new SP instead of combinig the existing two methods, since there is no possiblity to delete an account if this operation fails after account creation <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>201</b>  Account is created and the location is returned in the Location Header <br>" +
-    " <b>400</b>  The provided data contains errors, e.g. Username or EMail are not unique or Invalid Value of NotificationMode or Role <br>" +
-    " <b>403</b>  The logged in user isnt allowed to create an account with this data. Possibile Reason: A doctor is only allowed to create a new patient.<br>"+
-    " <b>500</b> Internal Server Error",
+    notes: "Instead of calling POST /account and POST /patient in a row, you can use this function to create a patients' account. Uses new SP instead of combinig the existing two methods, since there is no possiblity to delete an account if this operation fails after account creation <br><br>" ,
     path : "/createPatientAndAccount",
     method: "POST",
     nickname : "addPatientWithAccount",
-    parameters : [swagger.bodyParam("PatientAndAccount", "new Patient with new Account", "PatientAndAccount")]
+    parameters : [swagger.bodyParam("PatientAndAccount", "new Patient with new Account", "PatientAndAccount")],
+    responseMessages: [
+        {
+            code: 201,
+            message: "Account and Patientdata was created and the location is returned in the Location Header"
+        },
+        {
+            code: 400,
+            message: "The provided data contains errors ",
+            responseModel : "ErrorMsg"
+        },
+        {
+            code: 401,
+            message: "The logged-in user isnt allowed to use this function ",
+            responseModel : "ErrorMsg"
+        },
+        {
+            code: 500,
+            message: "Internal Server Error",
+            responseModel : "ErrorMsg"
+        }
+    ]
 
 };
 
-exports.changeSpec = {
+exports.changeDoctorSpec = {
     summary : "Changes Doctor of Given Patient (Roles: admin)",
-    notes: "Changes Doctor of Given Patient <br><br><b>Possible Results</b>: <br>" +
-    " <b>200</b>  Doctor changed <br>" +
-    " <b>400</b>  The provided data contains errors, e.g. given doctor isnt a doctor <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "Changes Doctor of Given Patient ",
     path : "/changeDoctor",
     method: "POST",
     nickname : "changeDoc",
-    parameters : [swagger.bodyParam("ChangeDoctor", "new Patient with new Account", "ChangeDoctor")]
+    parameters : [swagger.bodyParam("ChangeDoctor", "new Patient with new Account", "ChangeDoctor")],
+    responseMessages: [
+        {
+            code: 200,
+            message: "Doctor changed"
+        },
+        {
+            code: 400,
+            message: "The provided data contains errors, e.g. given doctor isnt a doctor",
+            responseModel : "ErrorMsg"
+        },
+        {
+            code: 401,
+            message: "The logged-in user isnt allowed to use this function ",
+            responseModel : "ErrorMsg"
+        },
+        {
+            code: 500,
+            message: "Internal Server Error",
+            responseModel : "ErrorMsg"
+        }
+    ]
 
 };
 

@@ -67,10 +67,9 @@ exports.add = function(req,res,next){
             i.smoker, i.tlc,i.tlc_pre,i.tlc_pre_pro,i.tlc_pro,
             i.weight],
         function(err, result) {
-            if (err) {
-                next(err);
-
-            } else {
+            connection.release();
+            if (err) next(err);
+            else {
                 var analyzer = require('./notify.js');
                 var dailyAnalyzer = new analyzer();
                 // this postpones the analysis of the data until the POST is completely processed
@@ -79,11 +78,9 @@ exports.add = function(req,res,next){
                 });
                 // resource was created
                 // link will be provided in location header
-                res.statusCode = 201;
-                res.location('/patients/'+ id + '/readings/' + result[0][0].insertId);
-                res.send();
+                res.loc = '/patients/'+ id + '/readings/' + result[0][0].insertId;
+                next()
             }
-            connection.release();
         });
 };
 
@@ -123,103 +120,76 @@ exports.update = function(req,res,next){
             i.rv_pre_pro,i.rv_pro,i.rv_tlc,i.satO2_pro,i.smoker,
             i.tlc,i.tlc_pre,i.tlc_pre_pro,i.tlc_pro,i.weight],
         function(err, result) {
-            if (err) {
-                next(err);
-            } else {
-                // record  was updated
-                if (result[0][0].affected_rows > 0){
-                    res.statusCode = 204;
-                    res.send();
-                }
-                // record wasnt updated since it doesnt exist or isnt visible to the current user
-                else {
-                    res.statusCode = 404;
-                    res.send();
-                }
-            }
             connection.release();
+            if (err) next(err);
+            else {
+                res.affectedRows = result[0][0].affected_rows;
+                next();
+            }
         });
 };
 
+var respMessages = commons.respMsg("Readings");
 exports.listSpec = {
     summary : "Get Readings Records of this Patient (Roles: doctor)",
     notes: "This Function lists all Readings for the given patient. <br>This function passes the parameters to the SP listExams. <br><br> <b>Parameters:</b> <br><br>  " +
-    "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " +
-    "<b>Possible Results</b>: <br>" +
-    " <b>200</b>  List of Readings is supplied. Format cats: [Array of readings Model] <br>" +
-    " <b>204</b>  List (or the current page) is currently empty <br>" +
-    " <b>403</b>  The current user isnt allowed to access the data of the given patient <br>" +
-    " <b>500</b> Internal Server Error",
+    "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> ",
     path : "/patients/{id}/readings",
     method: "GET",
     type : "ListReadings",
     nickname : "listReadings",
     parameters : [swagger.pathParam("id", "Patient where the records belong to", "string"),
         swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
-        swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")]
+        swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")],
+    responseMessages: respMessages.list
 };
 
 
 exports.addSpec = {
     summary : "Add Readings Records (Roles: doctor)",
-    notes: "This Function creates an new Readings Record. (if the Body contains patientId, its ignored) <br>This function passes its parameters to the SP readingsCreate. <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>201</b>  Record is created and the location is returned in the Location Header <br>" +
-    " <b>400</b>  The provided data contains errors, e.g. a invalid value for status <br>" +
-    " <b>403</b>  The logged in user isnt allowed to create a record with this data.<br>"+
-    " <b>500</b> Internal Server Error",
+    notes: "This Function creates an new Readings Record. (if the Body contains patientId, its ignored) <br>This function passes its parameters to the SP readingsCreate. <br><br>" ,
     path : "/patients/{id}/readings",
     method: "POST",
     nickname : "addReadings",
     parameters : [swagger.bodyParam("Readings", "new Record", "NewReadings"),
-        swagger.pathParam("id", "Patient where the records belong to", "string")]
+        swagger.pathParam("id", "Patient where the records belong to", "string")],
+    responseMessages: respMessages.add
 };
 
 exports.listOneSpec = {
     summary : "Get specific Readings Record of this Patient (Roles: doctor)",
-    notes: "This Function returns the requested Readings record, if it exists and is visible to the current user. <br>This function passes the parameters to the SP listSingleExams. <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>200</b>  Record is supplied <br>" +
-    " <b>403</b>  The current user isnt allowed to access the data of the given patient <br>" +
-    " <b>404</b>  The requested record doesnt exist. <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "This Function returns the requested Readings record, if it exists and is visible to the current user. <br>This function passes the parameters to the SP listSingleExams. <br><br>" ,
     path : "/patients/{id}/readings/{rid}",
     method: "GET",
     type : "Readings",
     nickname : "listOneReadings",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
-        swagger.pathParam("rid", "ID of the Record", "string")]
+        swagger.pathParam("rid", "ID of the Record", "string")],
+    responseMessages: respMessages.listOne
 };
 
 
 exports.delSpec = {
     summary : "Delete specific Readings Record of this Patient (Roles: doctor)",
-    notes: "This Function deletes a record, which is specified by the url. (if the Body contains ids, theyre ignored) <br>This function passes its parameters to the SP deleteExamRecord <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>204</b>  Record was deleted. <br>" +
-    " <b>404</b>  Record is either not visible to the current user or doesnt exist. <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "This Function deletes a record, which is specified by the url. (if the Body contains ids, theyre ignored) <br>This function passes its parameters to the SP deleteExamRecord <br><br>" ,
     path : "/patients/{id}/readings/{rid}",
     method: "DELETE",
     nickname : "delReadings",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
-        swagger.pathParam("rid", "ID of the Record", "string")]
+        swagger.pathParam("rid", "ID of the Record", "string")],
+    responseMessages: respMessages.del
 };
 
 exports.updateSpec = {
     summary : "Update specific Readings Record of this Patient (Roles: doctor)",
-    notes: "This Function updates a record, which is specified by the url. Any IDs in the Message Body are ignored. Instead the ids in the url are used. <br>This function passes its parameters to the SP readingsUpdate. <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>204</b>  Record was updated. <br>" +
-    " <b>400</b>  The provided data contains errors, e.g. a invalid value for status <br>" +
-    " <b>404</b>  Record is either not visible to the current user or doesnt exist. <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "This Function updates a record, which is specified by the url. Any IDs in the Message Body are ignored. Instead the ids in the url are used. <br>This function passes its parameters to the SP readingsUpdate. <br><br>" ,
     path : "/patients/{id}/readings/{rid}",
     method: "PUT",
     nickname : "updateReadings",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
         swagger.pathParam("rid", "ID of the Record", "string") ,
         swagger.bodyParam("Readings", "updated Readings Record", "NewReadings")],
+    responseMessages: respMessages.update
 };
 
 var contents = {

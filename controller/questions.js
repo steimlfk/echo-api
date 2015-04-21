@@ -1,7 +1,6 @@
 /**
  * Route: Questions
  */
-//TODO: COMPLETE DOCU!!!
 var mysql = require('../utils.js').db;
 var swagger = require('swagger-node-express');
 var db = mysql;
@@ -36,7 +35,7 @@ exports.add = function(req,res,next){
                     }
                 });
                 res.statusCode = 201;
-                res.location('questions/' + result.insertId);
+                res.location('/questions/' + result.insertId);
                 res.send();
             }
             connection.release();
@@ -54,7 +53,7 @@ exports.add = function(req,res,next){
                 next(err);
             } else {
                 res.statusCode = 201;
-                res.location('questions/' + result.insertId);
+                res.location('/questions/' + result.insertId);
                 res.send();
             }
             connection.release();
@@ -67,9 +66,10 @@ exports.list = function(req,res,next){
     var qry = 'SELECT questionId,category,type,text,active FROM questions ORDER BY category,type,text';
     connection.query(qry, function(err, rows) {
         if (err) {
+            connection.release();
             next(err);
         }
-        if (rows.length > 0){
+        else if (rows.length > 0){
             var result_set = [];
             async.eachSeries(rows, function(question, each_next){
                 async.waterfall([
@@ -88,19 +88,40 @@ exports.list = function(req,res,next){
                         }
                     ],
                     function(err, result){ //final waterfall
-                        if (err) {res.send (503);}
-                        result_set.push(result);
-                        each_next();
+                        if (err) {
+                            each_next(err);
+                        }
+                        else {
+                            result_set.push(result);
+                            each_next();
+                        }
                     });
             }, function(err,result){ // final eachSeries
-                if (err) {next(err);}
-                res.send(result_set);
+                if (err) {
+                    next(err);
+                }
+                else res.send(result_set);
+                connection.release();
             } );
         }
         else{
-            res.send(204);
+            res.sendStatus(204);
+            connection.release();
         }
+
+    });
+};
+
+exports.del = function (req, res, next){
+    var con = req.con;
+    var qry = 'DELETE FROM questions WHERE questionId = ?';
+    con.query(qry, req.params.id, function(err, result){
         connection.release();
+        if (err) next(err);
+        else {
+            res.affectedRows = result[0][0].affected_rows > 0;
+            next();
+        }
     });
 };
 
@@ -125,6 +146,7 @@ function getQuestions(req, res, next, cat){
     var qry = 'SELECT questionId,category,type,text,active,label FROM questions where active = 1 and category=' + db.escape(cat);
     connection.query(qry, function(err, rows) {
         if (err) {
+            connection.release();
             next(err);
         }
         if (rows.length > 0){
@@ -147,18 +169,21 @@ function getQuestions(req, res, next, cat){
                     ],
                     function(err, result){ //final waterfall
                         if (err) {each_next(err);}
-                        result_set.push(result);
-                        each_next();
+                        else {
+                            result_set.push(result);
+                            each_next();
+                        }
                     });
             }, function(err,result){ // final eachSeries
                 if (err) {next(err);}
-                res.send(result_set);
+                else res.send(result_set);
+                connection.release();
             } );
         }
         else{
-            res.send(204);
+            res.sendStatus(204);
+            connection.release();
         }
-        connection.release();
     });
 };
 
@@ -171,6 +196,14 @@ exports.listSpec = {
 
 };
 
+exports.delSpec = {
+    summary : "Delete specific Questions",
+    path : "/questions/{id}",
+    method: "DELETE",
+    nickname : "delQuestion",
+    parameters : [swagger.pathParam("id", "Question to delete", "string")]
+
+};
 
 exports.addSpec = {
     summary : "Add Question",

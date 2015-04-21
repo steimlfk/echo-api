@@ -23,10 +23,10 @@ exports.list = function(req, res, next){
     // query
     var qry = 'call deathGet(?)';
     connection.query(qry, [req.params.id], function(err, rows) {
-        if (err) {
-            next(err);
-        }
+        connection.release();
+        if (err) next(err);
         else {
+            var fullResult = {};
             // row found
             if (rows[0].length > 0){
                 var host = ((ssl)?'https://':'http://')+req.headers.host;
@@ -38,15 +38,11 @@ exports.list = function(req, res, next){
                 // add patients link
                 o._links.patient = {};
                 o._links.patient.href = host+'/patients/'+req.params.id;
-                res.send(o);
+                fullResult = o;
             }
-            // row doesnt exist
-            else{
-                res.statusCode = 204;
-                res.send();
-            }
+            res.result = fullResult;
+            next();
         }
-        connection.release();
     });
 };
 
@@ -66,22 +62,12 @@ exports.del = function(req, res, next, exam){
     var i = req.body;
     var id = parseInt(req.params.id);
     connection.query('call deathDelete(?)', [id], function(err, result) {
-        if (err) {
-            next(err);
-
-        } else {
-            // death event deleted
-            if (result[0][0].affected_rows > 0){
-                res.statusCode = 204;
-                res.send();
-            }
-            // death event not found
-            else {
-                res.statusCode = 404;
-                res.send();
-            }
-        }
         connection.release();
+        if (err) next(err);
+        else {
+            res.affectedRows = result[0][0].affected_rows > 0;
+            next();
+        }
     });
 };
 
@@ -104,21 +90,12 @@ exports.update = function(req,res,next){
     var date = i.diagnoseDate || null;
     connection.query('call deathUpdate(?,?,?, ?,?,?,?)',
         [id, date,i.cardiovascular,i.respiratory,i.infectious_disease,i.malignancy,i.other], function(err, result) {
-            if (err) {
-                next(err);
-            } else {
-                // record updated
-                if (result[0][0].affected_rows > 0){
-                    res.statusCode = 204;
-                    res.send();
-                }
-                // record not found
-                else {
-                    res.statusCode = 404;
-                    res.send();
-                }
-            }
             connection.release();
+            if (err) next(err);
+            else {
+                res.affectedRows = result[0][0].affected_rows > 0;
+                next();
+            }
         });
 };
 
@@ -141,79 +118,61 @@ exports.add = function(req,res,next){
     var date = i.diagnoseDate || null;
     connection.query('call deathCreate(?,?,?, ?,?,?,?)',
         [id, date, i.cardiovascular,i.respiratory,i.infectious_disease,i.malignancy,i.other], function(err, result) {
-            if (err) {
-                next(err);
-
-            } else {
-                // resource creted
-                res.statusCode = 201;
-                res.location('/patients/'+ id + '/death');
-                res.send();
-            }
             connection.release();
+            if (err) next(err);
+            else {
+                res.loc = '/patients/'+ id + '/death';
+                next();
+            }
         });
 };
-
+var commons = require('./controller_commons');
+var respMessages = commons.respMsg("Death");
 exports.listSpec = {
     summary : "Get Death Record of this Patient (Roles: doctor)",
-    notes: "This Function returns the requested record, if it exists and is visible to the current user. <br>This function passes the parameters to the SP deathGet. <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>200</b>  Record is supplied <br>" +
-    " <b>403</b>  The current user isnt allowed to access the data of the given patient <br>" +
-    " <b>404</b>  The requested record doesnt exist. <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "This Function returns the requested record, if it exists and is visible to the current user. <br>This function passes the parameters to the SP deathGet. <br><br>" ,
     path : "/patients/{id}/death",
     method: "GET",
     type : "Death",
     nickname : "listDeath",
-    parameters : [swagger.pathParam("id", "Patient where the records belong to", "string")]
+    parameters : [swagger.pathParam("id", "Patient where the records belong to", "string")],
+    responseMessages: respMessages.listOne
 
 };
 
 
 exports.addSpec = {
     summary : "Add  Death Records (Roles: doctor)",
-    notes: "This Function creates an new Death Record. (if the Body contains patientId, its ignored) <br>This function passes its parameters to the SP deathCreate. <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>201</b>  Record is created and the location is returned in the Location Header <br>" +
-    " <b>400</b>  The provided data contains errors, maybe the record already exists? <br>" +
-    " <b>403</b>  The logged in user isnt allowed to create a record with this data.<br>"+
-    " <b>500</b> Internal Server Error",
+    notes: "This Function creates an new Death Record. (if the Body contains patientId, its ignored) <br>This function passes its parameters to the SP deathCreate. <br><br>" ,
     path : "/patients/{id}/death",
     method: "POST",
     nickname : "addDeath",
     parameters : [swagger.bodyParam("Death", "new Record", "Death"),
-        swagger.pathParam("id", "Patient where the records belong to", "string")]
+        swagger.pathParam("id", "Patient where the records belong to", "string")],
+    responseMessages: respMessages.add
 
 };
 
 exports.delSpec = {
     summary : "Delete Death Record of this Patient (Roles: doctor)",
-    notes: "This Function deletes the death record, which is specified by the url. (if the Body contains ids, theyre ignored) <br>This function passes its parameters to the SP deathDelete <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>204</b>  Record was deleted. <br>" +
-    " <b>404</b>  Record is either not visible to the current user or doesnt exist. <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "This Function deletes the death record, which is specified by the url. (if the Body contains ids, theyre ignored) <br>This function passes its parameters to the SP deathDelete <br><br>" ,
     path : "/patients/{id}/death",
     method: "DELETE",
     nickname : "delDeath",
-    parameters : [swagger.pathParam("id", "ID of the Patient", "string")]
+    parameters : [swagger.pathParam("id", "ID of the Patient", "string")],
+    responseMessages: respMessages.del
 
 };
 
 exports.updateSpec = {
-    summary : "Update specific Treatment Record of this Patient (Roles: doctor)",
-    notes: "This Function updates the death record, which is specified by the url. Any IDs in the Message Body are ignored. Instead the ids in the url are used. <br>This function passes its parameters to the SP deathUpdate. <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>204</b>  Record was updated. <br>" +
-    " <b>400</b>  The provided data contains errors, e.g. a invalid value for status <br>" +
-    " <b>404</b>  Record is either not visible to the current user or doesnt exist. <br>" +
-    " <b>500</b> Internal Server Error",
+    summary : "Update specific Death Record of this Patient (Roles: doctor)",
+    notes: "This Function updates the death record, which is specified by the url. Any IDs in the Message Body are ignored. Instead the ids in the url are used. <br>This function passes its parameters to the SP deathUpdate. <br><br>" ,
     path : "/patients/{id}/death/",
     method: "PUT",
     nickname : "updateDeath",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
-        swagger.bodyParam("Death", "updated Treatment Record", "Death")]
+        swagger.bodyParam("Death", "updated Treatment Record", "Death")],
+    responseMessages: respMessages.update
 };
 
 

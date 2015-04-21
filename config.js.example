@@ -4,12 +4,6 @@
  */
 
 /**
- *  API key for push/sms/email service
- */
-
-var apiKey = '';
-
-/**
  *  Host and Port Config
  */
 
@@ -55,8 +49,29 @@ var db = {
 var ssl = {
     useSsl: false,
     password: "",
-    privateKey: "",
-    certificate: ""
+    privateKey: "/ssl/privatekey.pem",
+    certificate: "/ssl/certificate.pem"
+};
+
+/**
+ * Section Notification Service
+ *
+ */
+
+var service = {
+    apiKey : '',
+    host : '',
+    email : {
+        url : '/echo/email',
+        subject : 'ECHO Notification'
+    },
+    sms : {
+        url : '/echo/sms',
+        label : 'ECHO'
+    },
+    push : {
+        url : '/echo/sns'
+    }
 };
 
 exports.host = host;
@@ -66,5 +81,6 @@ exports.db_pw_prefix = prefix;
 exports.tokensecret = tokensecret;
 exports.db = db;
 exports.ssl = ssl;
-exports.api = apiKey;
-exports.notificationhost = '';
+exports.notificationService = service;
+
+

@@ -1,5 +1,5 @@
 /**
- * Mocha Tests for Treatments records...
+ * Mocha Tests for Severity records...
  * Created by steimlfk on 17.12.14.
  */
 
@@ -11,9 +11,9 @@ var async = require('async');
 
 
 var config = require('./config.js');
-var data = require('./testdata/treatments.js');
+var data = require('./testdata/severity.js');
 
-describe('Treatments Record Tests:', function() {
+describe('Severity Record Tests:', function() {
     // Config Vars
     var url = config.url;
     var admin_username = config.admin_username;
@@ -180,9 +180,9 @@ describe('Treatments Record Tests:', function() {
          };
          */
 
-        it('Admin cant get List of Treatments Records of a certain Patient', function (done){
+        it('Admin cant get List of Severity Records of a certain Patient', function (done){
             request(url)
-                .get(patData_url + '/treatments')
+                .get(patData_url + '/severity')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(403)
                 .end(function (err, res){
@@ -191,11 +191,11 @@ describe('Treatments Record Tests:', function() {
                 });
         });
 
-        it('Admin cant create new Treatments Record', function (done){
+        it('Admin cant create new Severity Record', function (done){
             request(url)
-                .post(patData_url + '/treatments')
+                .post(patData_url + '/severity')
                 .set('Authorization', 'Bearer ' + access_token)
-                .send (data.admin.newTreatment)
+                .send (data.admin.newSeverity)
                 .expect(403)
                 .end(function (err, res){
                     if (err) throw err;
@@ -203,21 +203,9 @@ describe('Treatments Record Tests:', function() {
                 });
         });
 
-        it('Admin cant get a certain Treatments Records of a certain Patient', function (done){
+        it('Admin cant get a certain Severity Records of a certain Patient', function (done){
             request(url)
-                .get(patData_url + '/treatments/42')
-                .set('Authorization', 'Bearer ' + access_token)
-                .expect(403)
-                .end(function (err, res){
-                    if (err) throw err;
-                    done();
-                });
-        });
-
-
-        it('Admin cant delete Treatments Record', function (done){
-            request(url)
-                .del(patData_url + '/treatments/42')
+                .get(patData_url + '/severity/42')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(403)
                 .end(function (err, res){
@@ -226,11 +214,11 @@ describe('Treatments Record Tests:', function() {
                 });
         });
 
-        it('Admin cant update a Treatments Record', function (done){
+
+        it('Admin cant delete Severity Record', function (done){
             request(url)
-                .put(patData_url + '/treatments/42')
+                .del(patData_url + '/severity/42')
                 .set('Authorization', 'Bearer ' + access_token)
-                .send (data.admin.newTreatment)
                 .expect(403)
                 .end(function (err, res){
                     if (err) throw err;
@@ -245,7 +233,7 @@ describe('Treatments Record Tests:', function() {
     describe('Testing Functions as Doctor:', function() {
         var access_token = null;
         var list_length = 0;
-        var exam_url, exam2_url;
+        var exam_url;
         var creds = {
             username: data.init.newDAcc.username,
             password: data.init.newDAcc.password,
@@ -279,28 +267,26 @@ describe('Treatments Record Tests:', function() {
 
         };
 
-        it('Doctor can get Treatments Records of his patients', function (done){
+        it('Doctor can get Severity Records of his patients', function (done){
             request(url)
-                .get(patData_url+'/treatments')
+                .get(patData_url+'/severity')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(validStatusCodeForListOrEmptyList)
                 .end(function (err, res){
                     if (err) throw err;
                     if (res.statusCode == 200) {
-                        res.body.should.have.property('treatments');
-
-                        list_length = res.body.treatments.length;
+                        res.body.should.have.property('severity');
+                        list_length = res.body.severity.length;
                     }
                     else list_length = 0;
                     done();
                 });
         });
 
-        it('Doctor can create new Treatments Records Data (baseline)', function (done){
-            var tmp = data.doctor.newTreatment;
-            tmp.status = "baseline";
+        it('Doctor can create new Severity Records Data', function (done){
+            var tmp = data.doctor.newSeverity;
             request(url)
-                .post(patData_url+'/treatments')
+                .post(patData_url+'/severity')
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (tmp)
                 .expect(201)
@@ -312,83 +298,33 @@ describe('Treatments Record Tests:', function() {
                 });
         });
 
-        it('Doctor can create new Treatments Records Data (exacerbation)', function (done){
-            var tmp = data.doctor.newTreatment;
-            tmp.status = "exacerbation";
+
+        it('Recordslists Length should be N+1', function (done){
             request(url)
-                .post(patData_url+'/treatments')
-                .set('Authorization', 'Bearer ' + access_token)
-                .send (tmp)
-                .expect(201)
-                .end(function (err, res){
-                    if (err) throw err;
-
-                    exam2_url = res.headers.location;
-                    done();
-                });
-        });
-
-
-        it('Doctor cant create new Treatments Records Data with status any other than baseline or exacerbation', function (done){
-            var tmp = data.doctor.newTreatment;
-            tmp.status = "fine";
-            request(url)
-                .post(patData_url+'/treatments')
-                .set('Authorization', 'Bearer ' + access_token)
-                .send (tmp)
-                .expect(400)
-                .end(function (err, res){
-                    if (err) throw err;
-
-                    done();
-                });
-        });
-
-        it('Recordslists Length should be N+2', function (done){
-            request(url)
-                .get(patData_url+'/treatments')
+                .get(patData_url+'/severity')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(200)
                 .end(function (err, res){
                     if (err) throw err;
-                    res.body.should.have.property('treatments');
-                    res.body.treatments.length.should.equal(list_length+2);
+                    res.body.should.have.property('severity');
+                    res.body.severity.length.should.equal(list_length+1);
 
                     done();
                 });
         });
 
         it('Doctor can get created Data', function (done){
-            var c = data.doctor.newTreatment;
             request(url)
                 .get(exam_url)
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(200)
                 .end(function (err, res){
                     if (err) throw err;
-
-
                     done();
                 });
         });
 
-        it('Doctor can update Treatments Records Data', function (done){
-            var tmp = data.doctor.newTreatment;
-            tmp.status = "exacerbation";
-            tmp.mycolytocis = true;
-            request(url)
-                .put(exam2_url)
-                .set('Authorization', 'Bearer ' + access_token)
-                .send (tmp)
-                .expect(204)
-                .end(function (err, res){
-                    if (err) throw err;
-
-                    done();
-                });
-        });
-
-        it('Doctor can delete certain Treatments Records', function (done){
+        it('Doctor can delete certain Severity Records', function (done){
             async.series
             ([
                 function (cb) {
@@ -403,25 +339,14 @@ describe('Treatments Record Tests:', function() {
                 },
                 function (cb) {
                     request(url)
-                        .del(exam2_url)
-                        .set('Authorization', 'Bearer ' + access_token)
-                        .expect(204)
-                        .end(function (err, res){
-                            if (err) throw cb(err);
-                            cb(null, res);
-
-                        });
-                },
-                function (cb) {
-                    request(url)
-                        .get(patData_url+'/treatments')
+                        .get(patData_url+'/severity')
                         .set('Authorization', 'Bearer ' + access_token)
                         .expect(validStatusCodeForListOrEmptyList)
                         .end(function (err, res){
                             if (err) throw err;
                             if (res.statusCode == 200) {
-                                res.body.should.have.property('treatments');
-                                res.body.treatments.length.should.equal(list_length);
+                                res.body.should.have.property('severity');
+                                res.body.severity.length.should.equal(list_length);
                             }
                             if (err) throw cb(err);
                             cb(null, res);
@@ -467,9 +392,9 @@ describe('Treatments Record Tests:', function() {
                 });
         });
 
-        it('Patient cant get his List of Treatments Records', function (done){
+        it('Patient cant get his List of Severity Records', function (done){
             request(url)
-                .get(patData_url + '/treatments')
+                .get(patData_url + '/severity')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(403)
                 .end(function (err, res){
@@ -478,11 +403,11 @@ describe('Treatments Record Tests:', function() {
                 });
         });
 
-        it('Patient cant create new Treatments Record', function (done){
+        it('Patient cant create new Severity Record', function (done){
             request(url)
-                .post(patData_url + '/treatments')
+                .post(patData_url + '/severity')
                 .set('Authorization', 'Bearer ' + access_token)
-                .send (data.admin.newTreatment)
+                .send (data.admin.newSeverity)
                 .expect(403)
                 .end(function (err, res){
                     if (err) throw err;
@@ -490,21 +415,9 @@ describe('Treatments Record Tests:', function() {
                 });
         });
 
-        it('Patient cant get a certain Treatments Record', function (done){
+        it('Patient cant get a certain Severity Record', function (done){
             request(url)
-                .get(patData_url + '/treatments/42')
-                .set('Authorization', 'Bearer ' + access_token)
-                .expect(403)
-                .end(function (err, res){
-                    if (err) throw err;
-                    done();
-                });
-        });
-
-
-        it('Patient cant delete Treatments Record', function (done){
-            request(url)
-                .del(patData_url + '/treatments/42')
+                .get(patData_url + '/severity/42')
                 .set('Authorization', 'Bearer ' + access_token)
                 .expect(403)
                 .end(function (err, res){
@@ -513,18 +426,17 @@ describe('Treatments Record Tests:', function() {
                 });
         });
 
-        it('Patient cant update a Treatments Record', function (done){
+
+        it('Patient cant delete Severity Record', function (done){
             request(url)
-                .put(patData_url + '/treatments/42')
+                .del(patData_url + '/severity/42')
                 .set('Authorization', 'Bearer ' + access_token)
-                .send (data.admin.newTreatment)
                 .expect(403)
                 .end(function (err, res){
                     if (err) throw err;
                     done();
                 });
         });
-
     });
 
     after('Cleaning Up...', function(done) {

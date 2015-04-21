@@ -38,33 +38,12 @@ var newPatData = {
     "landline": "030123456"
 };
 
-var newTreatment = {
+var newCat = {
     "patientId": 42,
-    "antibiotics": false,
-    "antiflu": false,
-    "antipneum": false,
-    "lama": false,
-    "longActingB2": false,
-    "ltot": false,
-    // ['Concetrator' or 'Cylinder' or 'Liquid']:LTOT Device,
-    "ltotDevice": "Concetrator",
-    "ltotStartDate": "2011-11-01",
-    "mycolytocis": false,
-    "niv": false,
-    "pdef4Inhalator": false,
-    "sama": false,
-    "shortActingB2": false,
-    "steroidsInhaled": false,
-    "steroidsOral": false,
-    "theophyline": false,
-    "ultraLongB2": false,
-    //'CPAP' or 'BiPAP': Ventilation Device,
-    "ventilationDevice": "CPAP",
-    "ventilationStart": "2011-01-01",
-    "diagnoseDate": "2014-12-17",
-    "other": "other mean things"
-}
-
+    "validFrom": "2014-12-17",
+    "comment" : null,
+    "severity" : "A"
+};
 
 module.exports = {
     init : {
@@ -74,15 +53,15 @@ module.exports = {
     },
     // data for admin tests....
     admin: {
-        newTreatment : newTreatment
+        newSeverity : newCat
     },
     // data for doctor tests
     doctor:{
-        newTreatment : newTreatment
+        newSeverity : newCat
     },
     // data for patient tests
     patient:{
-        newTreatment : newTreatment
+        newSeverity : newCat
     }
 
 };

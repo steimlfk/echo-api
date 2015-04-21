@@ -52,15 +52,14 @@ exports.add = function(req,res,next){
     var status = (i.status)? i.status.toLowerCase() : "";
     // query db
     // ? from query will be replaced by values in [] - including escaping!
-    connection.query('call treatmentCreate(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?)',
+    connection.query('call treatmentCreate(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?)',
         [id, date,status,i.antibiotics,i.antiflu,i.antipneum,i.lama,i.longActingB2,
             i.ltot,i.ltotDevice,i.ltotStart,i.mycolytocis,i.niv,i.pdef4Inhalator,i.sama,i.shortActingB2,
-            i.steroidsInhaled,i.steroidsOral,i.theophyline,i.ultraLongB2,i.ventilationDevice,i.ventilationStart],
+            i.steroidsInhaled,i.steroidsOral,i.theophyline,i.ultraLongB2,i.ventilationDevice,i.ventilationStart, i.other],
         function(err, result) {
-            if (err) {
-                next(err);
-
-            } else {
+            connection.release();
+            if (err) next(err);
+            else {
                 var analyzer = require('./notify.js');
                 var dailyAnalyzer = new analyzer();
                 // this postpones the analysis of the data until the POST is completely processed
@@ -69,11 +68,9 @@ exports.add = function(req,res,next){
                 });
                 // resource was created
                 // link will be provided in location header
-                res.statusCode = 201;
-                res.location('/patients/'+ id + '/treatments/' + result[0][0].insertId);
-                res.send();
+                res.loc = '/patients/'+ id + '/treatments/' + result[0][0].insertId;
+                next();
             }
-            connection.release();
         });
 };
 
@@ -101,128 +98,84 @@ exports.update = function(req,res,next){
     var status = (i.status)? i.status.toLowerCase() : "";
     // query db
     // ? from query will be replaced by values in [] - including escaping!
-    connection.query('call treatmentUpdate(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?)',
+    connection.query('call treatmentUpdate(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?)',
         [rid, id, date,status,i.antibiotics,i.antiflu,i.antipneum,i.lama,i.longActingB2,
             i.ltot,i.ltotDevice,i.ltotStart,i.mycolytocis,i.niv,i.pdef4Inhalator,i.sama,i.shortActingB2,
-            i.steroidsInhaled,i.steroidsOral,i.theophyline,i.ultraLongB2,i.ventilationDevice,i.ventilationStart],
+            i.steroidsInhaled,i.steroidsOral,i.theophyline,i.ultraLongB2,i.ventilationDevice,i.ventilationStart, i.other],
         function(err, result) {
-            if (err) {
-                // Error Handling for sql signal statements for the triggers
-                // 22400 is equiv. to HTTP Error Code 400: Bad Request (has errors, should be altered and resend)
-                if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22400'){
-                    res.statusCode = 400;
-                    res.send({error: err.message});
-                }
-                // Error Handling for sql signal statements for the triggers
-                // 22403 is equiv. to HTTP Error Code 403: Forbidden
-                else if (err.code === 'ER_SIGNAL_EXCEPTION' && err.sqlState == '22403'){
-                    res.statusCode = 403;
-                    res.send({error: err.message});
-                }
-                // Error Handling: Something else went wrong!
-                else {
-                    console.error('Query error on PUT Treatment: ',err);
-                    res.statusCode = 500;
-                    res.send({error: 'Internal Server Error'});
-                }
-            } else {
-                // record  was updated
-                if (result[0][0].affected_rows > 0){
-                    res.statusCode = 204;
-                    res.send();
-                }
-                // record wasnt updated since it doesnt exist or isnt visible to the current user
-                else {
-                    res.statusCode = 404;
-                    res.send();
-                }
-            }
             connection.release();
+            if (err) next(err);
+            else {
+                res.affectedRows = result[0][0].affected_rows;
+                next();
+            }
         });
 };
 
+var respMessages = commons.respMsg("Treatment");
 exports.listSpec = {
     summary : "Get Treatment Records of this Patient (Roles: doctor)",
     notes: "This Function lists all Treatment Records for the given patient. <br>This function passes the parameters to the SP listExams. <br><br> <b>Parameters:</b> <br><br>  " +
-    "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " +
-    "<b>Possible Results</b>: <br>" +
-    " <b>200</b>  List of Readings is supplied. Format cats: [Array of treatments Model] <br>" +
-    " <b>204</b>  List (or the current page) is currently empty <br>" +
-    " <b>403</b>  The current user isnt allowed to access the data of the given patient <br>" +
-    " <b>500</b> Internal Server Error",
+    "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " ,
     path : "/patients/{id}/treatments",
     method: "GET",
     type : "ListTreatment",
     nickname : "listTreatment",
     parameters : [swagger.pathParam("id", "Patient where the records belong to", "string"),
         swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
-        swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")]
+        swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")],
+    responseMessages: respMessages.list
 };
 
 
 exports.addSpec = {
     summary : "Add  Treatment Records (Roles: doctor)",
-    notes: "This Function creates an new Catscale Record. (if the Body contains patientId, its ignored) <br>This function passes its parameters to the SP treamtentCreate. <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>201</b>  Record is created and the location is returned in the Location Header <br>" +
-    " <b>400</b>  The provided data contains errors, e.g. a invalid value for status <br>" +
-    " <b>403</b>  The logged in user isnt allowed to create a record with this data.<br>"+
-    " <b>500</b> Internal Server Error",
+    notes: "This Function creates an new Catscale Record. (if the Body contains patientId, its ignored) <br>This function passes its parameters to the SP treamtentCreate. <br><br>" ,
     path : "/patients/{id}/treatments",
     method: "POST",
     nickname : "addTreatment",
     parameters : [swagger.bodyParam("Treatment", "new Record", "NewTreatment"),
-        swagger.pathParam("id", "Patient where the records belong to", "string")]
+        swagger.pathParam("id", "Patient where the records belong to", "string")],
+    responseMessages: respMessages.add
 
 };
 
 exports.listOneSpec = {
     summary : "Get specific Treatment Record of this Patient (Roles: doctor)",
-    notes: "This Function returns the requested record, if it exists and is visible to the current user. <br>This function passes the parameters to the SP listSingleExams. <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>200</b>  Record is supplied <br>" +
-    " <b>403</b>  The current user isnt allowed to access the data of the given patient <br>" +
-    " <b>404</b>  The requested record doesnt exist. <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "This Function returns the requested record, if it exists and is visible to the current user. <br>This function passes the parameters to the SP listSingleExams. <br><br>" ,
     path : "/patients/{id}/treatments/{rid}",
     method: "GET",
     type : "Treatment",
     nickname : "listOneTreatment",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
-        swagger.pathParam("rid", "ID of the Record", "string")]
+        swagger.pathParam("rid", "ID of the Record", "string")],
+    responseMessages: respMessages.listOne
 
 };
 
 
 exports.delSpec = {
     summary : "Delete specific Treatment Record of this Patient (Roles: doctor)",
-    notes: "This Function deletes a record, which is specified by the url. (if the Body contains ids, theyre ignored) <br>This function passes its parameters to the SP deleteExamRecord <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>204</b>  Record was deleted. <br>" +
-    " <b>404</b>  Record is either not visible to the current user or doesnt exist. <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "This Function deletes a record, which is specified by the url. (if the Body contains ids, theyre ignored) <br>This function passes its parameters to the SP deleteExamRecord <br><br>" ,
     path : "/patients/{id}/treatments/{rid}",
     method: "DELETE",
     nickname : "delTreatment",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
-        swagger.pathParam("rid", "ID of the Record", "string")]
+        swagger.pathParam("rid", "ID of the Record", "string")],
+    responseMessages: respMessages.del
 
 };
 
 exports.updateSpec = {
     summary : "Update specific Treatment Record of this Patient (Roles: doctor)",
     path : "/patients/{id}/treatments/{rid}",
-    notes: "This Function updates an Account, which is specified by the url. The accountId in the Message Body is ignored. <br>This function passes its parameters to the SP treatmentUpdate. <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>204</b>  Record was updated. <br>" +
-    " <b>400</b>  The provided data contains errors, e.g. a invalid value for status <br>" +
-    " <b>404</b>  Record is either not visible to the current user or doesnt exist. <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "This Function updates an Account, which is specified by the url. The accountId in the Message Body is ignored. <br>This function passes its parameters to the SP treatmentUpdate. <br><br>" ,
     method: "PUT",
     nickname : "updateTreatment",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
         swagger.pathParam("rid", "ID of the Record", "string") ,
-        swagger.bodyParam("Treatment", "updated Treatment Record", "NewTreatment")]
+        swagger.bodyParam("Treatment", "updated Treatment Record", "NewTreatment")],
+    responseMessages: respMessages.update
 };
 
 var contents = {
@@ -236,7 +189,7 @@ var contents = {
     "lama":{"type":"boolean","description": "lama"},
     "longActingB2":{"type":"boolean","description": "longActingB2"},
     "ltot":{"type":"boolean","description": "ltot"},
-    "ltotDevice":{"type":"string","description" : "LTOT Device","enum":[ "none", "CPAP", "BiPAP"]},
+    "ltotDevice":{"type":"string","description" : "LTOT Device","enum":[ "none", "Concetrator", "Cylinder", "Liquid"]},
     "ltotStartDate":{"type":"string","format": "Date", "description": "Date of LTOT Start"},
     "mycolytocis":{"type":"boolean","description": "mycolytocis"},
     "niv":{"type":"boolean","description": "niv"},
@@ -247,8 +200,9 @@ var contents = {
     "steroidsOral":{"type":"boolean","description": "steroidsOral"},
     "theophyline":{"type":"boolean","description": "theophyline"},
     "ultraLongB2":{"type":"boolean","description": "ultraLongB2"},
-    "ventilationDevice":{"type":"string","description" : "Ventilation Device","enum":[ "none", "Concetrator", "Cylinder", "Liquid"]},
-    "ventilationStart":{"type":"string","format": "Date", "description": "Date of Ventilation Start"}
+    "ventilationDevice":{"type":"string","description" : "Ventilation Device","enum":[ "none", "CPAP", "BiPAP"]},
+    "ventilationStart":{"type":"string","format": "Date", "description": "Date of Ventilation Start"},
+    "other": {"type":"string","description" : "Other notes about treatment"}
 };
 
 exports.models = {
@@ -256,14 +210,14 @@ exports.models = {
         "id":"Treatment",
         "required": ["patientId","recordId","diagnoseDate","status","antibiotics","antiflu","antipneum","lama","longActingB2","ltot",
             "ltotDevice","ltotStart","mycolytocis","niv","pdef4Inhalator","sama","shortActingB2","steroidsInhaled",
-            "steroidsOral","theophyline","ultraLongB2","ventilationDevice","ventilationStart"],
+            "steroidsOral","theophyline","ultraLongB2","ventilationDevice","ventilationStart", "other"],
         "properties": contents
     },
     "NewTreatment":{
         "id":"NewTreatment",
         "required": ["patientId","diagnoseDate","status","antibiotics","antiflu","antipneum","lama","longActingB2","ltot",
             "ltotDevice","ltotStart","mycolytocis","niv","pdef4Inhalator","sama","shortActingB2","steroidsInhaled",
-            "steroidsOral","theophyline","ultraLongB2","ventilationDevice","ventilationStart"],
+            "steroidsOral","theophyline","ultraLongB2","ventilationDevice","ventilationStart", "other"],
         "properties": contents
     },
     "ListTreatment":{

@@ -47,10 +47,12 @@ exports.list = function(req, res, next1){
     // query db
     // ? from query will be replaced by values in [] - including escaping!
     connection.query(qry, [req.params.id, page, pageSize], function(err, rows) {
-        if (err) {
-            next1(err);
-        }
+        connection.release();
+        if (err) next1(err);
         else {
+            var fullResult = {
+                daily_reports : []
+            };
             // is there any result?
             if (rows[0].length > 0){
                 var host = 'https://'+req.headers.host;
@@ -66,10 +68,11 @@ exports.list = function(req, res, next1){
                     o._links.patient.href = host+'/patients/'+req.params.id;
                     result.push(o);
                 }
-                var links;
+                fullResult.daily_reports = result;
+
                 // add pagination links to result set if pagination was used
                 if(page != 0){
-                    links = {};
+                    var links = {};
                     // create "first" link
                     var first = host+'/patients/'+req.params.id+'/'+exam+'?page=1&pageSize='+pageSize;
                     links.first = first;
@@ -83,20 +86,12 @@ exports.list = function(req, res, next1){
                         var back = host+'/patients/'+req.params.id+'/'+exam+'?page='+(page-1)+'&pageSize='+pageSize;
                         links.back = back
                     }
+                    fullResult._links = links;
                 }
-                // send complete result set with pagination links
-                var ret = {};
-                ret[exam] = result;
-                if(page != 0) ret._links = links;
-                res.send(ret);
             }
-            else{
-                // result set from db was empty
-                res.statusCode = 204;
-                res.send();
-            }
+            res.result = fullResult;
+            next1();
         }
-        connection.release();
     });
 };
 
@@ -119,10 +114,10 @@ exports.listOne = function(req,res,next){
     // query db
     // ? from query will be replaced by values in [] - including escaping!
     connection.query(qry,[id,rid], function(err, rows) {
-        if (err) {
-            next(err);
-        }
+        connection.release();
+        if (err) next(err);
         else {
+            var fullResult = {};
             // is there any result?
             if (rows[0].length > 0){
                 var host = 'https://'+req.headers.host;
@@ -134,15 +129,11 @@ exports.listOne = function(req,res,next){
                 // create corresponding patients link
                 o._links.patient = {};
                 o._links.patient.href = host+'/patients/'+req.params.id;
-                res.send(o);
+                fullResult = o;
             }
-            // there was no result from db
-            else{
-                res.statusCode = 404;
-                res.send();
-            }
+            res.result = fullResult;
+            next();
         }
-        connection.release();
     });
 };
 
@@ -164,21 +155,12 @@ exports.del = function(req, res, next){
     // query db
     // ? from query will be replaced by values in [] - including escaping!
     connection.query('call reportDelete(?, ?)', [id, rid], function(err, result) {
-        if (err) {
-            next(err);
-        } else {
-            // record was deleted
-            if (result[0][0].affected_rows > 0){
-                res.statusCode = 204;
-                res.send();
-            }
-            // record wasnt deleted
-            else {
-                res.statusCode = 404;
-                res.send();
-            }
-        }
         connection.release();
+        if (err) next(err);
+        else {
+            res.affectedRows = result[0][0].affected_rows > 0;
+            next();
+        }
     });
 };
 /**
@@ -205,21 +187,12 @@ exports.update = function(req,res,next){
         [rid, id, date,
             i.q1, i.q2, i.q3, i.q4, i.q5, i.q1a, i.q1b, i.q1c,i.q3a, i.q3b, i.q3c, i.satO2,
             i.walkingDist, i.temperature, i.pefr, i.heartRate, i.x, i.y], function(err, result) {
-            if (err) {
-                next(err);
-            } else {
-                // record  was updated
-                if (result[0][0].affected_rows > 0){
-                    res.statusCode = 204;
-                    res.send();
-                }
-                // record was not found
-                else {
-                    res.statusCode = 404;
-                    res.send();
-                }
-            }
             connection.release();
+            if (err) next(err);
+            else {
+                res.affectedRows = result[0][0].affected_rows > 0;
+                next();
+            }
         });
 };
 /**
@@ -244,106 +217,83 @@ exports.add = function(req,res,next){
         [id, date,
             i.q1, i.q2, i.q3, i.q4, i.q5, i.q1a, i.q1b, i.q1c, i.q3a, i.q3b, i.q3c, i.satO2,
             i.walkingDist, i.temperature, i.pefr, i.heartRate, i.x, i.y], function(err, result) {
-            if (err) {
-                next(err);
-
-            } else {
+            connection.release();
+            if (err) next(err);
+            else {
                 // trigger analysis
                 var analyzer = require('./notify.js');
                 var dailyAnalyzer = new analyzer();
                 // this postpones the analysis of the data until the POST is completely processed
                 process.nextTick (function (){
                     dailyAnalyzer.emit('newDailyReport', result[0][0].insertId);
-                    dailyAnalyzer.emit('twoDayAnalyzes', id);
                 });
-
-                // new ressource created
-                res.statusCode = 201;
-                res.location('/patients/'+ id + '/daily_reports/' + result[0][0].insertId);
-                res.send();
+                res.loc = '/patients/'+ id + '/daily_reports/' + result[0][0].insertId;
+                next();
             }
-            connection.release();
         });
 };
 
+var commons = require('./controller_commons');
+var respMessages = commons.respMsg("DailyReport");
 exports.listSpec = {
     summary : "Get All Daily Reports By this Patient (Roles: doctor and patient)",
     notes: "This Function lists all Daily Reports for the given patient. <br>This function passes the parameters to the SP reportList. <br><br> <b>Parameters:</b> <br><br>  " +
-    "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> " +
-    "<b>Possible Results</b>: <br>" +
-    " <b>200</b>  List of Daily Reports is supplied. Format cats: [Array of daily_report Model] <br>" +
-    " <b>204</b>  List (or the current page) is currently empty <br>" +
-    " <b>403</b>  The current user isnt allowed to access the data of the given patient <br>" +
-    " <b>500</b> Internal Server Error",
+    "<b>Pagination</b>: If you provide a page and a pageSize, the result is only the requested part of the list. If the value of page is too big, an empty list is returned. If you provide a Pagecount without Pagesize, Pagesize is 20. <br> ",
     path : "/patients/{id}/daily_reports",
     method: "GET",
     type : "ListDailyReport",
     nickname : "listReport",
     parameters : [swagger.pathParam("id", "Patient who answered the Questions", "string"),
         swagger.queryParam("page", "Page Count for Pagination", "string", false, null, "1"),
-        swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")]
+        swagger.queryParam("pageSize", "Page Size for Pagination. Default is 20", "string", false, null, "20")],
+    responseMessages: respMessages.list
 };
 
 
 exports.addSpec = {
     summary : "Add new Daily Reports (Roles: doctor and patient)",
-    notes: "This Function creates an new Daily Report. If the Body contains patientId, its ignored and the id from the url is taken. Also it will set the date if date is null. <br>This function passes its parameters to the SP reportCreate. <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>201</b>  Record is created and the location is returned in the Location Header <br>" +
-    " <b>400</b>  The provided data contains errors. <br>" +
-    " <b>403</b>  The logged in user isnt allowed to create a record with this data.<br>"+
-    " <b>500</b> Internal Server Error",
+    notes: "This Function creates an new Daily Report. If the Body contains patientId, its ignored and the id from the url is taken. Also it will set the date if date is null. <br>This function passes its parameters to the SP reportCreate. <br><br>" ,
     path : "/patients/{id}/daily_reports",
     method: "POST",
     nickname : "addReport",
     parameters : [swagger.bodyParam("NewDailyReport", "new Set of Daily Answers", "NewDailyReport"), swagger.pathParam("id", "Patient who answered the Questions", "string")],
+    responseMessages: respMessages.add
 };
 
 exports.listOneSpec = {
     summary : "Get specific Daily Report Record of this Patient (Roles: doctor and patient)",
     path : "/patients/{id}/daily_reports/{rid}",
-    notes: "This Function returns the requested record, if it exists and is visible to the current user. <br>This function passes the parameters to the SP reportListOne. <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>200</b>  Record is supplied <br>" +
-    " <b>403</b>  The current user isnt allowed to access the data of the given patient <br>" +
-    " <b>404</b>  The requested record doesnt exist. <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "This Function returns the requested record, if it exists and is visible to the current user. <br>This function passes the parameters to the SP reportListOne. <br><br>" ,
     method: "GET",
     type : "DailyReport",
     nickname : "listOneReport",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
         swagger.pathParam("rid", "ID of the Record", "string")],
+    responseMessages: respMessages.listOne
 };
 
 
 exports.delSpec = {
     summary : "Delete specific Daily Report Record of this Patient (Roles: doctor and patient)",
-    notes: "This Function deletes a record, which is specified by the url. (if the Body contains ids, theyre ignored) <br>This function passes its parameters to the SP reportDelete <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>204</b>  Record was deleted. <br>" +
-    " <b>404</b>  Record is either not visible to the current user or doesnt exist. <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "This Function deletes a record, which is specified by the url. (if the Body contains ids, theyre ignored) <br>This function passes its parameters to the SP reportDelete <br><br>" ,
     path : "/patients/{id}/daily_reports/{rid}",
     method: "DELETE",
     nickname : "delReport",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
         swagger.pathParam("rid", "ID of the Record", "string")],
+    responseMessages: respMessages.del
 };
 
 exports.updateSpec = {
     summary : "Update specific Daily Report Record of this Patient (Roles: doctor and patient)",
-    notes: "This Function updates a Daily Report, which is specified by the url. Any ids in the Message Body are ignored. <br>This function passes its parameters to the SP reportUpdate. <br><br>" +
-    "<b>Possible Results</b>: <br>" +
-    " <b>204</b>  Record was updated. <br>" +
-    " <b>400</b>  The provided data contains errors, e.g. a invalid value for status <br>" +
-    " <b>404</b>  Record is either not visible to the current user or doesnt exist. <br>" +
-    " <b>500</b> Internal Server Error",
+    notes: "This Function updates a Daily Report, which is specified by the url. Any ids in the Message Body are ignored. <br>This function passes its parameters to the SP reportUpdate. <br><br>" ,
     path : "/patients/{id}/daily_reports/{rid}",
     method: "PUT",
     nickname : "updateReport",
     parameters : [swagger.pathParam("id", "ID of the Patient", "string"),
         swagger.pathParam("rid", "ID of the Record", "string") ,
-        swagger.bodyParam("DailyReport", "updated Readings Record", "NewDailyReport")]
+        swagger.bodyParam("DailyReport", "updated Readings Record", "NewDailyReport")],
+    responseMessages: respMessages.update
 };
 
 

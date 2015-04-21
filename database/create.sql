@@ -38,19 +38,24 @@ GRANT EXECUTE ON function  `echo`.`getRole` TO 'echo_db_usr'@'localhost';
 DELIMITER $$
 CREATE DEFINER=`echo_db_usr`@`localhost` FUNCTION `twoDayAnalyzes`(
 id Integer
-) RETURNS tinyint(1)
+) RETURNS int(11)
     DETERMINISTIC
 BEGIN
-declare yesterday boolean;
-declare today boolean;
-select coalesce((select q1 from dailyReports where date >= (now() - interval 1 day) and patientId=id)) into @today;
-select coalesce((select q1 from dailyReports where date<(now()-interval 1 day) and date >=(now()-interval 2 day) and patientId=id)) into @yesterday;
-if @today = 0 OR @yesterday = 0
-  then
-  select coalesce((select q5 from dailyReports where date >= (now() - interval 1 day) and patientId=id)) into @today;
-  select coalesce((select q5 from dailyReports where date<(now()-interval 1 day) and date >=(now()-interval 2 day) and patientId=id)) into @yesterday;
+SELECT q1,q5 into @q1_yesterday, @q5_yesterday FROM echo.dailyReports WHERE patientId = id AND date = date_sub(CURDATE(), INTERVAL 1 DAY) ORDER BY date,recordId desc LIMIT 1;
+SELECT q1,q5 into @q1_today, @q5_today FROM echo.dailyReports WHERE patientId = id AND date = CURDATE() ORDER BY date,recordId desc LIMIT 1;
+SET @result = 0;
+if (@q1_yesterday is not null AND @q1_today is not null) then
+	if (@q1_yesterday = 1 AND @q1_today = 1) then
+		SET @result = @result +1;
+	end if;
 end if;
-RETURN @today=@yesterday and @today=1;
+
+if (@q5_yesterday is not null AND @q5_today is not null) then
+	if (@q5_yesterday = 1 AND @q5_today = 1) then
+		SET @result = @result +5;
+	end if;
+end if;
+return @result;
 END$$
 DELIMITER ;
 
@@ -138,6 +143,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`accounts` (
   `notificationEnabled` TINYINT(1) NOT NULL DEFAULT 1,
   `notificationMode` ENUM('email', 'sms', 'push') NOT NULL DEFAULT 'email',
   `mobile` VARCHAR(45) NULL,
+  `modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE INDEX `email_UNIQUE` (`email` ASC),
   UNIQUE INDEX `username_UNIQUE` (`username` ASC),
   PRIMARY KEY (`accountId`))
@@ -160,6 +166,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`patients` (
   `fullAddress` VARCHAR(255) NOT NULL,
   `landline` VARCHAR(50) NULL,
   `fileId` VARCHAR(45) NOT NULL,
+   `modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`patientId`),
   UNIQUE INDEX `socialId_UNIQUE` (`socialId` ASC),
   UNIQUE INDEX `fileId_UNIQUE` (`fileId` ASC),
@@ -199,6 +206,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`ccqs` (
   `mentalStateScore` FLOAT NULL DEFAULT NULL,
   `functionalStateScore` FLOAT NULL DEFAULT NULL,
   `status` ENUM('baseline', 'exacerbation') NOT NULL,
+  `modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`recordId`),
   INDEX `ccqFKpat_idx` (`patientId` ASC),
   CONSTRAINT `ccqFKpat`
@@ -228,6 +236,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`cats` (
   `q8` INT NOT NULL DEFAULT -1,
   `totalCatscale` INT NULL DEFAULT 0,
   `status` ENUM('baseline', 'exacerbation') NOT NULL,
+  `modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`recordId`),
   INDEX `catsFKpat_idx` (`patientId` ASC),
   CONSTRAINT `catsFKpat`
@@ -268,6 +277,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`charlsons` (
   `aids` TINYINT(1) NULL DEFAULT 0,
   `noConditionAvailable` TINYINT(1) NULL DEFAULT 0,
   `totalCharlson` INT(11) NULL DEFAULT 0,
+  `modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`recordId`),
   INDEX `charFKpat_idx` (`patientId` ASC),
   CONSTRAINT `charFKpat`
@@ -287,7 +297,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`treatments` (
   `recordId` INT NOT NULL AUTO_INCREMENT,
   `patientId` INT NOT NULL,
   `diagnoseDate` DATE NULL,
-  `status` VARCHAR(15) NOT NULL,
+  `status` ENUM('baseline', 'exacerbation') NOT NULL,
   `shortActingB2` TINYINT(1) NULL,
   `longActingB2` TINYINT(1) NULL,
   `ultraLongB2` TINYINT(1) NULL,
@@ -303,10 +313,12 @@ CREATE TABLE IF NOT EXISTS `echo`.`treatments` (
   `antipneum` TINYINT(1) NULL,
   `ltot` TINYINT(1) NULL,
   `ltotStartDate` DATE NULL DEFAULT NULL,
-  `ltotDevice` ENUM('none', 'BiPAP', 'CPAP') NULL,
+  `ltotDevice` ENUM('none', 'Cylinder', 'Liquid', 'Concetrator')  NULL,
   `niv` TINYINT(1) NULL,
   `ventilationStart` DATE NULL,
-  `ventilationDevice` ENUM('none', 'Cylinder', 'Liquid', 'Concetrator') NULL,
+  `ventilationDevice` ENUM('none', 'BiPAP', 'CPAP') NULL,
+  `other` TEXT NULL,
+  `modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`recordId`),
   INDEX `treatFKpat_idx` (`patientId` ASC),
   CONSTRAINT `treatFKpat`
@@ -370,6 +382,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`readings` (
   `del_fev1_post` FLOAT NULL DEFAULT NULL,
   `del_fef25_75_pro` FLOAT NULL DEFAULT NULL,
   `del_pef_pro` FLOAT NULL DEFAULT NULL,
+  `modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`recordId`),
   INDEX `readFKpat_idx` (`patientId` ASC),
   CONSTRAINT `readFKpat`
@@ -433,7 +446,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`answers` (
   CONSTRAINT `fk.ans.quid`
     FOREIGN KEY (`questionId`)
     REFERENCES `echo`.`questions` (`questionId`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
@@ -463,6 +476,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`dailyReports` (
   `pefr` FLOAT NULL DEFAULT 0,
   `heartRate` FLOAT NULL DEFAULT 0,
   `loc` POINT NULL DEFAULT NULL,
+  `modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`recordId`),
   INDEX `repFKpat_idx` (`patientId` ASC),
   CONSTRAINT `repFKpat`
@@ -485,6 +499,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`deaths` (
   `infectious_disease` TINYINT(1) NULL DEFAULT 0,
   `malignancy` TINYINT(1) NULL DEFAULT 0,
   `other` VARCHAR(255) NULL,
+  `modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`patientId`),
   CONSTRAINT `deathFKpat`
     FOREIGN KEY (`patientId`)
@@ -503,6 +518,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`notifications` (
   `date` DATETIME NULL,
   `type` INT NOT NULL,
   `subjectsAccount` INT NULL,
+  `modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`notificationId`),
   INDEX `notFKpatient_idx` (`accountId` ASC),
   INDEX `notFKsubject_idx` (`subjectsAccount` ASC),
@@ -524,6 +540,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `echo`.`devices` (
   `accountId` INT NOT NULL,
   `deviceId` VARCHAR(255) NOT NULL,
+  `modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`accountId`, `deviceId`),
   UNIQUE INDEX `deviceId_UNIQUE` (`deviceId` ASC),
   CONSTRAINT `devicesFKacc`
@@ -552,9 +569,10 @@ CREATE TABLE `severity` (
   `severity` enum('A','B','C','D') NOT NULL,
   `validFrom` datetime NOT NULL,
   `comment` mediumtext,
+  `modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   KEY `sevFKpat_idx` (`patientId`),
   PRIMARY KEY (`recordId`),
-  CONSTRAINT `sevFKpat` FOREIGN KEY (`patientId`) REFERENCES `patients` (`patientId`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  CONSTRAINT `sevFKpat` FOREIGN KEY (`patientId`) REFERENCES `patients` (`patientId`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=InnoDB;
 
 USE `echo` ;
@@ -562,57 +580,201 @@ USE `echo` ;
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`severity_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`severity_view` (`recordId` INT, `patientId` INT, `severity` enum('A','B','C','D'), `validFrom` date, `comment` mediumtext);
+CREATE TABLE IF NOT EXISTS `echo`.`severity_view` (`recordId` INT, `patientId` INT, `severity` enum('A','B','C','D'), `validFrom` date, `comment` mediumtext, modified INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`accounts_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`accounts_view` (`accountId` INT, `username` INT, `password` INT, `role` INT, `email` INT, `enabled` INT, `reminderTime` INT, `notificationEnabled` INT, `notificationMode` INT, `mobile` INT);
+CREATE TABLE IF NOT EXISTS `echo`.`accounts_view` (`accountId` INT, `username` INT, `password` INT, `role` INT, `email` INT, `enabled` INT, `reminderTime` INT, `notificationEnabled` INT, `notificationMode` INT, `mobile` INT, modified INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`patients_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`patients_view` (`patientId` INT, `doctorId` INT, `firstName` INT, `lastName` INT, `secondName` INT, `socialId` INT, `sex` INT, `dateOfBirth` INT, `firstDiagnoseDate` INT, `fileId` INT, `fullAddress` INT, `landline` INT, `email` INT, `mobile` INT, `severity` ENUM('A', 'B', 'C', 'D'), `enabled` BOOLEAN);
+CREATE TABLE IF NOT EXISTS `echo`.`patients_view` (`patientId` INT, `doctorId` INT, `firstName` INT, `lastName` INT, `secondName` INT, `socialId` INT, `sex` INT, `dateOfBirth` INT, `firstDiagnoseDate` INT, `fileId` INT, `fullAddress` INT, `landline` INT, `email` INT, `mobile` INT, `severity` ENUM('A', 'B', 'C', 'D'), `enabled` BOOLEAN, modified INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`cats_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`cats_view` (`recordId` INT, `patientId` INT, `diagnoseDate` INT, `q1` INT, `q2` INT, `q3` INT, `q4` INT, `q5` INT, `q6` INT, `q7` INT, `q8` INT, `totalCatscale` INT, `status` INT);
+CREATE TABLE IF NOT EXISTS `echo`.`cats_view` (`recordId` INT, `patientId` INT, `diagnoseDate` INT, `q1` INT, `q2` INT, `q3` INT, `q4` INT, `q5` INT, `q6` INT, `q7` INT, `q8` INT, `totalCatscale` INT, `status` INT, modified INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`ccqs_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`ccqs_view` (`recordId` INT, `patientId` INT, `diagnoseDate` INT, `q1` INT, `q2` INT, `q3` INT, `q4` INT, `q5` INT, `q6` INT, `q7` INT, `q8` INT, `q9` INT, `q10` INT, `totalCCQScore` INT, `symptomScore` INT, `mentalStateScore` INT, `functionalStateScore` INT, `status` INT);
+CREATE TABLE IF NOT EXISTS `echo`.`ccqs_view` (`recordId` INT, `patientId` INT, `diagnoseDate` INT, `q1` INT, `q2` INT, `q3` INT, `q4` INT, `q5` INT, `q6` INT, `q7` INT, `q8` INT, `q9` INT, `q10` INT, `totalCCQScore` INT, `symptomScore` INT, `mentalStateScore` INT, `functionalStateScore` INT, `status` INT, modified INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`charlsons_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`charlsons_view` (`recordId` INT, `patientId` INT, `diagnoseDate` INT, `myocardialInfarction` INT, `congestiveHeartFailure` INT, `peripheralVascularDisease` INT, `cerebrovascularDisease` INT, `dementia` INT, `chronicPulmonaryDiasease` INT, `connectiveTissueDisease` INT, `ulcerDisease` INT, `liverDiseaseMild` INT, `diabetes` INT, `hemiplegia` INT, `renalDiseaseModerateOrSevere` INT, `diabetesWithEndOrganDamage` INT, `anyTumor` INT, `leukemia` INT, `malignantLymphoma` INT, `liverDiseaseModerateOrSevere` INT, `metastaticSolidMalignancy` INT, `aids` INT, `noConditionAvailable` INT, `totalCharlson` INT);
+CREATE TABLE IF NOT EXISTS `echo`.`charlsons_view` (`recordId` INT, `patientId` INT, `diagnoseDate` INT, `myocardialInfarction` INT, `congestiveHeartFailure` INT, `peripheralVascularDisease` INT, `cerebrovascularDisease` INT, `dementia` INT, `chronicPulmonaryDiasease` INT, `connectiveTissueDisease` INT, `ulcerDisease` INT, `liverDiseaseMild` INT, `diabetes` INT, `hemiplegia` INT, `renalDiseaseModerateOrSevere` INT, `diabetesWithEndOrganDamage` INT, `anyTumor` INT, `leukemia` INT, `malignantLymphoma` INT, `liverDiseaseModerateOrSevere` INT, `metastaticSolidMalignancy` INT, `aids` INT, `noConditionAvailable` INT, `totalCharlson` INT, modified INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`treatments_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`treatments_view` (`patientId` INT, `diagnoseDate` INT, `status` INT, `shortActingB2` INT, `longActingB2` INT, `ultraLongB2` INT, `steroidsInhaled` INT, `steroidsOral` INT, `sama` INT, `lama` INT, `pdef4Inhalator` INT, `theophyline` INT, `mycolytocis` INT, `antibiotics` INT, `antiflu` INT, `antipneum` INT, `ltot` INT, `ltotStartDate` INT, `ltotDevice` INT, `niv` INT, `ventilationStart` INT, `ventilationDevice` INT, `recordId` INT);
+CREATE TABLE IF NOT EXISTS `echo`.`treatments_view` (`patientId` INT, `diagnoseDate` INT, `status` INT, `shortActingB2` INT, `longActingB2` INT, `ultraLongB2` INT, `steroidsInhaled` INT, `steroidsOral` INT, `sama` INT, `lama` INT, `pdef4Inhalator` INT, `theophyline` INT, `mycolytocis` INT, `antibiotics` INT, `antiflu` INT, `antipneum` INT, `ltot` INT, `ltotStartDate` INT, `ltotDevice` INT, `niv` INT, `ventilationStart` INT, `ventilationDevice` INT, `recordId` INT, `other` int, modified INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`readings_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`readings_view` (`patientId` INT, `diagnoseDate` INT, `weight` INT, `height` INT, `pxy` INT, `fev1` INT, `fev1_pro` INT, `fvc` INT, `fvc_pro` INT, `fev1_fvc` INT, `rv` INT, `rv_pro` INT, `tlc` INT, `tlc_pro` INT, `rv_tlc` INT, `satO2_pro` INT, `dlco_pro` INT, `pao2` INT, `paco2` INT, `hco3` INT, `pH` INT, `fvc_pre` INT, `fvc_pre_pro` INT, `fev1_pre` INT, `fev1_pre_pro` INT, `fev1_fvc_pre` INT, `fef25_75_pre_pro` INT, `pef_pre_pro` INT, `tlc_pre` INT, `tlc_pre_pro` INT, `frc_pre` INT, `frc_pre_pro` INT, `rv_pre` INT, `rv_pre_pro` INT, `kco_pro` INT, `hematocrit` INT, `status` INT, `fvc_post` INT, `del_fvc_pro` INT, `fev1_post` INT, `del_fev1_post` INT, `del_fef25_75_pro` INT, `del_pef_pro` INT, `mmrc` INT, `smoker` INT, `notes` INT, `recordId` INT);
+CREATE TABLE IF NOT EXISTS `echo`.`readings_view` (`patientId` INT, `diagnoseDate` INT, `weight` INT, `height` INT, `pxy` INT, `fev1` INT, `fev1_pro` INT, `fvc` INT, `fvc_pro` INT, `fev1_fvc` INT, `rv` INT, `rv_pro` INT, `tlc` INT, `tlc_pro` INT, `rv_tlc` INT, `satO2_pro` INT, `dlco_pro` INT, `pao2` INT, `paco2` INT, `hco3` INT, `pH` INT, `fvc_pre` INT, `fvc_pre_pro` INT, `fev1_pre` INT, `fev1_pre_pro` INT, `fev1_fvc_pre` INT, `fef25_75_pre_pro` INT, `pef_pre_pro` INT, `tlc_pre` INT, `tlc_pre_pro` INT, `frc_pre` INT, `frc_pre_pro` INT, `rv_pre` INT, `rv_pre_pro` INT, `kco_pro` INT, `hematocrit` INT, `status` INT, `fvc_post` INT, `del_fvc_pro` INT, `fev1_post` INT, `del_fev1_post` INT, `del_fef25_75_pro` INT, `del_pef_pro` INT, `mmrc` INT, `smoker` INT, `notes` INT, `recordId` INT, modified INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`dailyReports_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`dailyReports_view` (`recordId` INT, `patientId` INT, `date` INT, `q1` INT, `q2` INT, `q3` INT, `q4` INT, `q5` INT, `q1a` INT, `q1b` INT, `q1c` INT, `q3a` INT, `q3b` INT, `q3c` INT, `satO2` INT, `walkingDist` INT, `temperature` INT, `pefr` INT, `heartRate` INT, `loc` INT);
+CREATE TABLE IF NOT EXISTS `echo`.`dailyReports_view` (`recordId` INT, `patientId` INT, `date` INT, `q1` INT, `q2` INT, `q3` INT, `q4` INT, `q5` INT, `q1a` INT, `q1b` INT, `q1c` INT, `q3a` INT, `q3b` INT, `q3c` INT, `satO2` INT, `walkingDist` INT, `temperature` INT, `pefr` INT, `heartRate` INT, `loc` INT, modified INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`deaths_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`deaths_view` (`patientId` INT, `date` INT, `cardiovascular` INT, `respiratory` INT, `infectious_disease` INT, `malignancy` INT, `other` INT);
+CREATE TABLE IF NOT EXISTS `echo`.`deaths_view` (`patientId` INT, `date` INT, `cardiovascular` INT, `respiratory` INT, `infectious_disease` INT, `malignancy` INT, `other` INT, modified INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`notifications_view`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `echo`.`notifications_view` (`notificationId` INT, `accountId` INT, `date` INT, `type` INT, `subjectsAccount` INT, `message` INT);
+
+
+-- -----------------------------------------------------
+-- procedure dropAllDbUsers
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=CURRENT_USER PROCEDURE `dropAllDbUsers`()
+BEGIN
+
+  #declare variable
+  DECLARE ptr INTEGER;
+  DECLARE done INT DEFAULT FALSE;
+  #declare cursor
+  DECLARE cur1 CURSOR FOR SELECT DISTINCT user from mysql.procs_priv where grantor='echo_db_usr@localhost';
+  #declare handle
+  DECLARE CONTINUE  HANDLER FOR NOT FOUND SET done = TRUE;
+
+  #open cursor
+  OPEN cur1;
+  #starts the loop
+  accounts_loop: LOOP
+    #get the values of each column into our  variables
+    FETCH cur1 INTO ptr;
+    IF done THEN
+      LEAVE accounts_loop;
+    END IF;
+	SET @stmt = CONCAT("DROP USER '",ptr,"'@'localhost'");
+	PREPARE s from @stmt;
+	EXECUTE s;
+	deallocate PREPARE s;
+  END LOOP accounts_loop;
+  CLOSE cur1;
+
+END
+$$
+
+DELIMITER ;
+
+
+-- -----------------------------------------------------
+-- procedure createAllDbUsers
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=CURRENT_USER PROCEDURE `createAllDbUsers`(IN pw_prefix VARCHAR (100))
+BEGIN
+
+  #declare variable
+  DECLARE ptr INTEGER;
+  DECLARE done INT DEFAULT FALSE;
+  #declare cursor
+  DECLARE cur1 CURSOR FOR SELECT accountId
+  FROM `echo`.`accounts`;
+  #declare handle
+  DECLARE CONTINUE  HANDLER FOR NOT FOUND SET done = TRUE;
+
+  #open cursor
+  OPEN cur1;
+  #starts the loop
+  accounts_loop: LOOP
+    #get the values of each column into our  variables
+    FETCH cur1 INTO ptr;
+    IF done THEN
+      LEAVE accounts_loop;
+    END IF;
+	CALL createDbUser(ptr, pw_prefix);
+  END LOOP accounts_loop;
+  CLOSE cur1;
+
+END
+$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure createDbUser
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `createDbUser`(IN uid INT, IN pw_prefix VARCHAR (100))
+begin
+
+	DECLARE x1 varchar(10);
+	SELECT role into x1 FROM accounts where accountId = uid;
+
+	if x1 is not  null then
+		SET @uid = uid;
+		SET @test = CONCAT(pw_prefix,uid);
+		SET @stmt = CONCAT("CREATE USER '",@uid,"'@'localhost' IDENTIFIED BY '",@test,"'");
+		PREPARE s from @stmt;
+		EXECUTE s;
+		deallocate PREPARE s;
+		if x1 <> 'patient' then
+			SET @stmt = CONCAT("GRANT EXECUTE ON PROCEDURE `echo`.`grantRolePermissions` TO '",@uid,"'@'localhost'");
+			PREPARE s from @stmt;
+			EXECUTE s;
+			deallocate PREPARE s;
+		end if;
+
+	end if;
+END$$
+
+DELIMITER ;
+
+
+-- -----------------------------------------------------
+-- procedure repairPermissions
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=CURRENT_USER PROCEDURE `repairPermissions`()
+BEGIN
+
+  #declare variable
+  DECLARE ptr INTEGER;
+  DECLARE ro VARCHAR(10);
+  DECLARE done INT DEFAULT FALSE;
+  #declare cursor
+  DECLARE cur1 CURSOR FOR SELECT accountId,role
+  FROM `echo`.`accounts`;
+  #declare handle
+  DECLARE CONTINUE  HANDLER FOR NOT FOUND SET done = TRUE;
+
+  #open cursor
+  OPEN cur1;
+  #starts the loop
+  accounts_loop: LOOP
+    #get the values of each column into our  variables
+    FETCH cur1 INTO ptr, ro;
+    IF done THEN
+      LEAVE accounts_loop;
+    END IF;
+	CALL grantRolePermissions(ptr, ro);
+  END LOOP accounts_loop;
+  CLOSE cur1;
+
+END$$
+
+DELIMITER ;
 
 -- -----------------------------------------------------
 -- procedure accountsCreate
@@ -687,29 +849,6 @@ IF getRole() = 'admin' OR 'echo_db_usr' = substring_index(user(), '@', 1) then
 	EXECUTE s;
     DEALLOCATE PREPARE s;
     
-else
-	signal sqlstate '22403' set message_text = 'You are not authorized to disable an account';
-end if;
-
-END$$
-
-DELIMITER ;
-
--- -----------------------------------------------------
--- procedure accountsDisable
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `accountsDisable`(IN accountId INT)
-begin
-IF getRole() = 'admin' then
-	set @id = accountId;
-	SET @stmt = "UPDATE accounts SET enabled = 0 WHERE accountId = ?";
-	PREPARE s FROM @stmt;
-	EXECUTE s using @id;
-	SELECT row_count() as affected_rows;
-	DEALLOCATE PREPARE s;
 else
 	signal sqlstate '22403' set message_text = 'You are not authorized to disable an account';
 end if;
@@ -817,7 +956,7 @@ CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `accountsUpdate`(
 	IN notEnabled BOOLEAN,
 	IN notMode VARCHAR(10),
 	IN mobile varchar(20),
-    	IN accountEnabled BOOLEAN
+    IN accountEnabled BOOLEAN
 )
 begin
 	DECLARE x1 INT;
@@ -833,28 +972,26 @@ begin
 		SET @accEn = accountEnabled;
 		set @id = accId;
 		if (getRole() = 'patient') then
-			if (pwd <> '') then
-				set @pwd = pwd;
-				SET @stmt = "UPDATE accounts SET password = ?, username=?, email = ?, reminderTime = ?, notificationEnabled = ?, notificationMode = ?, mobile = ? WHERE accountId = ?";
-				PREPARE s FROM @stmt;
-				EXECUTE s using @pwd, @usr,@email, @reTime, @notEn, @notMode, @mobile, @id;
-				select row_count() as affected_rows;
-				DEALLOCATE PREPARE s;
-			else 
-				SET @stmt = "UPDATE accounts SET username=?, email = ?,  reminderTime = ?, notificationEnabled = ?, notificationMode = ?, mobile = ? WHERE accountId = ?";
-				PREPARE s FROM @stmt;
-				EXECUTE s using @usr, @email, @reTime, @notEn, @notMode, @mobile, @id;
-				select row_count() as affected_rows;
-				DEALLOCATE PREPARE s;
-			end if;
-		else
-			set @pwd = pwd;
-			SET @stmt = "UPDATE accounts SET password = ?, username=?, email = ?, reminderTime = ?, notificationEnabled = ?, notificationMode = ?, mobile = ?, enabled=? WHERE accountId = ?";
-			PREPARE s FROM @stmt;
-			EXECUTE s using @pwd, @usr,@email, @reTime, @notEn, @notMode, @mobile, @accEn, @id;
-			select row_count() as affected_rows;
-			DEALLOCATE PREPARE s;
+            SELECT enabled INTO @accEN FROM accounts WHERE accountId = accId;
 		end if;
+        SELECT role INTO @role FROM accounts WHERE accountId = accId;
+        if (@role = 'admin') then
+            SET @accEn = true;
+        end if;
+        if (pwd <> '') then
+            set @pwd = pwd;
+            SET @stmt = "UPDATE accounts SET password = ?, username=?, email = ?, reminderTime = ?, notificationEnabled = ?, notificationMode = ?, mobile = ?, enabled = ? WHERE accountId = ?";
+            PREPARE s FROM @stmt;
+            EXECUTE s using @pwd, @usr,@email, @reTime, @notEn, @notMode, @mobile, @accEn, @id;
+            select row_count() as affected_rows;
+            DEALLOCATE PREPARE s;
+        else
+            SET @stmt = "UPDATE accounts SET username=?, email = ?,  reminderTime = ?, notificationEnabled = ?, notificationMode = ?, mobile = ?, enabled = ? WHERE accountId = ?";
+            PREPARE s FROM @stmt;
+            EXECUTE s using @usr, @email, @reTime, @notEn, @notMode, @mobile, @accEn, @id;
+            select row_count() as affected_rows;
+            DEALLOCATE PREPARE s;
+        end if;
 	else
 		signal sqlstate '22403' set message_text = 'You are not allowed to alter this account';
 	end if;
@@ -1214,37 +1351,6 @@ END$$
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure createDbUser
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `createDbUser`(IN uid INT, IN pw_prefix VARCHAR (100))
-begin	
-
-	DECLARE x1 varchar(10);
-	SELECT role into x1 FROM accounts where accountId = uid;
-
-	if x1 is not  null then
-		SET @uid = uid;
-		SET @test = CONCAT(pw_prefix,uid);
-		SET @stmt = CONCAT("CREATE USER '",@uid,"'@'localhost' IDENTIFIED BY '",@test,"'");
-		PREPARE s from @stmt;
-		EXECUTE s;
-		deallocate PREPARE s;
-		if x1 <> 'patient' then
-			SET @stmt = CONCAT("GRANT EXECUTE ON PROCEDURE `echo`.`grantRolePermissions` TO '",@uid,"'@'localhost'");
-			PREPARE s from @stmt;
-			EXECUTE s;
-			deallocate PREPARE s;
-		end if;
-
-	end if;
-END$$
-
-DELIMITER ;
-
--- -----------------------------------------------------
 -- procedure deathCreate
 -- -----------------------------------------------------
 
@@ -1393,6 +1499,8 @@ begin
 			set @table = 'readings_view';
 		when 'treatments' then
 			set @table = 'treatments_view';
+     	when 'severity' then
+			set @table = 'severity_view';
 		else
 			set @table = ' ';
 	end case;
@@ -1566,7 +1674,7 @@ BEGIN
 			signal sqlstate '22403' set message_text = 'Access Forbidden, Please use your Account for the report.'; 
 		end if;
 	end if;
-		set @basic_stmt = CONCAT ('SELECT recordId, patientId, date, q1, q2, q3, q4, q5, q1a, q1b, q1c, q3a, q3b, q3c, satO2, walkingDist, temperature, pefr, heartRate, X(loc) as X, Y(loc) as Y FROM dailyReports_view WHERE patientId = ?');
+		set @basic_stmt = CONCAT ('SELECT recordId, patientId, date, q1, q2, q3, q4, q5, q1a, q1b, q1c, q3a, q3b, q3c, satO2, walkingDist, temperature, pefr, heartRate, X(loc) as X, Y(loc) as Y, modified FROM dailyReports_view WHERE patientId = ?');
 		set @page_stmt = ' ';
 		set @pid = patId;
 
@@ -1611,7 +1719,7 @@ BEGIN
 			signal sqlstate '22403' set message_text = 'Access Forbidden, Please use your Account for the report.'; 
 		end if;
 	end if;
-		set @basic_stmt = CONCAT ('SELECT recordId, patientId, date, q1, q2, q3, q4, q5, q1a, q1b, q1c, q3a, q3b, q3c, satO2, walkingDist, temperature, pefr, heartRate, X(loc) as X, Y(loc) as Y  FROM dailyReports_view WHERE patientId = ? and recordId = ?');
+		set @basic_stmt = CONCAT ('SELECT recordId, patientId, date, q1, q2, q3, q4, q5, q1a, q1b, q1c, q3a, q3b, q3c, satO2, walkingDist, temperature, pefr, heartRate, X(loc) as X, Y(loc) as Y, modified  FROM dailyReports_view WHERE patientId = ? and recordId = ?');
 		set @pid = patId;
 		set @rid = recId;
 		PREPARE s FROM @basic_stmt;
@@ -1715,7 +1823,8 @@ in steroidsOral BOOLEAN ,
 in theophyline BOOLEAN ,
 in ultraLongB2 BOOLEAN ,
 in ventilationDevice VARCHAR(50) ,
-in ventilationStart DATE 
+in ventilationStart DATE,
+in other TEXT
 )
 proc: BEGIN
 
@@ -1729,8 +1838,8 @@ proc: BEGIN
 		end if;
 	end if;
 	
-	SET @stmt = "INSERT INTO treatments (patientId, diagnoseDate, status,antibiotics,antiflu,antipneum,lama,longActingB2,ltot,ltotDevice,ltotStartDate,mycolytocis,niv,pdef4Inhalator,sama,shortActingB2,steroidsInhaled,steroidsOral,theophyline,ultraLongB2,ventilationDevice,ventilationStart) 
-VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+	SET @stmt = "INSERT INTO treatments (patientId, diagnoseDate, status,antibiotics,antiflu,antipneum,lama,longActingB2,ltot,ltotDevice,ltotStartDate,mycolytocis,niv,pdef4Inhalator,sama,shortActingB2,steroidsInhaled,steroidsOral,theophyline,ultraLongB2,ventilationDevice,ventilationStart, other)
+VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 	set @patientId = patId;
 	set @diagnoseDate = diagnoseDate;
 	set @status = status;
@@ -1753,10 +1862,10 @@ set @q16 = theophyline ;
 set @q17 = ultraLongB2 ;
 set @q18 = ventilationDevice ;
 set @q19 = ventilationStart ;
-
+set @q20 = other;
 
 	PREPARE s FROM @stmt;
-	EXECUTE s using @patientId, @diagnoseDate, @status, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10,@q11, @q12, @q13, @q14, @q15, @q16, @q17, @q18, @q19;
+	EXECUTE s using @patientId, @diagnoseDate, @status, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10,@q11, @q12, @q13, @q14, @q15, @q16, @q17, @q18, @q19, @q20;
 	SELECt last_insert_id() as insertId;
 	DEALLOCATE PREPARE s;
 
@@ -1793,12 +1902,13 @@ in steroidsOral BOOLEAN ,
 in theophyline BOOLEAN ,
 in ultraLongB2 BOOLEAN ,
 in ventilationDevice VARCHAR(50) ,
-in ventilationStart DATE 
+in ventilationStart DATE ,
+in other TEXT
 )
 BEGIN
 
 	
-	SET @stmt = "UPDATE treatments_view  SET diagnoseDate = ?, status =? ,antibiotics=?,antiflu=?,antipneum=?,lama=?,longActingB2=?,ltot=?,ltotDevice=?,ltotStartDate=?,mycolytocis=?,niv=?,pdef4Inhalator=?,sama=?,shortActingB2=?,steroidsInhaled=?,steroidsOral=?,theophyline=?,ultraLongB2=?,ventilationDevice=?,ventilationStart =?
+	SET @stmt = "UPDATE treatments_view  SET diagnoseDate = ?, status =? ,antibiotics=?,antiflu=?,antipneum=?,lama=?,longActingB2=?,ltot=?,ltotDevice=?,ltotStartDate=?,mycolytocis=?,niv=?,pdef4Inhalator=?,sama=?,shortActingB2=?,steroidsInhaled=?,steroidsOral=?,theophyline=?,ultraLongB2=?,ventilationDevice=?,ventilationStart =?, other = ?
  where  recordId =? and patientId = ?";
 	set @recId = recordId;
 	set @patientId = patId;
@@ -1823,10 +1933,10 @@ set @q16 = theophyline ;
 set @q17 = ultraLongB2 ;
 set @q18 = ventilationDevice ;
 set @q19 = ventilationStart ;
-
+set @q20 = other;
 
 	PREPARE s FROM @stmt;
-	EXECUTE s using @diagnoseDate, @status, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10,@q11, @q12, @q13, @q14, @q15, @q16, @q17, @q18, @q19, @recId, @patientId;
+	EXECUTE s using @diagnoseDate, @status, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10,@q11, @q12, @q13, @q14, @q15, @q16, @q17, @q18, @q19, @q20, @recId, @patientId;
 	SELECT ROW_COUNT() as affected_rows;
 	DEALLOCATE PREPARE s;
 
@@ -1891,6 +2001,24 @@ BEGIN
 	deallocate PREPARE s;
   END LOOP proc_loop;
   CLOSE cur2;
+  SET @stmt = CONCAT("GRANT SELECT ON TABLE echo.questions TO '",@uid,"'@'localhost'");
+  PREPARE s from @stmt;
+  EXECUTE s;
+  deallocate PREPARE s;
+  SET @stmt = CONCAT("GRANT SELECT ON TABLE echo.answers TO '",@uid,"'@'localhost'");
+  PREPARE s from @stmt;
+  EXECUTE s;
+  deallocate PREPARE s;
+  if (ro = 'admin') then
+    SET @stmt = CONCAT("GRANT INSERT,DELETE,UPDATE ON TABLE echo.questions TO '",@uid,"'@'localhost'");
+    PREPARE s from @stmt;
+    EXECUTE s;
+    deallocate PREPARE s;
+    SET @stmt = CONCAT("GRANT INSERT,DELETE,UPDATE ON TABLE echo.answers TO '",@uid,"'@'localhost'");
+    PREPARE s from @stmt;
+    EXECUTE s;
+    deallocate PREPARE s;
+  end if;
 END$$
 
 DELIMITER ;
@@ -2042,122 +2170,6 @@ END$$
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure patientsAndAccountCreate
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `patientsAndAccountCreate`(
-	IN pw_prefix varchar(100),
-	IN username varchar(255),
-	IN pwd VARCHAR(255),
-	IN email VARCHAR(100),
-	IN role VARCHAR(10),
-	IN enabled BOOLEAN,
-	IN reTime TIME,
-	IN notEnabled BOOLEAN,
-	IN notMode VARCHAR(10),
-	IN mobile varchar(20),
-in doctorId int ,
-in firstName VARCHAR(50) ,
-in lastName VARCHAR(50) ,
-in secondName VARCHAR(50) ,
-in socialId VARCHAR(20) ,
-in sex BOOLEAN ,
-in dateOfBirth DATE ,
-in firstDiagnoseDate DATE ,
-in fileId varchar(20) ,
-in fullAddress VARCHAR(255) ,
-in landline VARCHAR(50) 
-)
-BEGIN
-	DECLARE new_acc INT DEFAULT 0;
-	DECLARE exit handler for sqlwarning, sqlexception
-	BEGIN
-		-- WARNING
-		RESIGNAL;
-		rollback;
-	END;
-
-	if getRole() = 'doctor' and role <> 'patient' then
-		signal sqlstate '22400' set message_text = 'You are not allowed to create an account with another role than patient';
-	end if;
-
-	START TRANSACTION;
-	SET @stmt = "INSERT INTO accounts(`username`,`password`,`role`,`email`, `enabled`, `reminderTime`, `notificationEnabled`, `mobile`, `notificationMode`) VALUES(?,?, ?,?, ?,?, ?,?, ?);";
-	set @username = username;
-	SET @pwd = pwd;
-	SET @email = email;
-	SET @role = role;
-	SET @en = enabled;
-	SET @reTime = reTime;
-	SET @notEn = notEnabled;
-	SET @notMode = notMode;
-	SET @mobile = mobile;
-
-	PREPARE s FROM @stmt;
-	EXECUTE s using @username, @pwd, @role, @email, @en, @reTime, @notEn, @mobile, @notMode;
-	DEALLOCATE PREPARE s;
-	SELECT LAST_INSERT_ID() into new_acc;
-
-	SET @self = substring_index(user(), '@', 1);
-	SET @doctorId = doctorId;
-	if getRole() = 'doctor'  then
-		SET @doctorId = @self;
-	end if;
-
-	SET @stmt = "INSERT INTO patients(patientId, doctorId, firstName, lastName, secondName, socialId, sex, dateOfBirth, firstDiagnoseDate, fullAddress, landline, fileId) VALUES(?,?,?,?,?,?,?,?,?,?,?,?);";
-	SET @patientId = new_acc;
-	SET @firstName = firstName;
-	SET @lastName = lastName;
-	SET @secondName = secondName;
-	SET @socialId = socialId;
-	SET @sex = sex;
-	SET @dateOfBirth = dateOfBirth;
-	SET @firstDiagnoseDate = firstDiagnoseDate;
-	SET @fileId = fileId;
-	SET @fullAddress = fullAddress;
-	SET @landline = landline;
-	PREPARE s FROM @stmt;
-	EXECUTE s using @patientId, @doctorId, @firstName, @lastName, @secondName, @socialId, @sex, @dateOfBirth,  @firstDiagnoseDate, @fullAddress, @landline, @fileId;
-	DEALLOCATE PREPARE s;
-	COMMIT;
-
-	CALL createDbUser(new_acc, pw_prefix);
-	SELECT new_acc as location;
-
-
-END$$
-
-DELIMITER ;
-
--- -----------------------------------------------------
--- procedure patientsChangeDoctor
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `patientsChangeDoctor`(
-	IN patientId INT, 
-	in doctorId int
-)
-begin
-
-	set @pid = patientId;
-	set @did = doctorId;
-	SET @stmt = "UPDATE patients SET doctorId=? where patientId = ?";	
-	PREPARE s FROM @stmt;
-	EXECUTE s using @did, @pid;
-	select row_count() into @pat_affected;
-	DEALLOCATE PREPARE s;
-
-	SELECT @pat_affected as affected_rows;
-
-END$$
-
-DELIMITER ;
-
--- -----------------------------------------------------
 -- procedure patientsCreate
 -- -----------------------------------------------------
 
@@ -2199,7 +2211,7 @@ BEGIN
 	SET @landline = landline;
 	PREPARE s FROM @stmt;
 	EXECUTE s using @patientId, @doctorId, @firstName, @lastName, @secondName, @socialId, @sex, @dateOfBirth,  @firstDiagnoseDate, @fullAddress, @landline, @fileId;
-	SELECt last_insert_id() as insertId;
+	SELECt @patientId as insertId;
 	DEALLOCATE PREPARE s;
 
 
@@ -2270,8 +2282,9 @@ begin
 	SET @email = email;
 	SET @mobile = mobile;
 	set @id = patientId;
+	SELECT doctorId into @docId FROM patients WHERE patiendId = @id;
 
-	SET @stmt = "UPDATE patients SET firstName=?, lastName=?, secondName=?, socialId=?, sex=?, dateOfBirth=?, firstDiagnoseDate=?, fullAddress=?, landline=?, fileId=? where patientId = ?";
+	SET @stmt = "UPDATE patients SET firstName=?, lastName=?, secondName=?, socialId=?, sex=?, dateOfBirth=?, firstDiagnoseDate=?, fullAddress=?, landline=?, fileId=?, doctorId =? where patientId = ?";
 	SET @firstName = firstName;
 	SET @lastName = lastName;
 	SET @secondName = secondName;
@@ -2282,9 +2295,10 @@ begin
 	SET @fileId = fileId;
 	SET @fullAddress = fullAddress;
 	SET @landline = landline;
+	if getRole() = 'admin' then SET @docId = doctorId; end if;
 	
 	PREPARE s FROM @stmt;
-	EXECUTE s using @firstName, @lastName, @secondName, @socialId, @sex, @dateOfBirth, @firstDiagnoseDate, @fullAddress, @landline, @fileId, @id;
+	EXECUTE s using @firstName, @lastName, @secondName, @socialId, @sex, @dateOfBirth, @firstDiagnoseDate, @fullAddress, @landline, @fileId, @docId, @id;
 	select row_count() into @pat_affected;
 	DEALLOCATE PREPARE s;
 
@@ -2323,11 +2337,11 @@ PREPARE statement FROM @test_stmt;
 EXECUTE statement using @pid, @doc;
 DEALLOCATE PREPARE statement;
 IF @tmp IS NULL then
-	signal sqlstate '22403' set message_text = 'You are not allowed to view this patients data!';
+	signal sqlstate '22403' set message_text = 'This patient isnt assigned to you!';
 end if;
 
 
-set @date = date ;
+set @validFrom = date;
 set @comment = comment ;
 set @severity = severity ;
 set @stmt = "Insert into severity(patientId,severity,validFrom,comment) VALUES (?,?,?,?)";
@@ -2586,117 +2600,6 @@ END$$
 
 DELIMITER ;
 
-
--- -----------------------------------------------------
--- procedure createAllDbUsers
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=CURRENT_USER PROCEDURE `createAllDbUsers`(IN pw_prefix VARCHAR (100))
-BEGIN
-
-  #declare variable
-  DECLARE ptr INTEGER;
-  DECLARE done INT DEFAULT FALSE;
-  #declare cursor
-  DECLARE cur1 CURSOR FOR SELECT accountId
-  FROM `echo`.`accounts`;
-  #declare handle 
-  DECLARE CONTINUE  HANDLER FOR NOT FOUND SET done = TRUE;
-  
-  #open cursor
-  OPEN cur1;
-  #starts the loop
-  accounts_loop: LOOP
-    #get the values of each column into our  variables
-    FETCH cur1 INTO ptr;
-    IF done THEN
-      LEAVE accounts_loop;
-    END IF;
-	CALL createDbUser(ptr, pw_prefix);
-  END LOOP accounts_loop;
-  CLOSE cur1;
-
-END
-$$
-
-DELIMITER ;
-
--- -----------------------------------------------------
--- procedure dropAllDbUsers
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=CURRENT_USER PROCEDURE `dropAllDbUsers`()
-BEGIN
-
-  #declare variable
-  DECLARE ptr INTEGER;
-  DECLARE done INT DEFAULT FALSE;
-  #declare cursor
-  DECLARE cur1 CURSOR FOR SELECT DISTINCT user from mysql.procs_priv where grantor='echo_db_usr@localhost';
-  #declare handle 
-  DECLARE CONTINUE  HANDLER FOR NOT FOUND SET done = TRUE;
-  
-  #open cursor
-  OPEN cur1;
-  #starts the loop
-  accounts_loop: LOOP
-    #get the values of each column into our  variables
-    FETCH cur1 INTO ptr;
-    IF done THEN
-      LEAVE accounts_loop;
-    END IF;
-	SET @stmt = CONCAT("DROP USER '",ptr,"'@'localhost'");
-	PREPARE s from @stmt;
-	EXECUTE s;
-	deallocate PREPARE s;
-  END LOOP accounts_loop;
-  CLOSE cur1;
-
-END
-$$
-
-DELIMITER ;
-
--- -----------------------------------------------------
--- procedure repairPermissions
--- -----------------------------------------------------
-
-DELIMITER $$
-USE `echo`$$
-CREATE DEFINER=CURRENT_USER PROCEDURE `repairPermissions`()
-BEGIN
-
-  #declare variable
-  DECLARE ptr INTEGER;
-  DECLARE ro VARCHAR(10);
-  DECLARE done INT DEFAULT FALSE;
-  #declare cursor
-  DECLARE cur1 CURSOR FOR SELECT accountId,role
-  FROM `echo`.`accounts`;
-  #declare handle 
-  DECLARE CONTINUE  HANDLER FOR NOT FOUND SET done = TRUE;
-  
-  #open cursor
-  OPEN cur1;
-  #starts the loop
-  accounts_loop: LOOP
-    #get the values of each column into our  variables
-    FETCH cur1 INTO ptr, ro;
-    IF done THEN
-      LEAVE accounts_loop;
-    END IF;
-	CALL grantRolePermissions(ptr, ro);
-  END LOOP accounts_loop;
-  CLOSE cur1;
-
-END$$
-
-DELIMITER ;
-
 -- -----------------------------------------------------
 -- View `echo`.`accounts_view`
 -- -----------------------------------------------------
@@ -2707,7 +2610,7 @@ select `echo`.`accounts`.`accountId` AS `accountId`,`echo`.`accounts`.`username`
 `echo`.`accounts`.`password` AS `password`,`echo`.`accounts`.`role` AS `role`,`echo`.`accounts`.`email` AS `email`,
 `echo`.`accounts`.`enabled` AS `enabled`,`echo`.`accounts`.`reminderTime` AS `reminderTime`,
 `echo`.`accounts`.`notificationEnabled` AS `notificationEnabled`,`echo`.`accounts`.`notificationMode` AS `notificationMode`,
-`echo`.`accounts`.`mobile` AS `mobile` from `echo`.`accounts` where (case when (`getRole`() = 'admin') then (1 = 1)
+`echo`.`accounts`.`mobile` AS `mobile`, `echo`.`accounts`.`modified` AS `modified`  from `echo`.`accounts` where (case when (`getRole`() = 'admin') then (1 = 1)
 else (`echo`.`accounts`.`accountId` = substring_index(user(),'@',1)) end);
 
 -- -----------------------------------------------------
@@ -2720,8 +2623,8 @@ select `echo`.`patients`.`patientId` AS `patientId`,`echo`.`patients`.`doctorId`
 `echo`.`patients`.`lastName` AS `lastName`,`echo`.`patients`.`secondName` AS `secondName`,`echo`.`patients`.`socialId` AS `socialId`,
 `echo`.`patients`.`sex` AS `sex`,`echo`.`patients`.`dateOfBirth` AS `dateOfBirth`,`echo`.`patients`.`firstDiagnoseDate` AS `firstDiagnoseDate`,
 `echo`.`patients`.`fileId` AS `fileId`,`echo`.`patients`.`fullAddress` AS `fullAddress`,`echo`.`patients`.`landline` AS `landline`, `echo`.`accounts`.`enabled` AS `enabled`,
-`echo`.`accounts`.`email` AS `email`,`echo`.`accounts`.`mobile` AS `mobile`,
-(SELECT `echo`.`severity`.`severity` as `severity` from `severity` where ((`severity`.`patientId` = `accounts`.`accountId`)) ORDER BY recordId desc LIMIT 1)
+`echo`.`accounts`.`email` AS `email`,`echo`.`accounts`.`mobile` AS `mobile`, `echo`.`patients`.`modified` AS `modified`,
+(SELECT `echo`.`severity`.`severity` as `severity` from `severity` where ((`severity`.`patientId` = `accounts`.`accountId`)) ORDER BY validFrom desc LIMIT 1) AS severity
 from
         (`patients`
         join `accounts` ON ((`patients`.`patientId` = `accounts`.`accountId`)))
@@ -2737,56 +2640,56 @@ from
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`cats_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`cats_view` AS select `echo`.`cats`.`recordId` AS `recordId`,`echo`.`cats`.`patientId` AS `patientId`,`echo`.`cats`.`diagnoseDate` AS `diagnoseDate`,`echo`.`cats`.`q1` AS `q1`,`echo`.`cats`.`q2` AS `q2`,`echo`.`cats`.`q3` AS `q3`,`echo`.`cats`.`q4` AS `q4`,`echo`.`cats`.`q5` AS `q5`,`echo`.`cats`.`q6` AS `q6`,`echo`.`cats`.`q7` AS `q7`,`echo`.`cats`.`q8` AS `q8`,`echo`.`cats`.`totalCatscale` AS `totalCatscale`,`echo`.`cats`.`status` AS `status` from `echo`.`cats` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`cats`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`cats_view` AS select `echo`.`cats`.`recordId` AS `recordId`,`echo`.`cats`.`patientId` AS `patientId`,`echo`.`cats`.`diagnoseDate` AS `diagnoseDate`,`echo`.`cats`.`q1` AS `q1`,`echo`.`cats`.`q2` AS `q2`,`echo`.`cats`.`q3` AS `q3`,`echo`.`cats`.`q4` AS `q4`,`echo`.`cats`.`q5` AS `q5`,`echo`.`cats`.`q6` AS `q6`,`echo`.`cats`.`q7` AS `q7`,`echo`.`cats`.`q8` AS `q8`,`echo`.`cats`.`totalCatscale` AS `totalCatscale`,`echo`.`cats`.`status` AS `status`,`echo`.`cats`.`modified` AS `modified` from `echo`.`cats` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`cats`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`ccqs_view`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`ccqs_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`ccqs_view` AS select `echo`.`ccqs`.`recordId` AS `recordId`,`echo`.`ccqs`.`patientId` AS `patientId`,`echo`.`ccqs`.`diagnoseDate` AS `diagnoseDate`,`echo`.`ccqs`.`q1` AS `q1`,`echo`.`ccqs`.`q2` AS `q2`,`echo`.`ccqs`.`q3` AS `q3`,`echo`.`ccqs`.`q4` AS `q4`,`echo`.`ccqs`.`q5` AS `q5`,`echo`.`ccqs`.`q6` AS `q6`,`echo`.`ccqs`.`q7` AS `q7`,`echo`.`ccqs`.`q8` AS `q8`,`echo`.`ccqs`.`q9` AS `q9`,`echo`.`ccqs`.`q10` AS `q10`,`echo`.`ccqs`.`totalCCQScore` AS `totalCCQScore`,`echo`.`ccqs`.`symptomScore` AS `symptomScore`,`echo`.`ccqs`.`mentalStateScore` AS `mentalStateScore`,`echo`.`ccqs`.`functionalStateScore` AS `functionalStateScore`,`echo`.`ccqs`.`status` AS `status` from `echo`.`ccqs` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`ccqs`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`ccqs_view` AS select `echo`.`ccqs`.`recordId` AS `recordId`,`echo`.`ccqs`.`patientId` AS `patientId`,`echo`.`ccqs`.`diagnoseDate` AS `diagnoseDate`,`echo`.`ccqs`.`q1` AS `q1`,`echo`.`ccqs`.`q2` AS `q2`,`echo`.`ccqs`.`q3` AS `q3`,`echo`.`ccqs`.`q4` AS `q4`,`echo`.`ccqs`.`q5` AS `q5`,`echo`.`ccqs`.`q6` AS `q6`,`echo`.`ccqs`.`q7` AS `q7`,`echo`.`ccqs`.`q8` AS `q8`,`echo`.`ccqs`.`q9` AS `q9`,`echo`.`ccqs`.`q10` AS `q10`,`echo`.`ccqs`.`totalCCQScore` AS `totalCCQScore`,`echo`.`ccqs`.`symptomScore` AS `symptomScore`,`echo`.`ccqs`.`mentalStateScore` AS `mentalStateScore`,`echo`.`ccqs`.`functionalStateScore` AS `functionalStateScore`,`echo`.`ccqs`.`status` AS `status`, `echo`.`ccqs`.`modified` AS `modified` from `echo`.`ccqs` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`ccqs`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`charlsons_view`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`charlsons_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`charlsons_view` AS select `echo`.`charlsons`.`recordId` AS `recordId`,`echo`.`charlsons`.`patientId` AS `patientId`,`echo`.`charlsons`.`diagnoseDate` AS `diagnoseDate`,`echo`.`charlsons`.`myocardialInfarction` AS `myocardialInfarction`,`echo`.`charlsons`.`congestiveHeartFailure` AS `congestiveHeartFailure`,`echo`.`charlsons`.`peripheralVascularDisease` AS `peripheralVascularDisease`,`echo`.`charlsons`.`cerebrovascularDisease` AS `cerebrovascularDisease`,`echo`.`charlsons`.`dementia` AS `dementia`,`echo`.`charlsons`.`chronicPulmonaryDiasease` AS `chronicPulmonaryDiasease`,`echo`.`charlsons`.`connectiveTissueDisease` AS `connectiveTissueDisease`,`echo`.`charlsons`.`ulcerDisease` AS `ulcerDisease`,`echo`.`charlsons`.`liverDiseaseMild` AS `liverDiseaseMild`,`echo`.`charlsons`.`diabetes` AS `diabetes`,`echo`.`charlsons`.`hemiplegia` AS `hemiplegia`,`echo`.`charlsons`.`renalDiseaseModerateOrSevere` AS `renalDiseaseModerateOrSevere`,`echo`.`charlsons`.`diabetesWithEndOrganDamage` AS `diabetesWithEndOrganDamage`,`echo`.`charlsons`.`anyTumor` AS `anyTumor`,`echo`.`charlsons`.`leukemia` AS `leukemia`,`echo`.`charlsons`.`malignantLymphoma` AS `malignantLymphoma`,`echo`.`charlsons`.`liverDiseaseModerateOrSevere` AS `liverDiseaseModerateOrSevere`,`echo`.`charlsons`.`metastaticSolidMalignancy` AS `metastaticSolidMalignancy`,`echo`.`charlsons`.`aids` AS `aids`,`echo`.`charlsons`.`noConditionAvailable` AS `noConditionAvailable`,`echo`.`charlsons`.`totalCharlson` AS `totalCharlson` from `echo`.`charlsons` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`charlsons`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`charlsons_view` AS select `echo`.`charlsons`.`recordId` AS `recordId`,`echo`.`charlsons`.`patientId` AS `patientId`,`echo`.`charlsons`.`diagnoseDate` AS `diagnoseDate`,`echo`.`charlsons`.`myocardialInfarction` AS `myocardialInfarction`,`echo`.`charlsons`.`congestiveHeartFailure` AS `congestiveHeartFailure`,`echo`.`charlsons`.`peripheralVascularDisease` AS `peripheralVascularDisease`,`echo`.`charlsons`.`cerebrovascularDisease` AS `cerebrovascularDisease`,`echo`.`charlsons`.`dementia` AS `dementia`,`echo`.`charlsons`.`chronicPulmonaryDiasease` AS `chronicPulmonaryDiasease`,`echo`.`charlsons`.`connectiveTissueDisease` AS `connectiveTissueDisease`,`echo`.`charlsons`.`ulcerDisease` AS `ulcerDisease`,`echo`.`charlsons`.`liverDiseaseMild` AS `liverDiseaseMild`,`echo`.`charlsons`.`diabetes` AS `diabetes`,`echo`.`charlsons`.`hemiplegia` AS `hemiplegia`,`echo`.`charlsons`.`renalDiseaseModerateOrSevere` AS `renalDiseaseModerateOrSevere`,`echo`.`charlsons`.`diabetesWithEndOrganDamage` AS `diabetesWithEndOrganDamage`,`echo`.`charlsons`.`anyTumor` AS `anyTumor`,`echo`.`charlsons`.`leukemia` AS `leukemia`,`echo`.`charlsons`.`malignantLymphoma` AS `malignantLymphoma`,`echo`.`charlsons`.`liverDiseaseModerateOrSevere` AS `liverDiseaseModerateOrSevere`,`echo`.`charlsons`.`metastaticSolidMalignancy` AS `metastaticSolidMalignancy`,`echo`.`charlsons`.`aids` AS `aids`,`echo`.`charlsons`.`noConditionAvailable` AS `noConditionAvailable`,`echo`.`charlsons`.`totalCharlson` AS `totalCharlson` , `echo`.`charlsons`.`modified` AS `modified` from `echo`.`charlsons` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`charlsons`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
 -- View `echo`.severity_view`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`severity_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`severity_view` AS select `echo`.`severity`.`recordId` AS `recordId`, `echo`.`severity`.`patientId` AS `patientId`, `echo`.`severity`.`severity` AS `severity`, `echo`.`severity`.`validFrom` AS `validFrom`, `echo`.`severity`.`comment` AS `comment` from `echo`.`severity` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`severity`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`severity_view` AS select `echo`.`severity`.`recordId` AS `recordId`, `echo`.`severity`.`patientId` AS `patientId`, `echo`.`severity`.`severity` AS `severity`, `echo`.`severity`.`validFrom` AS `validFrom`, `echo`.`severity`.`comment` AS `comment`, `echo`.`severity`.`modified` AS `modified`  from `echo`.`severity` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`severity`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`treatments_view`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`treatments_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`treatments_view` AS select `echo`.`treatments`.`patientId` AS `patientId`,`echo`.`treatments`.`diagnoseDate` AS `diagnoseDate`,`echo`.`treatments`.`status` AS `status`,`echo`.`treatments`.`shortActingB2` AS `shortActingB2`,`echo`.`treatments`.`longActingB2` AS `longActingB2`,`echo`.`treatments`.`ultraLongB2` AS `ultraLongB2`,`echo`.`treatments`.`steroidsInhaled` AS `steroidsInhaled`,`echo`.`treatments`.`steroidsOral` AS `steroidsOral`,`echo`.`treatments`.`sama` AS `sama`,`echo`.`treatments`.`lama` AS `lama`,`echo`.`treatments`.`pdef4Inhalator` AS `pdef4Inhalator`,`echo`.`treatments`.`theophyline` AS `theophyline`,`echo`.`treatments`.`mycolytocis` AS `mycolytocis`,`echo`.`treatments`.`antibiotics` AS `antibiotics`,`echo`.`treatments`.`antiflu` AS `antiflu`,`echo`.`treatments`.`antipneum` AS `antipneum`,`echo`.`treatments`.`ltot` AS `ltot`,`echo`.`treatments`.`ltotStartDate` AS `ltotStartDate`,`echo`.`treatments`.`ltotDevice` AS `ltotDevice`,`echo`.`treatments`.`niv` AS `niv`,`echo`.`treatments`.`ventilationStart` AS `ventilationStart`,`echo`.`treatments`.`ventilationDevice` AS `ventilationDevice`,`echo`.`treatments`.`recordId` AS `recordId` from `echo`.`treatments` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`treatments`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`treatments_view` AS select `echo`.`treatments`.`patientId` AS `patientId`,`echo`.`treatments`.`diagnoseDate` AS `diagnoseDate`,`echo`.`treatments`.`status` AS `status`,`echo`.`treatments`.`shortActingB2` AS `shortActingB2`,`echo`.`treatments`.`longActingB2` AS `longActingB2`,`echo`.`treatments`.`ultraLongB2` AS `ultraLongB2`,`echo`.`treatments`.`steroidsInhaled` AS `steroidsInhaled`,`echo`.`treatments`.`steroidsOral` AS `steroidsOral`,`echo`.`treatments`.`sama` AS `sama`,`echo`.`treatments`.`lama` AS `lama`,`echo`.`treatments`.`pdef4Inhalator` AS `pdef4Inhalator`,`echo`.`treatments`.`theophyline` AS `theophyline`,`echo`.`treatments`.`mycolytocis` AS `mycolytocis`,`echo`.`treatments`.`antibiotics` AS `antibiotics`,`echo`.`treatments`.`antiflu` AS `antiflu`,`echo`.`treatments`.`antipneum` AS `antipneum`,`echo`.`treatments`.`ltot` AS `ltot`,`echo`.`treatments`.`ltotStartDate` AS `ltotStartDate`,`echo`.`treatments`.`ltotDevice` AS `ltotDevice`,`echo`.`treatments`.`niv` AS `niv`,`echo`.`treatments`.`ventilationStart` AS `ventilationStart`,`echo`.`treatments`.`ventilationDevice` AS `ventilationDevice`,`echo`.`treatments`.`recordId` AS `recordId`, `echo`.`treatments`.`other` AS `other`, `echo`.`treatments`.`modified` AS `modified` from `echo`.`treatments` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`treatments`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`readings_view`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`readings_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`readings_view` AS select `echo`.`readings`.`patientId` AS `patientId`,`echo`.`readings`.`diagnoseDate` AS `diagnoseDate`,`echo`.`readings`.`weight` AS `weight`,`echo`.`readings`.`height` AS `height`,`echo`.`readings`.`pxy` AS `pxy`,`echo`.`readings`.`fev1` AS `fev1`,`echo`.`readings`.`fev1_pro` AS `fev1_pro`,`echo`.`readings`.`fvc` AS `fvc`,`echo`.`readings`.`fvc_pro` AS `fvc_pro`,`echo`.`readings`.`fev1_fvc` AS `fev1_fvc`,`echo`.`readings`.`rv` AS `rv`,`echo`.`readings`.`rv_pro` AS `rv_pro`,`echo`.`readings`.`tlc` AS `tlc`,`echo`.`readings`.`tlc_pro` AS `tlc_pro`,`echo`.`readings`.`rv_tlc` AS `rv_tlc`,`echo`.`readings`.`satO2_pro` AS `satO2_pro`,`echo`.`readings`.`dlco_pro` AS `dlco_pro`,`echo`.`readings`.`pao2` AS `pao2`,`echo`.`readings`.`paco2` AS `paco2`,`echo`.`readings`.`hco3` AS `hco3`,`echo`.`readings`.`pH` AS `pH`,`echo`.`readings`.`fvc_pre` AS `fvc_pre`,`echo`.`readings`.`fvc_pre_pro` AS `fvc_pre_pro`,`echo`.`readings`.`fev1_pre` AS `fev1_pre`,`echo`.`readings`.`fev1_pre_pro` AS `fev1_pre_pro`,`echo`.`readings`.`fev1_fvc_pre` AS `fev1_fvc_pre`,`echo`.`readings`.`fef25_75_pre_pro` AS `fef25_75_pre_pro`,`echo`.`readings`.`pef_pre_pro` AS `pef_pre_pro`,`echo`.`readings`.`tlc_pre` AS `tlc_pre`,`echo`.`readings`.`tlc_pre_pro` AS `tlc_pre_pro`,`echo`.`readings`.`frc_pre` AS `frc_pre`,`echo`.`readings`.`frc_pre_pro` AS `frc_pre_pro`,`echo`.`readings`.`rv_pre` AS `rv_pre`,`echo`.`readings`.`rv_pre_pro` AS `rv_pre_pro`,`echo`.`readings`.`kco_pro` AS `kco_pro`,`echo`.`readings`.`hematocrit` AS `hematocrit`,`echo`.`readings`.`status` AS `status`,`echo`.`readings`.`fvc_post` AS `fvc_post`,`echo`.`readings`.`del_fvc_pro` AS `del_fvc_pro`,`echo`.`readings`.`fev1_post` AS `fev1_post`,`echo`.`readings`.`del_fev1_post` AS `del_fev1_post`,`echo`.`readings`.`del_fef25_75_pro` AS `del_fef25_75_pro`,`echo`.`readings`.`del_pef_pro` AS `del_pef_pro`,`echo`.`readings`.`mmrc` AS `mmrc`,`echo`.`readings`.`smoker` AS `smoker`,`echo`.`readings`.`notes` AS `notes`,`echo`.`readings`.`recordId` AS `recordId` from `echo`.`readings` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`readings`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`readings_view` AS select `echo`.`readings`.`patientId` AS `patientId`,`echo`.`readings`.`diagnoseDate` AS `diagnoseDate`,`echo`.`readings`.`weight` AS `weight`,`echo`.`readings`.`height` AS `height`,`echo`.`readings`.`pxy` AS `pxy`,`echo`.`readings`.`fev1` AS `fev1`,`echo`.`readings`.`fev1_pro` AS `fev1_pro`,`echo`.`readings`.`fvc` AS `fvc`,`echo`.`readings`.`fvc_pro` AS `fvc_pro`,`echo`.`readings`.`fev1_fvc` AS `fev1_fvc`,`echo`.`readings`.`rv` AS `rv`,`echo`.`readings`.`rv_pro` AS `rv_pro`,`echo`.`readings`.`tlc` AS `tlc`,`echo`.`readings`.`tlc_pro` AS `tlc_pro`,`echo`.`readings`.`rv_tlc` AS `rv_tlc`,`echo`.`readings`.`satO2_pro` AS `satO2_pro`,`echo`.`readings`.`dlco_pro` AS `dlco_pro`,`echo`.`readings`.`pao2` AS `pao2`,`echo`.`readings`.`paco2` AS `paco2`,`echo`.`readings`.`hco3` AS `hco3`,`echo`.`readings`.`pH` AS `pH`,`echo`.`readings`.`fvc_pre` AS `fvc_pre`,`echo`.`readings`.`fvc_pre_pro` AS `fvc_pre_pro`,`echo`.`readings`.`fev1_pre` AS `fev1_pre`,`echo`.`readings`.`fev1_pre_pro` AS `fev1_pre_pro`,`echo`.`readings`.`fev1_fvc_pre` AS `fev1_fvc_pre`,`echo`.`readings`.`fef25_75_pre_pro` AS `fef25_75_pre_pro`,`echo`.`readings`.`pef_pre_pro` AS `pef_pre_pro`,`echo`.`readings`.`tlc_pre` AS `tlc_pre`,`echo`.`readings`.`tlc_pre_pro` AS `tlc_pre_pro`,`echo`.`readings`.`frc_pre` AS `frc_pre`,`echo`.`readings`.`frc_pre_pro` AS `frc_pre_pro`,`echo`.`readings`.`rv_pre` AS `rv_pre`,`echo`.`readings`.`rv_pre_pro` AS `rv_pre_pro`,`echo`.`readings`.`kco_pro` AS `kco_pro`,`echo`.`readings`.`hematocrit` AS `hematocrit`,`echo`.`readings`.`status` AS `status`,`echo`.`readings`.`fvc_post` AS `fvc_post`,`echo`.`readings`.`del_fvc_pro` AS `del_fvc_pro`,`echo`.`readings`.`fev1_post` AS `fev1_post`,`echo`.`readings`.`del_fev1_post` AS `del_fev1_post`,`echo`.`readings`.`del_fef25_75_pro` AS `del_fef25_75_pro`,`echo`.`readings`.`del_pef_pro` AS `del_pef_pro`,`echo`.`readings`.`mmrc` AS `mmrc`,`echo`.`readings`.`smoker` AS `smoker`,`echo`.`readings`.`notes` AS `notes`,`echo`.`readings`.`recordId` AS `recordId`, `echo`.`readings`.`modified` AS `modified` from `echo`.`readings` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`readings`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`dailyReports_view`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`dailyReports_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`dailyReports_view` AS select `echo`.`dailyReports`.`recordId` AS `recordId`,`echo`.`dailyReports`.`patientId` AS `patientId`,`echo`.`dailyReports`.`date` AS `date`,`echo`.`dailyReports`.`q1` AS `q1`,`echo`.`dailyReports`.`q2` AS `q2`,`echo`.`dailyReports`.`q3` AS `q3`,`echo`.`dailyReports`.`q4` AS `q4`,`echo`.`dailyReports`.`q5` AS `q5`,`echo`.`dailyReports`.`q1a` AS `q1a`,`echo`.`dailyReports`.`q1b` AS `q1b`,`echo`.`dailyReports`.`q1c` AS `q1c`,`echo`.`dailyReports`.`q3a` AS `q3a`,`echo`.`dailyReports`.`q3b` AS `q3b`,`echo`.`dailyReports`.`q3c` AS `q3c`,`echo`.`dailyReports`.`satO2` AS `satO2`,`echo`.`dailyReports`.`walkingDist` AS `walkingDist`,`echo`.`dailyReports`.`temperature` AS `temperature`,`echo`.`dailyReports`.`pefr` AS `pefr`,`echo`.`dailyReports`.`heartRate` AS `heartRate`,`echo`.`dailyReports`.`loc` AS `loc` from `echo`.`dailyReports` where (case when (`GETROLE`() = 'admin') then (1 = 1) when (`GETROLE`() = 'doctor') then `echo`.`dailyReports`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) else (`echo`.`dailyReports`.`patientId` = substring_index(user(),'@',1)) end);
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`dailyReports_view` AS select `echo`.`dailyReports`.`recordId` AS `recordId`,`echo`.`dailyReports`.`patientId` AS `patientId`,`echo`.`dailyReports`.`date` AS `date`,`echo`.`dailyReports`.`q1` AS `q1`,`echo`.`dailyReports`.`q2` AS `q2`,`echo`.`dailyReports`.`q3` AS `q3`,`echo`.`dailyReports`.`q4` AS `q4`,`echo`.`dailyReports`.`q5` AS `q5`,`echo`.`dailyReports`.`q1a` AS `q1a`,`echo`.`dailyReports`.`q1b` AS `q1b`,`echo`.`dailyReports`.`q1c` AS `q1c`,`echo`.`dailyReports`.`q3a` AS `q3a`,`echo`.`dailyReports`.`q3b` AS `q3b`,`echo`.`dailyReports`.`q3c` AS `q3c`,`echo`.`dailyReports`.`satO2` AS `satO2`,`echo`.`dailyReports`.`walkingDist` AS `walkingDist`,`echo`.`dailyReports`.`temperature` AS `temperature`,`echo`.`dailyReports`.`pefr` AS `pefr`,`echo`.`dailyReports`.`heartRate` AS `heartRate`,`echo`.`dailyReports`.`loc` AS `loc`,`echo`.`dailyReports`.`modified` AS `modified` from `echo`.`dailyReports` where (case when (`GETROLE`() = 'admin') then (1 = 1) when (`GETROLE`() = 'doctor') then `echo`.`dailyReports`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) else (`echo`.`dailyReports`.`patientId` = substring_index(user(),'@',1)) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`deaths_view`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`deaths_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`deaths_view` AS select `echo`.`deaths`.`patientId` AS `patientId`,`echo`.`deaths`.`date` AS `date`,`echo`.`deaths`.`cardiovascular` AS `cardiovascular`,`echo`.`deaths`.`respiratory` AS `respiratory`,`echo`.`deaths`.`infectious_disease` AS `infectious_disease`,`echo`.`deaths`.`malignancy` AS `malignancy`,`echo`.`deaths`.`other` AS `other` from `echo`.`deaths` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`deaths`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`deaths_view` AS select `echo`.`deaths`.`patientId` AS `patientId`,`echo`.`deaths`.`date` AS `date`,`echo`.`deaths`.`cardiovascular` AS `cardiovascular`,`echo`.`deaths`.`respiratory` AS `respiratory`,`echo`.`deaths`.`infectious_disease` AS `infectious_disease`,`echo`.`deaths`.`malignancy` AS `malignancy`,`echo`.`deaths`.`other` AS `other`,`echo`.`deaths`.`modified` AS `modified` from `echo`.`deaths` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`deaths`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`notifications_view`
@@ -2841,7 +2744,8 @@ VIEW `notifications_view` AS
                         `p`.`lastName`,
                         ' hasnt filled in his report for 10 days')
             else ''
-        end) AS `message`
+        end) AS `message`,
+        `n`.`modified` AS `modified`
     from
         (`notifications` `n`
         left join `patients` `p` ON ((`n`.`subjectsAccount` = `p`.`patientId`)))
@@ -2851,35 +2755,10 @@ USE `echo`;
 
 DELIMITER $$
 USE `echo`$$
-CREATE TRIGGER `Accounts_BINS` BEFORE INSERT ON `accounts` FOR EACH ROW
-BEGIN
-	if (new.Role != 'patient') then
-		if (new.Role != 'doctor') then
-			if (new.Role != 'admin') then
-				signal sqlstate '22400' set message_text = 'Invalid Role. Valid Values are: patient, doctor or admin';
-			end if;
-		end if;
-	end if;
-	if (new.notificationMode != 'email') then
-		if (new.notificationMode != 'sms') then
-			if (new.notificationMode != 'push') then
-				signal sqlstate '22400' set message_text = 'Invalid Notification Mode. Valid Values are: email, sms or push';
-			end if;
-		end if;
-	end if;
-END;$$
-
-USE `echo`$$
 CREATE TRIGGER `accounts_BUPD` BEFORE UPDATE ON `accounts` FOR EACH ROW
 BEGIN
 SET new.role = old.role;
-	if (new.notificationMode != 'email') then
-		if (new.notificationMode != 'sms') then
-			if (new.notificationMode != 'push') then
-				signal sqlstate '22400' set message_text = 'Invalid Notification Mode. Valid Values are: email, sms or push';
-			end if;
-		end if;
-	end if;
+
 END;$$
 
 USE `echo`$$
@@ -2921,11 +2800,6 @@ end;$$
 USE `echo`$$
 CREATE TRIGGER `ccqs_BINS` BEFORE INSERT ON `ccqs` FOR EACH ROW
 BEGIN
-if (new.status != 'exacerbation') then
-if (new.status != 'baseline') then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid Status (MUST be Baseline or Exacerbation)';
-end if;
-end if;
 if (new.q1 < 0 OR new.q2 < 0 OR new.q3 < 0 OR new.q4 < 0 OR new.q5 < 0 OR new.q6 < 0 OR new.q7 < 0 OR new.q8 < 0 OR new.q9 < 0 OR new.q10 < 0) then
 SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid answer. Answer values have to be in range [0; 6]';
 end if;
@@ -2943,11 +2817,6 @@ end;$$
 USE `echo`$$
 CREATE TRIGGER `ccqs_BUPD` BEFORE UPDATE ON `ccqs` FOR EACH ROW
 begin
-if (new.status != 'exacerbation') then
-if (new.status != 'baseline') then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid Status (MUST be Baseline or Exacerbation)';
-end if;
-end if;
 if (new.q1 < 0 OR new.q2 < 0 OR new.q3 < 0 OR new.q4 < 0 OR new.q5 < 0 OR new.q6 < 0 OR new.q7 < 0 OR new.q8 < 0 OR new.q9 < 0 OR new.q10 < 0) then
 SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid answer. Answer values have to be in range [0; 6]';
 end if;
@@ -2966,11 +2835,6 @@ end;$$
 USE `echo`$$
 CREATE TRIGGER `catscale_BINS` BEFORE INSERT ON `cats` FOR EACH ROW
 begin
-if (new.status != 'exacerbation') then
-if (new.status != 'baseline') then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid Status (MUST be baseline or exacerbation)';
-end if;
-end if;
 if (new.q1 < 0 OR new.q2 < 0 OR new.q3 < 0 OR new.q4 < 0 OR new.q5 < 0 OR new.q6 < 0 OR new.q7 < 0 OR new.q8 < 0) then
 SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid answer. Answer values have to be in range [0; 5]';
 end if;
@@ -2984,11 +2848,6 @@ end;$$
 USE `echo`$$
 CREATE TRIGGER `cats_BUPD` BEFORE UPDATE ON `cats` FOR EACH ROW
 begin
-if (new.status != 'exacerbation') then
-if (new.status != 'baseline') then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid Status (MUST be baseline or exacerbation)';
-end if;
-end if;
 if (new.q1 < 0 OR new.q2 < 0 OR new.q3 < 0 OR new.q4 < 0 OR new.q5 < 0 OR new.q6 < 0 OR new.q7 < 0 OR new.q8 < 0) then
 SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid answer. Answer values have to be in range [0; 5]';
 end if;
@@ -3184,52 +3043,12 @@ end;$$
 USE `echo`$$
 CREATE TRIGGER `treatments_BINS` BEFORE INSERT ON `treatments` FOR EACH ROW
 begin
-if (new.status != 'exacerbation') then
-if (new.status != 'baseline') then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid Status (MUST be Baseline or Exacerbation)';
-end if;
-end if;
-
-	if (new.ltotDevice != 'cpap') then
-		if (new.ltotDevice != 'bipap') then
-				signal sqlstate '22400' set message_text = 'Invalid LTOT Device. Valid Values are: cpap or bipap';
-			end if;
-	end if;
-
-	if (new.ventilationDevice != 'concetrator') then
-		if (new.ventilationDevice != 'cylinder') then
-			if (new.ventilationDevice != 'liquid') then
-				signal sqlstate '22400' set message_text = 'Invalid Ventilation Device. Valid Values are: concetrator or cylinder or liquid ';
-			end if;
-		end if;
-	end if;
-
 if (new.diagnoseDate is null) then set new.diagnoseDate = CURDATE(); end if;
 end;$$
 
 USE `echo`$$
 CREATE TRIGGER `treatments_BUPD` BEFORE UPDATE ON `treatments` FOR EACH ROW
 begin
-if (new.status != 'exacerbation') then
-if (new.status != 'baseline') then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid Status (MUST be Baseline or Exacerbation)';
-end if;
-end if;
-
-	if (new.ltotDevice != 'cpap') then
-		if (new.ltotDevice != 'bipap') then
-				signal sqlstate '22400' set message_text = 'Invalid LTOT Device. Valid Values are: cpap or bipap';
-			end if;
-	end if;
-
-	if (new.ventilationDevice != 'concetrator') then
-		if (new.ventilationDevice != 'cylinder') then
-			if (new.ventilationDevice != 'liquid') then
-				signal sqlstate '22400' set message_text = 'Invalid Ventilation Device. Valid Values are: concetrator or cylinder or liquid ';
-			end if;
-		end if;
-	end if;
-
 if (new.diagnoseDate is null) then set new.diagnoseDate = CURDATE(); end if;
 end;
 $$
@@ -3237,11 +3056,6 @@ $$
 USE `echo`$$
 CREATE TRIGGER `readings_BINS` BEFORE INSERT ON `readings` FOR EACH ROW
 begin
-if (new.status != 'exacerbation') then
-if (new.status != 'baseline') then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid Status (MUST be Baseline or Exacerbation)';
-end if;
-end if;
 if (new.mmrc < 0 or new.mmrc > 4) then 
 SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid value for mmrc. Value has to be in [0:4]';
 end if;
@@ -3254,11 +3068,6 @@ end;$$
 USE `echo`$$
 CREATE TRIGGER `readings_BUPD` BEFORE UPDATE ON `readings` FOR EACH ROW
 begin
-if (new.status != 'exacerbation') then
-if (new.status != 'baseline') then
-SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid Status (MUST be Baseline or Exacerbation)';
-end if;
-end if;
 if (new.mmrc < 0 or new.mmrc > 4) then 
 SIGNAL SQLSTATE '22400' SET MESSAGE_TEXT = 'Invalid value for mmrc. Value has to be in [0:4]';
 end if;
@@ -3314,7 +3123,6 @@ GRANT EXECUTE ON procedure `echo`.`accountsCreate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`severityCreate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`charlsonUpdate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`createDbUser` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`accountsDisable` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`accountsDelete` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`deleteExamRecord` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`accountsList` TO 'echo_db_usr'@'localhost';
@@ -3344,8 +3152,6 @@ GRANT EXECUTE ON procedure `echo`.`deathGet` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`deathCreate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`deathUpdate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`deathDelete` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`patientsAndAccountCreate` TO 'echo_db_usr'@'localhost';
-GRANT EXECUTE ON procedure `echo`.`patientsChangeDoctor` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`login` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`loginRefresh` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`deviceAdd` TO 'echo_db_usr'@'localhost';
@@ -3364,12 +3170,9 @@ INSERT INTO `echo`.`perm_roles_views` (`role`, `view_obj`) VALUES ('patient', 'n
 
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','accountsCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','accountsDelete');
-INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','accountsDisable');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','accountsUpdate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','deviceAdd');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','deviceRemove');
-INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsAndAccountCreate');
-INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsChangeDoctor');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsDelete');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('admin','patientsRessourceUpdate');
@@ -3390,7 +3193,6 @@ INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doc
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','deviceRemove');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','listExams');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','listSingleExam');
-INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','patientsAndAccountCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','patientsCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','patientsDelete');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','patientsRessourceUpdate');
@@ -3401,6 +3203,7 @@ INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doc
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','reportList');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','reportListOne');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','reportUpdate');
+INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','severityCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','treatmentCreate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('doctor','treatmentUpdate');
 INSERT INTO `echo`.`perm_roles_procedures` (`role`,`procedure_obj`) VALUES ('patient','accountsUpdate');
