@@ -222,7 +222,86 @@ var DailyAnalyzer = function() {
             var endTime = date.getHours() + ':' + (date.getMinutes()) + ':' + '00';
             connection.query('SELECT a.accountId, notificationEnabled, email, mobile, deviceId from accounts a ' +
                 'inner join devices on a.accountId=devices.accountId ' +
-                'inner join dailyReports d on a.accountId=patientId where d.date < (now() - interval 1 day) and reminderTime>=? and reminderTime <=? and notificationEnabled=1 group by a.accountId;',
+                'inner join dailyReports d on a.accountId=patientId where d.date = (now() - interval 1 day) and reminderTime>=? and reminderTime <=? and notificationEnabled=1 group by a.accountId;',
+                [startTime, endTime], function (err, result) {
+                    connection.release();
+                    var email = [],
+                        mobile = [],
+                        push = [];
+                    for (var r in result) {
+                        switch (r.notificationMode) {
+                            case 'email':
+                                email[email.length] = r.email;
+                                postOptions.path = '/echo/email';
+                                break;
+
+                            case 'sms':
+                                mobile[mobile.length] = r.mobile;
+                                postOptions.path = '/echo/sms';
+                                break;
+
+                            case 'push':
+                                push[push.length] = r.deviceId;
+                                postOptions.path = '/echo/sns';
+                                break;
+                        }
+                    }
+                    var data = JSON.stringify({
+                        'subject': 'This is an ECHO Notification',
+                        'message': 'You are dead.',
+                        'to': email,
+                        'label': 'ECHO',
+                        'arns': push,
+                        'receivers': mobile
+                    });
+                    postOptions.path = '/echo/sns';
+                    var request = http.request(postOptions, function (res) {
+                        res.setEncoding('utf8');
+                        res.on('data', function (data) {
+                            console.log(data);
+                        })
+                    });
+                    request.write(data);
+                    request.end();
+                    postOptions.path = '/echo/sms';
+                    var request = http.request(postOptions, function (res) {
+                        res.setEncoding('utf8');
+                        res.on('data', function (data) {
+                            console.log(data);
+                        })
+                    });
+                    request.write(data);
+                    request.end();
+                    postOptions.path = '/echo/email';
+                    var request = http.request(postOptions, function (res) {
+                        res.setEncoding('utf8');
+                        res.on('data', function (data) {
+                            console.log(data);
+                        })
+                    });
+                    request.write(data);
+                    request.end();
+                });
+        });
+    });
+
+    this.on('fiveDayInactiveAnalyzes', function() {
+        return;
+        var postOptions = {
+            host: service.host,
+            port: '80',
+            method: 'POST',
+            headers: {
+                Authorization: service.apiKey
+            }
+        };
+        db.getConnection(function(err, connection) {
+            var date = new Date();
+            var startTime = date.getHours() + ':' + (date.getMinutes() - 15) + ':' + '00';
+            var endTime = date.getHours() + ':' + (date.getMinutes()) + ':' + '00';
+            connection.query('SELECT a.accountId, notificationEnabled, email, mobile, deviceId from accounts a ' +
+                'inner join devices on a.accountId=devices.accountId ' +
+                'inner join dailyReports d on a.accountId=patientId where d.date <= (now() - interval 5 day) and reminderTime>=? and reminderTime <=? and notificationEnabled=1 group by a.accountId;',
                 [startTime, endTime], function (err, result) {
                     connection.release();
                     var email = [],
