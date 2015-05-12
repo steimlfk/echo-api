@@ -107,7 +107,8 @@ module.exports = {
         newPatData : newPatData,
         newPatDataInvSocial:newPatDataInvSocial,
         newPatDataInvFile : newPatDataInvFile,
-        newPatDataInvDocID : newPatDataInvDocID
+        newPatDataInvDocID : newPatDataInvDocID,
+        emptyAcc: {}
     },
     // data for doctor tests
     doctor:{

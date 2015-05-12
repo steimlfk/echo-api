@@ -185,6 +185,22 @@ describe('Patients Tests:', function() {
                     done();
                 });
         });
+
+        it('Admin cant create new Patients Data using an AdminId as doctors ID', function (done){
+            var tmp = data.admin.emptyAcc;
+            tmp.accountId = pat_id;
+            tmp.doctorId = admin_id;
+            request(url)
+                .post('/patients')
+                .set('Authorization', 'Bearer ' + access_token)
+                .send (tmp)
+                .expect(400)
+                .end(function (err, res){
+                    if (err) throw err;
+                    done();
+                });
+        });
+
         it('Admin cant create new Patients Data using patients Id as doctors ID', function (done){
             var tmp = data.admin.newPatDataInvDocID;
             tmp.accountId = pat_id;
@@ -509,6 +525,17 @@ describe('Patients Tests:', function() {
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (data.patient.dummyPat)
                 .expect(403)
+                .end(function (err, res){
+                    if (err) throw err;
+                    done();
+                });
+        });
+        it('Put empty Account', function (done){
+            request(url)
+                .put(('/patients/'+pat_id))
+                .set('Authorization', 'Bearer ' + access_token)
+                .send (data.admin.emptyAcc)
+                .expect(400)
                 .end(function (err, res){
                     if (err) throw err;
                     done();

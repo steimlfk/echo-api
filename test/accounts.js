@@ -98,6 +98,36 @@ describe('Accounts Tests:', function() {
                 });
         });
 
+        it('Post empty Account', function(done) {
+            request(url)
+                .post('/accounts')
+                .set('Authorization', 'Bearer ' + access_token)
+                .send(data.admin.emptyAcc)
+                .expect(400)
+                .end(function(err, res) {
+                    if (err) {
+                        throw err;
+                    }
+                    admin_url = res.headers.location;
+                    done();
+                });
+        });
+
+        it('Put empty Account', function(done) {
+            request(url)
+                .put('/accounts')
+                .set('Authorization', 'Bearer ' + access_token)
+                .send(data.admin.emptyAcc)
+                .expect(400)
+                .end(function(err, res) {
+                    if (err) {
+                        throw err;
+                    }
+                    admin_url = res.headers.location;
+                    done();
+                });
+        });
+
         it('Create a Doctor-Account with EMail Notification', function(done) {
             request(url)
                 .post('/accounts')

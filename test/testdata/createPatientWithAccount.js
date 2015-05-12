@@ -51,7 +51,8 @@ module.exports = {
     },
     // data for admin tests....
     admin: {
-        newData : newData
+        newData : newData,
+        emptyAcc: {}
     },
     // data for doctor tests
     doctor:{

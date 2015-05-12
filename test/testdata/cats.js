@@ -68,7 +68,8 @@ module.exports = {
     },
     // data for patient tests
     patient:{
-        newCat : newCat
+        newCat : newCat,
+        emptyCat: {}
     }
 
 };

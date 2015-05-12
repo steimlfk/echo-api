@@ -83,7 +83,8 @@ module.exports = {
     // data for doctor tests
     doctor:{
         newDaily : newDaily,
-        newMinDaily : newMinimalDaily
+        newMinDaily : newMinimalDaily,
+        emptyDaily: {}
     },
     // data for patient tests
     patient:{

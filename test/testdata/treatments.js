@@ -78,7 +78,8 @@ module.exports = {
     },
     // data for doctor tests
     doctor:{
-        newTreatment : newTreatment
+        newTreatment : newTreatment,
+        emptyTreatment: {}
     },
     // data for patient tests
     patient:{

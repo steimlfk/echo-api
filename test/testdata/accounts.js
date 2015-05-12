@@ -152,7 +152,8 @@ module.exports = {
         newAccUsedMail: newAccUsedMail,
         newAccUsedUsername: newAccUsedUsername,
         newAccInvMode: newAccInvMode,
-        updateTestDoc: updateTestDoc
+        updateTestDoc: updateTestDoc,
+        enotyAcc: {}
     },
     // data for doctor tests
     doctor:{

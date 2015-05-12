@@ -76,7 +76,8 @@ module.exports = {
     },
     // data for doctor tests
     doctor:{
-        newCharlson : newCharlson
+        newCharlson : newCharlson,
+        emptyData : {}
     },
     // data for patient tests
     patient:{

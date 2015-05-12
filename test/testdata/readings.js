@@ -99,7 +99,8 @@ module.exports = {
     },
     // data for doctor tests
     doctor:{
-        newReading : newReading
+        newReading : newReading,
+        emptyReading: {}
     },
     // data for patient tests
     patient:{
