@@ -175,7 +175,7 @@ var j = schedule.scheduleJob('*/30 * * * *', function() {
     var analyzer = require('./controller/notify.js');
     var notify = new analyzer();
     notify.emit('oneDayInactiveAnalyzes');
-    notify.emit('fiveDayInactiveAnalyzes');
+    notify.emit('nDayInactiveAnalyzes', 5);
 });
 
 /**

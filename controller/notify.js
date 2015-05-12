@@ -235,7 +235,6 @@ var DailyAnalyzer = function() {
                         push = [];
                     for (var r in result) {
                         connection.query('INSERT INTO notifications (accountId, date, type, subjectsAccount, modified) values (?, ?, 0, ?, ?)', [r.accountId, date, null, date]);
-                        connection.query('INSERT INTO notifications (accountId, date, type, subjectsAccount, modified) values (?, ?, 5, ?, ?)', [r.doctorId, date, r.accountId, date]);
                         switch (r.notificationMode) {
                             case 'email':
                                 email[email.length] = r.email;
@@ -299,7 +298,7 @@ var DailyAnalyzer = function() {
         });
     });
 
-    this.on('fiveDayInactiveAnalyzes', function() {
+    this.on('nDayInactiveAnalyzes', function(n) {
         var postOptions = {
             host: service.host,
             port: '80',
@@ -317,8 +316,8 @@ var DailyAnalyzer = function() {
             connection.query('SELECT a.accountId, notificationEnabled, email, mobile, deviceId, doctorId from accounts a ' +
                 'left join devices on a.accountId=devices.accountId ' +
                 'inner join patients on a.accountId = patients.patientId ' +
-                'inner join dailyReports d on a.accountId=patientId where d.date <= Date((now() - interval 5 day)) and reminderTime>=? and reminderTime <=? and notificationEnabled=1 group by a.accountId;',
-                [startTime, endTime], function (err, result) {
+                'inner join dailyReports d on a.accountId=patientId where d.date <= Date((now() - interval ? day)) and reminderTime>=? and reminderTime <=? and notificationEnabled=1 group by a.accountId;',
+                [n, startTime, endTime], function (err, result) {
                     var email = [],
                         mobile = [],
                         push = [];
