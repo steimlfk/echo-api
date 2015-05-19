@@ -115,7 +115,7 @@ describe('Accounts Tests:', function() {
 
         it('Put empty Account', function(done) {
             request(url)
-                .put('/accounts')
+                .put('/accounts/3')
                 .set('Authorization', 'Bearer ' + access_token)
                 .send(data.admin.emptyAcc)
                 .expect(400)

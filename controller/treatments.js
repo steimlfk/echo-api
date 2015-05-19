@@ -50,28 +50,38 @@ exports.add = function(req,res,next){
     var date = i.diagnoseDate || null;
     // make status lower case so the db triggers can validate the value (valid are baseline and exacerbation)
     var status = (i.status)? i.status.toLowerCase() : "";
-    // query db
-    // ? from query will be replaced by values in [] - including escaping!
-    connection.query('call treatmentCreate(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?)',
-        [id, date,status,i.antibiotics,i.antiflu,i.antipneum,i.lama,i.longActingB2,
-            i.ltot,i.ltotDevice,i.ltotStart,i.mycolytocis,i.niv,i.pdef4Inhalator,i.sama,i.shortActingB2,
-            i.steroidsInhaled,i.steroidsOral,i.theophyline,i.ultraLongB2,i.ventilationDevice,i.ventilationStart, i.other],
-        function(err, result) {
-            connection.release();
-            if (err) next(err);
-            else {
-                var analyzer = require('./notify.js');
-                var dailyAnalyzer = new analyzer();
-                // this postpones the analysis of the data until the POST is completely processed
-                process.nextTick (function (){
-                    dailyAnalyzer.emit('goldAnalyzes', id);
-                });
-                // resource was created
-                // link will be provided in location header
-                res.loc = '/patients/'+ id + '/treatments/' + result[0][0].insertId;
-                next();
-            }
-        });
+    if (i.status == undefined || ['baseline', 'exacerbation'].indexOf(i.status) == -1 || i.antibiotics == undefined ||
+        i.antibiotics == undefined || i.antiflu == undefined || i.antipneum == undefined || i.lama == undefined ||
+        i.longActingB2 == undefined || i.ltot == undefined || i.ltotDevice == undefined || ['none', 'Concentrator', 'Cylinder', 'Liquid'].indexOf(i.ltotDevice) == -1 ||
+        i.mycolytocis == undefined || i.niv == undefined || i.pdef4Inhalator == undefined || i.sama == undefined ||
+        i.shortActingB2 == undefined || i.steroidsInhaled == undefined || i.steroidsOral == undefined || i.theophyline == undefined ||
+        i.ultraLongB2 == undefined || i.ventilationDevice == undefined || ['none', 'CPAP', 'BiPAP'].indexOf(i.ventilationDevice) == -1 ||
+        i.ventilationStart == undefined || i.other == undefined) {
+        next({code: 'ER_BAD_NULL_ERROR'});
+    } else {
+        // query db
+        // ? from query will be replaced by values in [] - including escaping!
+        connection.query('call treatmentCreate(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?)',
+            [id, date, status, i.antibiotics, i.antiflu, i.antipneum, i.lama, i.longActingB2,
+                i.ltot, i.ltotDevice, i.ltotStart, i.mycolytocis, i.niv, i.pdef4Inhalator, i.sama, i.shortActingB2,
+                i.steroidsInhaled, i.steroidsOral, i.theophyline, i.ultraLongB2, i.ventilationDevice, i.ventilationStart, i.other],
+            function (err, result) {
+                connection.release();
+                if (err) next(err);
+                else {
+                    var analyzer = require('./notify.js');
+                    var dailyAnalyzer = new analyzer();
+                    // this postpones the analysis of the data until the POST is completely processed
+                    process.nextTick(function () {
+                        dailyAnalyzer.emit('goldAnalyzes', id);
+                    });
+                    // resource was created
+                    // link will be provided in location header
+                    res.loc = '/patients/' + id + '/treatments/' + result[0][0].insertId;
+                    next();
+                }
+            });
+    }
 };
 
 /**
@@ -96,20 +106,30 @@ exports.update = function(req,res,next){
     var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null;
     // make status lower case so the db triggers can validate the value (valid are baseline and exacerbation)
     var status = (i.status)? i.status.toLowerCase() : "";
-    // query db
-    // ? from query will be replaced by values in [] - including escaping!
-    connection.query('call treatmentUpdate(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?)',
-        [rid, id, date,status,i.antibiotics,i.antiflu,i.antipneum,i.lama,i.longActingB2,
-            i.ltot,i.ltotDevice,i.ltotStart,i.mycolytocis,i.niv,i.pdef4Inhalator,i.sama,i.shortActingB2,
-            i.steroidsInhaled,i.steroidsOral,i.theophyline,i.ultraLongB2,i.ventilationDevice,i.ventilationStart, i.other],
-        function(err, result) {
-            connection.release();
-            if (err) next(err);
-            else {
-                res.affectedRows = result[0][0].affected_rows;
-                next();
-            }
-        });
+    if (i.status == undefined || ['baseline', 'exacerbation'].indexOf(i.status) == -1 || i.antibiotics == undefined ||
+        i.antibiotics == undefined || i.antiflu == undefined || i.antipneum == undefined || i.lama == undefined ||
+        i.longActingB2 == undefined || i.ltot == undefined || i.ltotDevice == undefined || ['none', 'Concentrator', 'Cylinder', 'Liquid'].indexOf(i.ltotDevice) == -1 ||
+        i.mycolytocis == undefined || i.niv == undefined || i.pdef4Inhalator == undefined || i.sama == undefined ||
+        i.shortActingB2 == undefined || i.steroidsInhaled == undefined || i.steroidsOral == undefined || i.theophyline == undefined ||
+        i.ultraLongB2 == undefined || i.ventilationDevice == undefined || ['none', 'CPAP', 'BiPAP'].indexOf(i.ventilationDevice) == -1 ||
+        i.ventilationStart == undefined || i.other == undefined) {
+        next({code: 'ER_BAD_NULL_ERROR'});
+    } else {
+        // query db
+        // ? from query will be replaced by values in [] - including escaping!
+        connection.query('call treatmentUpdate(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?)',
+            [rid, id, date, status, i.antibiotics, i.antiflu, i.antipneum, i.lama, i.longActingB2,
+                i.ltot, i.ltotDevice, i.ltotStart, i.mycolytocis, i.niv, i.pdef4Inhalator, i.sama, i.shortActingB2,
+                i.steroidsInhaled, i.steroidsOral, i.theophyline, i.ultraLongB2, i.ventilationDevice, i.ventilationStart, i.other],
+            function (err, result) {
+                connection.release();
+                if (err) next(err);
+                else {
+                    res.affectedRows = result[0][0].affected_rows;
+                    next();
+                }
+            });
+    }
 };
 
 var respMessages = commons.respMsg("Treatment");

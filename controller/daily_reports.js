@@ -182,18 +182,22 @@ exports.update = function(req,res,next){
     var rid = parseInt(req.params.rid);
     // set date to null if not set
     var date = i.date || null;
-    // query db
-    connection.query('call reportUpdate(?,?,?, ?,?,?,?,?, ?,?,?,?,?,?, ?,?,?,?,?,?,?)',
-        [rid, id, date,
-            i.q1, i.q2, i.q3, i.q4, i.q5, i.q1a, i.q1b, i.q1c,i.q3a, i.q3b, i.q3c, i.satO2,
-            i.walkingDist, i.temperature, i.pefr, i.heartRate, i.x, i.y], function(err, result) {
-            connection.release();
-            if (err) next(err);
-            else {
-                res.affectedRows = result[0][0].affected_rows > 0;
-                next();
-            }
-        });
+    if (i.q1 == undefined && i.q2 == undefined && i.q3 == undefined && i.q3 == undefined && i.q4 == undefined && i.q5 == undefined) {
+        next({code: 'ER_BAD_NULL_ERROR'})
+    } else {
+        // query db
+        connection.query('call reportUpdate(?,?,?, ?,?,?,?,?, ?,?,?,?,?,?, ?,?,?,?,?,?,?)',
+            [rid, id, date,
+                i.q1, i.q2, i.q3, i.q4, i.q5, i.q1a, i.q1b, i.q1c, i.q3a, i.q3b, i.q3c, i.satO2,
+                i.walkingDist, i.temperature, i.pefr, i.heartRate, i.x, i.y], function (err, result) {
+                connection.release();
+                if (err) next(err);
+                else {
+                    res.affectedRows = result[0][0].affected_rows > 0;
+                    next();
+                }
+            });
+    }
 };
 /**
  *  POST /patients/id/daily_reports
