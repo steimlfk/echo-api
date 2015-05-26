@@ -108,7 +108,6 @@ describe('Accounts Tests:', function() {
                     if (err) {
                         throw err;
                     }
-                    admin_url = res.headers.location;
                     done();
                 });
         });
@@ -123,7 +122,6 @@ describe('Accounts Tests:', function() {
                     if (err) {
                         throw err;
                     }
-                    admin_url = res.headers.location;
                     done();
                 });
         });

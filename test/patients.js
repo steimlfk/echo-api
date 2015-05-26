@@ -186,7 +186,7 @@ describe('Patients Tests:', function() {
                 });
         });
 
-        it('Admin cant create new Patients Data using an AdminId as doctors ID', function (done){
+        it('post empty request', function (done){
             var tmp = data.admin.emptyAcc;
             tmp.accountId = pat_id;
             tmp.doctorId = admin_id;

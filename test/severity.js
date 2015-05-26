@@ -308,7 +308,6 @@ describe('Severity Record Tests:', function() {
                 .end(function (err, res){
                     if (err) throw err;
 
-                    exam_url = res.headers.location;
                     done();
                 });
         });

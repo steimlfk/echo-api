@@ -133,7 +133,6 @@ describe('CreatePatientWithAccount Tests:', function() {
                     if (err) {
                         throw err;
                     }
-                    pat_url = res.headers.location;
                     done();
                 });
         });

@@ -319,7 +319,6 @@ describe('Daily Reports Tests:', function() {
                 .expect(400)
                 .end(function (err, res){
                     if (err) throw err;
-                    exam_url = res.headers.location;
                     done();
                 });
         });
@@ -375,7 +374,6 @@ describe('Daily Reports Tests:', function() {
                 .expect(400)
                 .end(function (err, res){
                     if (err) throw err;
-                    exam_url = res.headers.location;
                     done();
                 });
         });
