@@ -393,6 +393,17 @@ describe('Patients Tests:', function() {
                     done();
                 });
         });
+        it('Put empty Account', function (done){
+            request(url)
+                .put(('/patients/'+pat_id))
+                .set('Authorization', 'Bearer ' + access_token)
+                .send (data.admin.emptyAcc)
+                .expect(400)
+                .end(function (err, res){
+                    if (err) throw err;
+                    done();
+                });
+        });
         it('Doctor cant create new Patients Data if File ID is in use', function (done){
             var tmp = data.doctor.newPatDataInvFile;
             tmp.accountId = pat_id;
@@ -525,17 +536,6 @@ describe('Patients Tests:', function() {
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (data.patient.dummyPat)
                 .expect(403)
-                .end(function (err, res){
-                    if (err) throw err;
-                    done();
-                });
-        });
-        it('Put empty Account', function (done){
-            request(url)
-                .put(('/patients/'+pat_id))
-                .set('Authorization', 'Bearer ' + access_token)
-                .send (data.admin.emptyAcc)
-                .expect(400)
                 .end(function (err, res){
                     if (err) throw err;
                     done();

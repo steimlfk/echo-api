@@ -16,7 +16,7 @@ exports.del = function(req,res,next){
     commons.del(req,res,next,'severity');
 };
 
-exports.add = function(req,res,next){
+exports.add = function(req,res,next) {
     var connection = req.con;
     // 4) create SQL Query from parameters
     var i = req.body;
@@ -26,22 +26,19 @@ exports.add = function(req,res,next){
     var date = i.validFrom || null;
     // if no comment is given make it null.
     var comment = i.comment || null;
-    if (i.serverity == undefined || ['A', 'B', 'C', 'D'].indexOf(i.severity.toUpperCase()) == -1) {
-        next({code: 'ER_BAD_NULL_ERROR'});
-    } else {
-        // query db
-        // ? from query will be replaced by values in [] - including escaping!
-        connection.query('call severityCreate(?,?,?,?)',
-            [id, date, comment, i.severity.toUpperCase()],
-            function (err, result) {
-                connection.release();
-                if (err) next(err);
-                else {
-                    res.loc = '/patients/' + id + '/severity/' + result[0][0].insertId;
-                    next();
-                }
-            });
-    }
+    i.severity = i.severity ? i.severity : "";
+    // query db
+    // ? from query will be replaced by values in [] - including escaping!
+    connection.query('call severityCreate(?,?,?,?)',
+        [id, date, comment, i.severity.toUpperCase()],
+        function (err, result) {
+            connection.release();
+            if (err) next(err);
+            else {
+                res.loc = '/patients/' + id + '/severity/' + result[0][0].insertId;
+                next();
+            }
+        });
 };
 var commons = require('./controller_commons');
 var respMessages = commons.respMsg("Severity");

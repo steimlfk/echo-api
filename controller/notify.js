@@ -86,11 +86,11 @@ var DailyAnalyzer = function() {
                     async.parallel([
                             function(cb) {
                                 // patients notification
-                                db.query(notificationqry, [i.accountId, type, null], cb);
+                                con.query(notificationqry, [i.accountId, type, null], cb);
                             },
                             function(cb) {
                                 // doctors notification
-                                db.query(notificationqry, [i.doc_id, type+2, i.accountId], cb);
+                                con.query(notificationqry, [i.doc_id, type+2, i.accountId], cb);
                             },
                             function(cb){
                                 // patients notification
@@ -198,6 +198,7 @@ var DailyAnalyzer = function() {
                             }
                         ],
                         function (err, res){
+                            con.release();
                             if (err) {
                                 console.log('ERROR while sending or storing notification!')
                                 console.log(err);
@@ -206,7 +207,6 @@ var DailyAnalyzer = function() {
                         });
                 }
             });
-            con.release();
         });
     });
 
@@ -398,57 +398,60 @@ var DailyAnalyzer = function() {
         };
         if (postOptions.host === '')
             return;
-        db.query('SELECT goldAnalyzes(?) as new, notificationMode, email, mobile, deviceId from accounts left join devices on accounts.accountId=devices.accountId where accounts.accountId=?;',
-            [id, id], function (err, result) {
-                var r = result[0];
-                if (r == null) {
-                    return;
-                } else {
-                    switch (r.notificationMode) {
-                        case 'email':
-                            postOptions.path = '/echo/email';
-                            var data = JSON.stringify({
-                                'subject': '',
-                                'message': 'You are dead.',
-                                'to': [r.email],
-                                'label': 'ECHO'
-                            });
-                            break;
+        db.getConnection(function(err, con) {
+            con.query('SELECT goldAnalyzes(?) as new, notificationMode, email, mobile, deviceId from accounts left join devices on accounts.accountId=devices.accountId where accounts.accountId=?;',
+                [id, id], function (err, result) {
+                    con.release();
+                    var r = result[0];
+                    if (r == null) {
+                        return;
+                    } else {
+                        switch (r.notificationMode) {
+                            case 'email':
+                                postOptions.path = '/echo/email';
+                                var data = JSON.stringify({
+                                    'subject': '',
+                                    'message': 'You are dead.',
+                                    'to': [r.email],
+                                    'label': 'ECHO'
+                                });
+                                break;
 
-                        case 'sms':
-                            postOptions.path = '/echo/sms';
-                            var data = JSON.stringify({
-                                'subject': 'This is an ECHO Notification',
-                                'message': 'You are dead.',
-                                'label': 'ECHO',
-                                'receivers': r.mobile
-                            });
-                            break;
+                            case 'sms':
+                                postOptions.path = '/echo/sms';
+                                var data = JSON.stringify({
+                                    'subject': 'This is an ECHO Notification',
+                                    'message': 'You are dead.',
+                                    'label': 'ECHO',
+                                    'receivers': r.mobile
+                                });
+                                break;
 
-                        case 'push':
-                            postOptions.path = '/echo/sns';
-                            var data = JSON.stringify({
-                                'subject': 'This is an ECHO Notification',
-                                'message': 'You are dead.',
-                                'label': 'ECHO',
-                                'arns': r.deviceId
-                            });
-                            break;
+                            case 'push':
+                                postOptions.path = '/echo/sns';
+                                var data = JSON.stringify({
+                                    'subject': 'This is an ECHO Notification',
+                                    'message': 'You are dead.',
+                                    'label': 'ECHO',
+                                    'arns': r.deviceId
+                                });
+                                break;
+                        }
+
+                        data.subject = 'The severity changed.';
+                        data.message = 'The severity of your illness changed to ' + r['new'];
+
+                        var request = http.request(postOptions, function (res) {
+                            res.setEncoding('utf8');
+                            res.on('data', function (data) {
+                                console.log(data);
+                            })
+                        });
+                        request.write(data);
+                        request.end();
                     }
-
-                    data.subject = 'The severity changed.';
-                    data.message = 'The severity of your illness changed to ' + r['new'];
-
-                    var request = http.request(postOptions, function (res) {
-                        res.setEncoding('utf8');
-                        res.on('data', function (data) {
-                            console.log(data);
-                        })
-                    });
-                    request.write(data);
-                    request.end();
-                }
-            });
+                });
+        });
     });
 };
 

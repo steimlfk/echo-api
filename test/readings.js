@@ -319,7 +319,7 @@ describe('Readings Record Tests:', function() {
                 .post(patData_url+'/readings')
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (tmp)
-                .expect(403)
+                .expect(400)
                 .end(function (err, res){
                     if (err) throw err;
 

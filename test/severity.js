@@ -304,7 +304,7 @@ describe('Severity Record Tests:', function() {
                 .post(patData_url+'/severity')
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (tmp)
-                .expect(403)
+                .expect(400)
                 .end(function (err, res){
                     if (err) throw err;
 

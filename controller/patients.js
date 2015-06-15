@@ -233,6 +233,7 @@ exports.update = function(req,res,next){
     var connection = req.con;
     // 4) create SQL Query from parameters
     var i = req.body;
+
     connection.query('Call patientsRessourceUpdate(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
         [req.params.id, i.doctorId, i.firstName, i.lastName, i.secondName, i.socialId, i.sex, i.dateOfBirth,
             i.firstDiagnoseDate, i.fileId, i.fullAddress, i.landline, i.email, i.mobile], function(err, result) {

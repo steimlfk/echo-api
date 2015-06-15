@@ -165,62 +165,58 @@ exports.listOne = function(req,res,next){
 /**
  *  POST /accounts
  */
-exports.add = function(req,res,next){
+exports.add = function(req,res,next) {
     var connection = req.con;
+    console.log(req.body)
 
     // 4) create SQL Query from parameters
-    var i = req.body;
-    var roles = ['admin', 'doctor', 'patient'];
+    var i = req.body ? req.body : {};
 
-    if (i.username == undefined || i.password == undefined || i.role == null || roles.indexOf(i.role.toLowerCase()) == -1 ||
-        i.email == undefined || i.enabled == undefined || i.reminderTime == undefined || i.notificationEnabled == undefined ||
-        i.notificationMode == undefined) {
-        next({code: 'ER_BAD_NULL_ERROR'});
-    } else {
-        // make NotificationMode and role lower case so the db triggers can validate the value
-        var mode = i.notificationMode.toLowerCase();
-        var role = i.role.toLowerCase();
+    // make NotificationMode and role lower case so the db triggers can validate the value
+    var mode = i.notificationMode ? i.notificationMode.toLowerCase() : null;
+    var role = i.role ? i.role.toLowerCase() : null;
 
-        async.parallel([
-            function (cb) {
+    async.parallel([
+        function (cb) {
+            if (i.password != null && i.password != "") {
                 utils.cryptPassword(i.password, cb);
-            },
-            function (cb) {
-                connection.query('CALL accountsCreate(?,?,?,?,?,?, ?,?,?,?)',
-                    [config.db_pw_prefix, i.username, " ", i.email, role, i.enabled, i.reminderTime, i.notificationEnabled, mode, i.mobile], cb);
             }
-        ], function (err, result) {
-            if (err) {
-                connection.release();
-                next(err);
-            } else {
-                var newId = result[1][0][0][0].location;
-                connection.changeUser({user: 'echo_db_usr', password: config.db.pwd}, function (err) {
-                    async.parallel([
-                        function (cb) {
-                            connection.query('UPDATE accounts SET password = ? WHERE accountId = ?', [result[0], newId], cb);
-                        },
-                        function (cb) {
-                            connection.query('CALL grantRolePermissions(?, ?)', [newId, i.role], cb);
-                        }
-                    ], function (err, res0) {
-                        connection.release();
-                        if (err) {
-                            // Something went wrong - shouldnt happen
-                            // future TODO: implement rollback which deletes the created account and the created db user
-                            next(err);
-                        }
-                        else {
-                            // account and db user created.
-                            res.loc = '/accounts/' + newId;
-                            next();
-                        }
-                    });
+        },
+        function (cb) {
+            connection.query('CALL accountsCreate(?,?,?,?,?,?, ?,?,?,?)',
+                [config.db_pw_prefix, i.username, " ", i.email, role, i.enabled, i.reminderTime, i.notificationEnabled, mode, i.mobile], cb);
+        }
+    ], function (err, result) {
+        if (err) {
+            connection.release();
+            next(err);
+        } else {
+            var newId = result[1][0][0][0].location;
+            connection.changeUser({user: 'echo_db_usr', password: config.db.pwd}, function (err) {
+                async.parallel([
+                    function (cb) {
+                        connection.query('UPDATE accounts SET password = ? WHERE accountId = ?', [result[0], newId], cb);
+                    },
+                    function (cb) {
+                        connection.query('CALL grantRolePermissions(?, ?)', [newId, i.role], cb);
+                    }
+                ], function (err, res0) {
+                    connection.release();
+                    if (err) {
+                        // Something went wrong - shouldnt happen
+                        // future TODO: implement rollback which deletes the created account and the created db user
+                        next(err);
+                    }
+                    else {
+                        // account and db user created.
+                        res.loc = '/accounts/' + newId;
+                        next();
+                    }
                 });
-            }
-            ;
-        });
-    }
+            });
+        }
+        ;
+    });
 };
 
 
@@ -245,36 +241,29 @@ exports.del = function(req,res,next){
 /**
  *  PUT /accounts/id
  */
-exports.update = function(req,res,next){
+exports.update = function(req,res,next) {
     var connection = req.con;
 
     // 3) create SQL Query from parameters
     var i = req.body;
     // password given? if no pw is given the SP wont change it! (SP checks if value is null)
     var pwd = null;
-
-    if (i.username == undefined &&  i.email == undefined && i.enabled == undefined && i.reminderTime == undefined &&
-        i.notificationEnabled == undefined && i.notificationMode == undefined) {
-        next({code: 'ER_BAD_NULL_ERROR'});
-    } else {
-
-        if (i.password != null && i.password != "") {
-            pwd = utils.cryptPasswordSync(i.password);
-        }
-        // make NotificationMode lower case so the db triggers can validate the value
-        var mode = i.notificationMode.toLowerCase();
-        // execute query
-        // ? from query will be replaced by values in [] - including escaping!
-        // any value for accountId given in the body will be ignored!
-        connection.query('CALL accountsUpdate(?,?,?,?, ?,?,?,?, ?)', [req.params.id, i.username, pwd, i.email, i.reminderTime, i.notificationEnabled, mode, i.mobile, i.enabled], function (err, result) {
-            connection.release();
-            if (err) next(err);
-            else {
-                res.affectedRows = result[0][0].affected_rows;
-                next();
-            }
-        });
+    if (i.password != null && i.password != "") {
+        pwd = utils.cryptPasswordSync(i.password);
     }
+    // make NotificationMode lower case so the db triggers can validate the value
+    var mode = i.notificationMode ? i.notificationMode.toLowerCase() : null;
+    // execute query
+    // ? from query will be replaced by values in [] - including escaping!
+    // any value for accountId given in the body will be ignored!
+    connection.query('CALL accountsUpdate(?,?,?,?, ?,?,?,?, ?)', [req.params.id, i.username, pwd, i.email, i.reminderTime, i.notificationEnabled, mode, i.mobile, i.enabled], function (err, result) {
+        connection.release();
+        if (err) next(err);
+        else {
+            res.affectedRows = result[0][0].affected_rows;
+            next();
+        }
+    });
 };
 
 /**

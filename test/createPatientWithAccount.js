@@ -121,9 +121,7 @@ describe('CreatePatientWithAccount Tests:', function() {
         });
 
         it('Post empty Account', function(done) {
-            var tmp = data.admin.emptyData;
-            tmp.patient.doctorId = doc_id;
-            tmp.account.role = 'patient';
+            var tmp = data.admin.emptyAcc;
             request(url)
                 .post('/createPatientAndAccount')
                 .set('Authorization', 'Bearer ' + access_token_global)

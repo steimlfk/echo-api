@@ -368,7 +368,7 @@ describe('Daily Reports Tests:', function() {
         it('Put empty Daily Report', function (done){
             var tmp = data.doctor.emptyDaily;
             request(url)
-                .post(exam_url)
+                .put(exam_url)
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (tmp)
                 .expect(400)

@@ -362,7 +362,7 @@ describe('Charlson Record Tests:', function() {
         });
 
         it('Post empty Charlson', function (done){
-            var tmp = data.doctor.emptyCharlson;
+            var tmp = data.doctor.emptyData;
             tmp.aids = true;
             tmp.noConditionAvailable = false,
                 request(url)
@@ -378,7 +378,7 @@ describe('Charlson Record Tests:', function() {
         });
 
         it('Put empty Charlson', function (done){
-            var tmp = data.doctor.emptyCharlson;
+            var tmp = data.doctor.emptyData;
             tmp.aids = true;
             tmp.noConditionAvailable = false,
                 request(url)

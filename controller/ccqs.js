@@ -89,25 +89,24 @@ exports.update = function(req,res,next) {
     var id = parseInt(req.params.id);
     var rid = parseInt(req.params.rid);
 
-    if (['baseline', 'exacerbation'].indexOf(i.status) == -1 && i.q1 == undefined && i.q2 == undefined && i.q3 == undefined &&
-        i.q4 == undefined && i.q5 == undefined && i.q7 == undefined && i.q8 == undefined && i.q9 == undefined && i.q10 == undefined) {
-        next({code: 'ER_BAD_NULL_ERROR'});
-    } else {
-        // if no date is given make it null, so the trigger can set the date
-        var date = i.diagnoseDate || null;
-        // make status lower case so the db triggers can validate the value (valid are baseline and exacerbation)
-        var status = (i.status) ? i.status.toLowerCase() : "";
-        // query db
-        // ? from query will be replaced by values in [] - including escaping!
-        connection.query('call ccqUpdate(?, ?,?,?,?,?,?,?,?,?,?,?, ?, ?)', [rid, id, date, status, i.q1, i.q2, i.q3, i.q4, i.q5, i.q6, i.q7, i.q8, i.q9, i.q10], function (err, result) {
-            connection.release();
-            if (err) next(err);
-            else {
+    // if no date is given make it null, so the trigger can set the date
+    var date = i.diagnoseDate || null;
+    // make status lower case so the db triggers can validate the value (valid are baseline and exacerbation)
+    var status = (i.status) ? i.status.toLowerCase() : "";
+    // query db
+    // ? from query will be replaced by values in [] - including escaping!
+    connection.query('call ccqUpdate(?, ?,?,?,?,?,?,?,?,?,?,?, ?, ?)', [rid, id, date, status, i.q1, i.q2, i.q3, i.q4, i.q5, i.q6, i.q7, i.q8, i.q9, i.q10], function (err, result) {
+        connection.release();
+        if (err) next(err);
+        else {
+            if (result.length >= 1 && result[0].length >= 1) {
                 res.affectedRows = result[0][0].affected_rows;
-                next();
+            } else {
+                res.affectedRows = -1;
             }
-        });
-    }
+            next();
+        }
+    });
 };
 
 
