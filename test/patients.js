@@ -393,7 +393,7 @@ describe('Patients Tests:', function() {
                     done();
                 });
         });
-        it('Put empty Account', function (done){
+        it('Put empty Patient', function (done){
             request(url)
                 .put(('/patients/'+pat_id))
                 .set('Authorization', 'Bearer ' + access_token)

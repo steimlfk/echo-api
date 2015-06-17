@@ -97,7 +97,7 @@ exports.update = function(req,res,next) {
     // ? from query will be replaced by values in [] - including escaping!
     connection.query('call ccqUpdate(?, ?,?,?,?,?,?,?,?,?,?,?, ?, ?)', [rid, id, date, status, i.q1, i.q2, i.q3, i.q4, i.q5, i.q6, i.q7, i.q8, i.q9, i.q10], function (err, result) {
         connection.release();
-        if (err) next(err);
+        if (err) { next(err);}
         else {
             if (result.length >= 1 && result[0].length >= 1) {
                 res.affectedRows = result[0][0].affected_rows;

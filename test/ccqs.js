@@ -333,9 +333,9 @@ describe('CCQ Record Tests:', function() {
 
         it('Put empty CCQ', function (done){
             var tmp = data.doctor.emptyCCQ;
-            tmp.status = "baseline";
+
             request(url)
-                .put(patData_url+'/ccqs/2')
+                .put(exam_url)
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (tmp)
                 .expect(400)

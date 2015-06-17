@@ -46,22 +46,27 @@ exports.add = function(req,res,next) {
     var id = parseInt(req.params.id);
     // if no date is given make it null, so the trigger can set the date
     var date = i.diagnoseDate || null;
-    // query db
-    // ? from query will be replaced by values in [] - including escaping!
-    connection.query('call charlsonCreate(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-        [id, date, i.aids, i.anyTumor, i.cerebrovascularDisease,
-            i.chronicPulmonaryDiasease, i.congestiveHeartFailure, i.connectiveTissueDisease, i.dementia,
-            i.diabetes, i.diabetesWithEndOrganDamage, i.hemiplegia, i.leukemia, i.liverDiseaseMild,
-            i.liverDiseaseModerateOrSevere, i.malignantLymphoma, i.metastaticSolidMalignancy,
-            i.myocardialInfarction, i.peripheralVascularDisease, i.renalDiseaseModerateOrSevere,
-            i.ulcerDisease, i.noConditionAvailable], function (err, result) {
-            connection.release();
-            if (err) next(err);
-            else {
-                res.loc = '/patients/' + id + '/charlsons/' + result[0][0].insertId;
-                next();
-            }
-        });
+    if (JSON.stringify(req.body) == '{}') {
+
+        next({code:'ER_BAD_NULL_ERROR'});
+    } else {
+        // query db
+        // ? from query will be replaced by values in [] - including escaping!
+        connection.query('call charlsonCreate(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+            [id, date, i.aids, i.anyTumor, i.cerebrovascularDisease,
+                i.chronicPulmonaryDiasease, i.congestiveHeartFailure, i.connectiveTissueDisease, i.dementia,
+                i.diabetes, i.diabetesWithEndOrganDamage, i.hemiplegia, i.leukemia, i.liverDiseaseMild,
+                i.liverDiseaseModerateOrSevere, i.malignantLymphoma, i.metastaticSolidMalignancy,
+                i.myocardialInfarction, i.peripheralVascularDisease, i.renalDiseaseModerateOrSevere,
+                i.ulcerDisease, i.noConditionAvailable], function (err, result) {
+                connection.release();
+                if (err) next(err);
+                else {
+                    res.loc = '/patients/' + id + '/charlsons/' + result[0][0].insertId;
+                    next();
+                }
+            });
+    }
 };
 
 /**
@@ -83,21 +88,27 @@ exports.update = function(req,res,next) {
     var rid = parseInt(req.params.rid);
     // if no date is given make it null, so the trigger can set the date
     var date = i.diagnoseDate || null;
-    connection.query('call charlsonUpdate(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-        [rid, id, date, i.aids, i.anyTumor, i.cerebrovascularDisease,
-            i.chronicPulmonaryDiasease, i.congestiveHeartFailure, i.connectiveTissueDisease, i.dementia,
-            i.diabetes, i.diabetesWithEndOrganDamage, i.hemiplegia, i.leukemia, i.liverDiseaseMild,
-            i.liverDiseaseModerateOrSevere, i.malignantLymphoma, i.metastaticSolidMalignancy,
-            i.myocardialInfarction, i.peripheralVascularDisease, i.renalDiseaseModerateOrSevere,
-            i.ulcerDisease, i.noConditionAvailable], function (err, result) {
-            connection.release();
-            if (err) next(err);
-            else {
-                // record  was updated
-                res.affectedRows = result[0][0].affected_rows > 0;
-                next();
-            }
-        });
+
+    if (JSON.stringify(req.body) == '{}') {
+        connection.release();
+        next({code:'ER_BAD_NULL_ERROR'})
+    } else {
+        connection.query('call charlsonUpdate(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+            [rid, id, date, i.aids, i.anyTumor, i.cerebrovascularDisease,
+                i.chronicPulmonaryDiasease, i.congestiveHeartFailure, i.connectiveTissueDisease, i.dementia,
+                i.diabetes, i.diabetesWithEndOrganDamage, i.hemiplegia, i.leukemia, i.liverDiseaseMild,
+                i.liverDiseaseModerateOrSevere, i.malignantLymphoma, i.metastaticSolidMalignancy,
+                i.myocardialInfarction, i.peripheralVascularDisease, i.renalDiseaseModerateOrSevere,
+                i.ulcerDisease, i.noConditionAvailable], function (err, result) {
+                connection.release();
+                if (err) next(err);
+                else {
+                    // record  was updated
+                    res.affectedRows = result[0][0].affected_rows > 0;
+                    next();
+                }
+            });
+    }
 };
 
 var respMessages = commons.respMsg("Charlson");

@@ -363,8 +363,6 @@ describe('Charlson Record Tests:', function() {
 
         it('Post empty Charlson', function (done){
             var tmp = data.doctor.emptyData;
-            tmp.aids = true;
-            tmp.noConditionAvailable = false,
                 request(url)
                     .post(patData_url+'/charlsons')
                     .set('Authorization', 'Bearer ' + access_token)
@@ -379,8 +377,6 @@ describe('Charlson Record Tests:', function() {
 
         it('Put empty Charlson', function (done){
             var tmp = data.doctor.emptyData;
-            tmp.aids = true;
-            tmp.noConditionAvailable = false,
                 request(url)
                     .put(exam_url)
                     .set('Authorization', 'Bearer ' + access_token)
