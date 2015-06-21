@@ -78,6 +78,7 @@ var newReading = {
     "rv_tlc": 0,
     "satO2_pro": 0,
     "smoker": 0,
+    "status": "baseline",
     "tlc": 0,
     "tlc_pre": 0,
     "tlc_pre_pro": 0,

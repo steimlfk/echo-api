@@ -314,12 +314,11 @@ describe('Treatments Record Tests:', function() {
 
         it('Post empty Treatment', function (done){
             var tmp = data.doctor.emptyTreatment;
-            tmp.status = "baseline";
             request(url)
                 .post(patData_url+'/treatments')
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (tmp)
-                .expect(403)
+                .expect(400)
                 .end(function (err, res){
                     if (err) throw err;
 
@@ -405,8 +404,6 @@ describe('Treatments Record Tests:', function() {
 
         it('Put empty Treatment', function (done){
             var tmp = data.doctor.emptyTreatment;
-            tmp.status = "exacerbation";
-            tmp.mycolytocis = true;
             request(url)
                 .put(exam2_url)
                 .set('Authorization', 'Bearer ' + access_token)

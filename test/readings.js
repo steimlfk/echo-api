@@ -314,7 +314,6 @@ describe('Readings Record Tests:', function() {
 
         it('Post empty reading', function (done){
             var tmp = data.doctor.emptyReading;
-            tmp.status = "baseline";
             request(url)
                 .post(patData_url+'/readings')
                 .set('Authorization', 'Bearer ' + access_token)
@@ -405,8 +404,6 @@ describe('Readings Record Tests:', function() {
 
         it('Put empty Reading', function (done){
             var tmp = data.doctor.emptyReading;
-            tmp.status = "exacerbation";
-            tmp.pxy = 5;
             request(url)
                 .put(exam2_url)
                 .set('Authorization', 'Bearer ' + access_token)

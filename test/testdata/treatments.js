@@ -54,6 +54,7 @@ var newTreatment = {
     "pdef4Inhalator": false,
     "sama": false,
     "shortActingB2": false,
+    "status": "baseline",
     "steroidsInhaled": false,
     "steroidsOral": false,
     "theophyline": false,

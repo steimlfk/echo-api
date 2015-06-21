@@ -2282,7 +2282,7 @@ begin
 	SET @email = email;
 	SET @mobile = mobile;
 	set @id = patientId;
-	SELECT doctorId into @docId FROM patients WHERE patientId = @id;
+	SELECT doctorId into @docId FROM patients WHERE patients.patientId = @id;
 
 	SET @stmt = "UPDATE patients SET firstName=?, lastName=?, secondName=?, socialId=?, sex=?, dateOfBirth=?, firstDiagnoseDate=?, fullAddress=?, landline=?, fileId=?, doctorId =? where patientId = ?";
 	SET @firstName = firstName;
