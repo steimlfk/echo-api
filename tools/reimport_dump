@@ -17,9 +17,9 @@ else
     pwd=$2
 fi
 
-js=`which node`
+js=`which nodejs`
 if [[ -z $js ]]; then
-  js=`which nodejs`
+  js=`which node`
   if [[ -z $js ]]; then
     echo "Please install node.js"
     exit
