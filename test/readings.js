@@ -313,6 +313,20 @@ describe('Readings Record Tests:', function() {
                 });
         });
 
+        it('Post empty reading', function (done){
+            var tmp = data.doctor.emptyReading;
+            request(url)
+                .post(patData_url+'/readings')
+                .set('Authorization', 'Bearer ' + access_token)
+                .send (tmp)
+                .expect(400)
+                .end(function (err, res){
+                    if (err) throw err;
+
+                    done();
+                });
+        });
+
         it('Doctor can create new Readings Records Data (exacerbation)', function (done){
             var tmp = data.doctor.newReading;
             tmp.status = "exacerbation";
@@ -383,6 +397,20 @@ describe('Readings Record Tests:', function() {
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (tmp)
                 .expect(204)
+                .end(function (err, res){
+                    if (err) throw err;
+
+                    done();
+                });
+        });
+
+        it('Put empty Reading', function (done){
+            var tmp = data.doctor.emptyReading;
+            request(url)
+                .put(exam2_url)
+                .set('Authorization', 'Bearer ' + access_token)
+                .send (tmp)
+                .expect(400)
                 .end(function (err, res){
                     if (err) throw err;
 

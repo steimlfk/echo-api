@@ -8,41 +8,47 @@ var ctrl = require('../health-api-middlewares.js');
 var acc = require('./accounts.js');
 var pat = require('./patients.js');
 
+
 exports.createPatientAndAccount = function(req,res,next) {
-    async.waterfall([
-            function (cb){
-                req.data = req.body;
-                req.body = req.body.account;
-                acc.add(req,res, cb);
-            },
-            // reset db connection since acc.add closed it!
-            function (cb){
-                ctrl.databaseHandler(req, res, cb);
-            },
-            function (cb){
-                req.data.patient.accountId = res.loc.split("/").pop();
-                req.body = req.data.patient;
-                pat.add(req,res, cb);
-            }
-        ],
-        function(err){
-            if (err) {
-                // rollback if account was already created! (doctorId is part of req.body of patient)
-                if (req.body.doctorId){
-                    req.params = {};
-                    req.params.id = req.body.accountId;
-                    ctrl.databaseHandler(req, res, function(e1){
-                        req.con.changeUser({user: 'echo_db_usr', password: config.db.pwd}, function (e2){
-                            acc.del(req,res, function(e3){
-                                next(err);
-                            })
-                        });
-                    });
+    if (JSON.stringify(req.body) == '{}') {
+        req.con.release();
+        next({code:'ER_BAD_NULL_ERROR'});
+    } else {
+        async.waterfall([
+                function (cb) {
+                    req.data = req.body;
+                    req.body = req.body.account;
+                    acc.add(req, res, cb);
+                },
+                function (cb) {
+                    ctrl.databaseHandler(req, res, cb);
+                },
+                function (cb) {
+                    req.data.patient.accountId = res.loc.split("/").pop();
+                    req.body = req.data.patient;
+                    req.body.accountId = parseInt(req.body.accountId);
+                    pat.add(req, res, cb);
                 }
-                else next(err);
-            }
-            else next();
-        });
+            ],
+            function (err) {
+                if (err) {
+                    // rollback if account was already created! (doctorId is part of req.body of patient)
+                    if (req.body.doctorId) {
+                        req.params = {};
+                        req.params.id = req.body.accountId;
+                        ctrl.databaseHandler(req, res, function (e1) {
+                            req.con.changeUser({user: 'echo_db_usr', password: config.db.pwd}, function (e2) {
+                                acc.del(req, res, function (e3) {
+                                    next(err);
+                                })
+                            });
+                        });
+                    }
+                    else next(err);
+                }
+                else next();
+            });
+    }
 };
 
 
@@ -60,7 +66,7 @@ exports.changeDoctor = function(req,res,next){
             function (cb){
                 req.body = res.result;
                 req.body.doctorId = doc_id;
-                pat.update(req,res, cb);
+                pat.add(req,res, cb);
             }
         ],
         function(err){

@@ -544,6 +544,18 @@ describe('CAT Record Tests:', function() {
                 });
         });
 
+        it('Patient cant submit empty request', function (done) {
+            request(url)
+                .post(patData_url + '/cats')
+                .set('Authorization', 'Bearer ' + access_token)
+                .send(data.patient.emptyCat)
+                .expect(403)
+                .end(function(err, res) {
+                    if (err) throw err;
+                    done();
+                })
+        })
+
     });
 
     after('Cleaning Up...', function(done) {

@@ -115,11 +115,11 @@ var DailyAnalyzer = function() {
                     async.parallel([
                             function(cb) {
                                 // patients notification
-                                db.query(notificationqry, [i.accountId, type, null, pattext], cb);
+                                con.query(notificationqry, [i.accountId, type, null, pattext], cb);
                             },
                             function(cb) {
                                 // doctors notification
-                                db.query(notificationqry, [i.doc_id, type+2, i.accountId, doctext], cb);
+                                con.query(notificationqry, [i.doc_id, type+2, i.accountId, doctext], cb);
                             },
                             function(cb){
                                 // patients notification
@@ -219,6 +219,7 @@ var DailyAnalyzer = function() {
                             }
                         ],
                         function (err, res){
+                            con.release();
                             if (err) {
                                 console.log('ERROR while sending or storing notification!')
                                 console.log(err);
@@ -227,12 +228,10 @@ var DailyAnalyzer = function() {
                         });
                 }
             });
-            con.release();
         });
     });
 
-    this.on('inactiveAnalyzes', function() {
-        return;
+    this.on('oneDayInactiveAnalyzes', function() {
         var postOptions = {
             host: service.host,
             port: '80',
@@ -241,19 +240,23 @@ var DailyAnalyzer = function() {
                 Authorization: service.apiKey
             }
         };
+        if (postOptions.host === '')
+            return;
         db.getConnection(function(err, connection) {
             var date = new Date();
             var startTime = date.getHours() + ':' + (date.getMinutes() - 15) + ':' + '00';
             var endTime = date.getHours() + ':' + (date.getMinutes()) + ':' + '00';
-            connection.query('SELECT a.accountId, notificationEnabled, email, mobile, deviceId from accounts a ' +
-                'inner join devices on a.accountId=devices.accountId ' +
-                'inner join dailyReports d on a.accountId=patientId where d.date < (now() - interval 2 day) and reminderTime>=? and reminderTime <=? and notificationEnabled=1 group by a.accountId;',
+            connection.query('SELECT a.accountId, notificationEnabled, email, mobile, deviceId, doctorId from accounts a ' +
+                'left join devices on a.accountId=devices.accountId ' +
+                'inner join patients on a.accountId = patients.patientId ' +
+                'inner join dailyReports d on a.accountId=d.patientId where d.date = Date((now() - interval 1 day)) and reminderTime>=? and reminderTime <=? and notificationEnabled=1 group by a.accountId;',
                 [startTime, endTime], function (err, result) {
                     connection.release();
                     var email = [],
                         mobile = [],
                         push = [];
                     for (var r in result) {
+                        connection.query('INSERT INTO notifications (accountId, date, type, subjectsAccount, modified) values (?, ?, 0, ?, ?)', [r.accountId, date, null, date]);
                         switch (r.notificationMode) {
                             case 'email':
                                 email[email.length] = r.email;
@@ -271,9 +274,10 @@ var DailyAnalyzer = function() {
                                 break;
                         }
                     }
+                    connection.release();
                     var data = JSON.stringify({
-                        'subject': 'This is an ECHO Notification',
-                        'message': 'You are dead.',
+                        'subject': 'Please insert a daily report',
+                        'message': 'You have not inserted a daily report, yesterday. Please insert one now.',
                         'to': email,
                         'label': 'ECHO',
                         'arns': push,
@@ -286,8 +290,10 @@ var DailyAnalyzer = function() {
                             console.log(data);
                         })
                     });
-                    request.write(data);
-                    request.end();
+                    if (push.length > 0) {
+                        request.write(data);
+                        request.end();
+                    }
                     postOptions.path = '/echo/sms';
                     var request = http.request(postOptions, function (res) {
                         res.setEncoding('utf8');
@@ -295,8 +301,10 @@ var DailyAnalyzer = function() {
                             console.log(data);
                         })
                     });
-                    request.write(data);
-                    request.end();
+                    if (mobile.length > 0) {
+                        request.write(data);
+                        request.end();
+                    }
                     postOptions.path = '/echo/email';
                     var request = http.request(postOptions, function (res) {
                         res.setEncoding('utf8');
@@ -304,8 +312,99 @@ var DailyAnalyzer = function() {
                             console.log(data);
                         })
                     });
-                    request.write(data);
-                    request.end();
+                    if (email.length > 0) {
+                        request.write(data);
+                        request.end();
+                    }
+                });
+        });
+    });
+
+    this.on('nDayInactiveAnalyzes', function(n) {
+        var postOptions = {
+            host: service.host,
+            port: '80',
+            method: 'POST',
+            headers: {
+                Authorization: service.apiKey
+            }
+        };
+        if (postOptions.host === '')
+            return;
+        db.getConnection(function(err, connection) {
+            var date = new Date();
+            var startTime = date.getHours() + ':' + (date.getMinutes() - 15) + ':' + '00';
+            var endTime = date.getHours() + ':' + (date.getMinutes()) + ':' + '00';
+            connection.query('SELECT a.accountId, notificationEnabled, email, mobile, deviceId, doctorId from accounts a ' +
+                'left join devices on a.accountId=devices.accountId ' +
+                'inner join patients on a.accountId = patients.patientId ' +
+                'inner join dailyReports d on a.accountId=patientId where d.date <= Date((now() - interval ? day)) and reminderTime>=? and reminderTime <=? and notificationEnabled=1 group by a.accountId;',
+                [n, startTime, endTime], function (err, result) {
+                    var email = [],
+                        mobile = [],
+                        push = [];
+                    for (var r in result) {
+                        connection.query('INSERT INTO notifications (accountId, date, type, subjectsAccount, modified) values (?, ?, 0, ?, ?)', [r.accountId, date, null, date]);
+                        connection.query('INSERT INTO notifications (accountId, date, type, subjectsAccount, modified) values (?, ?, 6, ?, ?)', [r.doctorId, date, r.accountId, date]);
+                        switch (r.notificationMode) {
+                            case 'email':
+                                email[email.length] = r.email;
+                                postOptions.path = '/echo/email';
+                                break;
+
+                            case 'sms':
+                                mobile[mobile.length] = r.mobile;
+                                postOptions.path = '/echo/sms';
+                                break;
+
+                            case 'push':
+                                push[push.length] = r.deviceId;
+                                postOptions.path = '/echo/sns';
+                                break;
+                        }
+                    }
+                    connection.release();
+                    var data = JSON.stringify({
+                        'subject': 'Please insert a daily report',
+                        'message': 'You have not inserted a daily report, yesterday. Please insert one now.',
+                        'to': email,
+                        'label': 'ECHO',
+                        'arns': push,
+                        'receivers': mobile
+                    });
+                    postOptions.path = '/echo/sns';
+                    var request = http.request(postOptions, function (res) {
+                        res.setEncoding('utf8');
+                        res.on('data', function (data) {
+                            console.log(data);
+                        })
+                    });
+                    if (push.length > 0) {
+                        request.write(data);
+                        request.end();
+                    }
+                    postOptions.path = '/echo/sms';
+                    var request = http.request(postOptions, function (res) {
+                        res.setEncoding('utf8');
+                        res.on('data', function (data) {
+                            console.log(data);
+                        })
+                    });
+                    if (mobile.length > 0) {
+                        request.write(data);
+                        request.end();
+                    }
+                    postOptions.path = '/echo/email';
+                    var request = http.request(postOptions, function (res) {
+                        res.setEncoding('utf8');
+                        res.on('data', function (data) {
+                            console.log(data);
+                        })
+                    });
+                    if (email.length > 0) {
+                        request.write(data);
+                        request.end();
+                    }
                 });
         });
     });
@@ -320,57 +419,62 @@ var DailyAnalyzer = function() {
                 Authorization: service.apiKey
             }
         };
-        db.query('SELECT goldAnalyzes(?) as new, notificationMode, email, mobile, deviceId from accounts left join devices on accounts.accountId=devices.accountId where accounts.accountId=?;',
-            [id, id], function (err, result) {
-                var r = result[0];
-                if (r == null) {
-                    return;
-                } else {
-                    switch (r.notificationMode) {
-                        case 'email':
-                            postOptions.path = '/echo/email';
-                            var data = JSON.stringify({
-                                'subject': '',
-                                'message': 'You are dead.',
-                                'to': [r.email],
-                                'label': 'ECHO'
-                            });
-                            break;
+        if (postOptions.host === '')
+            return;
+        db.getConnection(function(err, con) {
+            con.query('SELECT goldAnalyzes(?) as new, notificationMode, email, mobile, deviceId from accounts left join devices on accounts.accountId=devices.accountId where accounts.accountId=?;',
+                [id, id], function (err, result) {
+                    con.release();
+                    var r = result[0];
+                    if (r == null) {
+                        return;
+                    } else {
+                        switch (r.notificationMode) {
+                            case 'email':
+                                postOptions.path = '/echo/email';
+                                var data = JSON.stringify({
+                                    'subject': '',
+                                    'message': 'You are dead.',
+                                    'to': [r.email],
+                                    'label': 'ECHO'
+                                });
+                                break;
 
-                        case 'sms':
-                            postOptions.path = '/echo/sms';
-                            var data = JSON.stringify({
-                                'subject': 'This is an ECHO Notification',
-                                'message': 'You are dead.',
-                                'label': 'ECHO',
-                                'receivers': r.mobile
-                            });
-                            break;
+                            case 'sms':
+                                postOptions.path = '/echo/sms';
+                                var data = JSON.stringify({
+                                    'subject': 'This is an ECHO Notification',
+                                    'message': 'You are dead.',
+                                    'label': 'ECHO',
+                                    'receivers': r.mobile
+                                });
+                                break;
 
-                        case 'push':
-                            postOptions.path = '/echo/sns';
-                            var data = JSON.stringify({
-                                'subject': 'This is an ECHO Notification',
-                                'message': 'You are dead.',
-                                'label': 'ECHO',
-                                'arns': r.deviceId
-                            });
-                            break;
+                            case 'push':
+                                postOptions.path = '/echo/sns';
+                                var data = JSON.stringify({
+                                    'subject': 'This is an ECHO Notification',
+                                    'message': 'You are dead.',
+                                    'label': 'ECHO',
+                                    'arns': r.deviceId
+                                });
+                                break;
+                        }
+
+                        data.subject = 'The severity changed.';
+                        data.message = 'The severity of your illness changed to ' + r['new'];
+
+                        var request = http.request(postOptions, function (res) {
+                            res.setEncoding('utf8');
+                            res.on('data', function (data) {
+                                console.log(data);
+                            })
+                        });
+                        request.write(data);
+                        request.end();
                     }
-
-                    data.subject = 'The severity changed.';
-                    data.message = 'The severity of your illness changed to ' + r['new'];
-
-                    var request = http.request(postOptions, function (res) {
-                        res.setEncoding('utf8');
-                        res.on('data', function (data) {
-                            console.log(data);
-                        })
-                    });
-                    request.write(data);
-                    request.end();
-                }
-            });
+                });
+        });
     });
 };
 

@@ -71,21 +71,12 @@ id int
 ) RETURNS varchar(1) CHARSET utf8
     DETERMINISTIC
 BEGIN
-CREATE TEMPORARY TABLE catsTemp (status varchar(30), diagnoseDate date);
-insert into catsTemp select distinct status='exacerbation', diagnoseDate from cats where patientId=id and diagnoseDate>=(now() - interval 1 year);
-select sum(status)>=2 into @cats from catsTemp;
-
-CREATE TEMPORARY TABLE ccqsTemp (status varchar(30), diagnoseDate date);
-insert into ccqsTemp select distinct status='exacerbation', diagnoseDate from ccqs where patientId=id and diagnoseDate>=(now() - interval 1 year);
-select sum(status)>=2 into @ccqs;
-
-CREATE TEMPORARY TABLE treatmentsTemp (status varchar(30), diagnoseDate date);
-insert into treatmentsTemp select distinct status='exacerbation', diagnoseDate from treatments where patientId=id and diagnoseDate>=(now() - interval 1 year);
-select sum(status)>=2 into @treatments;
-
-CREATE TEMPORARY TABLE readingsTemp (status varchar(30), diagnoseDate date);
-insert into readingsTemp select distinct status='exacerbation', diagnoseDate from readings where patientId=id and diagnoseDate>=(now() - interval 1 year);
-select sum(status)>=2 into @readingsTemp;
+CREATE TEMPORARY TABLE exTemp (status varchar(30), diagnoseDate date);
+insert into exTemp select distinct status='exacerbation', diagnoseDate from cats where patientId=id and diagnoseDate>=(now() - interval 1 year);
+insert into exTemp select distinct status='exacerbation', diagnoseDate from ccqs where patientId=id and diagnoseDate>=(now() - interval 1 year);
+insert into exTemp select distinct status='exacerbation', diagnoseDate from treatments where patientId=id and diagnoseDate>=(now() - interval 1 year);
+insert into exTemp select distinct status='exacerbation', diagnoseDate from readings where patientId=id and diagnoseDate>=(now() - interval 1 year);
+select sum(status) into @exacerbation from exTemp group by diagnoseDate;
 
 select case
 	when (coalesce((select fev1>=80 and fev1_fvc<70 from readings where patientId=id))) then 1
@@ -94,16 +85,21 @@ select case
     when (coalesce((select fev1<30 and fev1_fvc<70 from readings where patientId=id))) then 4
     else null end into @stadium;
 
-select totalCatscale>10 or mmrc>=2 into @tot from cats left join readings on cats.patientId=readings.patientId where cat.patientId=id;
+select totalCatscale is not null into @catExists from cats where patientId=id and diagnoseDate>=(now() - interval 1 year);
+if @catExists then
+    select coalesce((select totalCatscale from cats where patientId=id order by diagnoseDate desc limit 1)) into @tot;
+else
+    select coalesce((select mmrc from readings where patientId=id order by diagnoseDate desc limit 1)) into @tot;
+end if;
 
-if (@cats or @ccqs or @treatments or @readings or 3<=@stadium<=4) then
-    if (@tot) then
+if @exacerbation>=2 then
+    if (@tot>10 and @catExists or @tot>=2) then
         set @severity='D';
 	else
 		set @severity='C';
 	end if;
 else
-    if (@tot) then
+    if (@tot>10 and @catExists or @tot>=2) then
         set @severity='B';
 	else
         set @severity='A';
@@ -115,6 +111,15 @@ if (coalesce((select severity from severity where patientId=id order by diagnose
     values
     (id, now(), 7, null),
     (coalesce((select doctorId from patients where patientId=id)), now(), 8, id);
+    if @catExists then
+        insert into severity (patientId, severity, validFrom, comment)
+        values
+        (id, @severity, now(), (select concat('Exacerbations:', @exacerbation, ';Stadium:', @stadium, ';CAT-Scale:', @tot)));
+    else
+        insert into severity (patientId, severity, validFrom, comment)
+        values
+        (id, @severity, now(), (select concat('Exacerbations:', @exacerbation, ';Stadium:', @stadium, ';MMRC:', @tot)));
+    end if;
     return @severity;
 end if;
 RETURN null;
@@ -2279,7 +2284,7 @@ begin
 	SET @email = email;
 	SET @mobile = mobile;
 	set @id = patientId;
-	SELECT doctorId into @docId FROM patients WHERE patiendId = @id;
+	SELECT doctorId into @docId FROM patients WHERE patients.patientId = @id;
 
 	SET @stmt = "UPDATE patients SET firstName=?, lastName=?, secondName=?, socialId=?, sex=?, dateOfBirth=?, firstDiagnoseDate=?, fullAddress=?, landline=?, fileId=?, doctorId =? where patientId = ?";
 	SET @firstName = firstName;

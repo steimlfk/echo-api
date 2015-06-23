@@ -98,7 +98,10 @@ exports.update = function(req,res,next){
     // ? from query will be replaced by values in [] - including escaping!
     connection.query('call catUpdate(?, ?,?,?,?,?,?,?,?,?,?,?)',  [rid, id, date, status, i.q1, i.q2, i.q3, i.q4, i.q5, i.q6, i.q7, i.q8], function(err, result) {
         connection.release();
-        if (err) next(err);
+        if (err) {
+            console.log('catstuff: ' + JSON.stringify(err));
+            next(err);
+        }
         else {
             res.affectedRows = result[0][0].affected_rows;
             next();

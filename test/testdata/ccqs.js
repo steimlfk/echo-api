@@ -66,7 +66,8 @@ module.exports = {
     },
     // data for doctor tests
     doctor:{
-        newCCQ : newCCQ
+        newCCQ : newCCQ,
+        emptyCCQ: {}
     },
     // data for patient tests
     patient:{

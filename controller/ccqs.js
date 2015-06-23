@@ -82,24 +82,29 @@ exports.add = function(req,res,next){
  *  	5) add links to result
  *  	6) send
  */
-exports.update = function(req,res,next){
+exports.update = function(req,res,next) {
     var connection = req.con;
     // 3) create SQL Query from parameters }
     var i = req.body;
     // any given ID in the body will be ignored and the ids from the url are used!
     var id = parseInt(req.params.id);
     var rid = parseInt(req.params.rid);
+
     // if no date is given make it null, so the trigger can set the date
     var date = i.diagnoseDate || null;
     // make status lower case so the db triggers can validate the value (valid are baseline and exacerbation)
-    var status = (i.status)? i.status.toLowerCase() : "";
+    var status = (i.status) ? i.status.toLowerCase() : "";
     // query db
     // ? from query will be replaced by values in [] - including escaping!
-    connection.query('call ccqUpdate(?, ?,?,?,?,?,?,?,?,?,?,?, ?, ?)', [rid, id, date, status, i.q1, i.q2, i.q3, i.q4, i.q5, i.q6, i.q7, i.q8,i.q9, i.q10], function(err, result) {
+    connection.query('call ccqUpdate(?, ?,?,?,?,?,?,?,?,?,?,?, ?, ?)', [rid, id, date, status, i.q1, i.q2, i.q3, i.q4, i.q5, i.q6, i.q7, i.q8, i.q9, i.q10], function (err, result) {
         connection.release();
-        if (err) next(err);
+        if (err) { next(err);}
         else {
-            res.affectedRows = result[0][0].affected_rows;
+            if (result.length >= 1 && result[0].length >= 1) {
+                res.affectedRows = result[0][0].affected_rows;
+            } else {
+                res.affectedRows = -1;
+            }
             next();
         }
     });

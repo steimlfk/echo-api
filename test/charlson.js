@@ -350,16 +350,44 @@ describe('Charlson Record Tests:', function() {
             var tmp = data.doctor.newCharlson;
             tmp.aids = true;
             tmp.noConditionAvailable = false,
-            request(url)
-                .put(exam_url)
-                .set('Authorization', 'Bearer ' + access_token)
-                .send (tmp)
-                .expect(204)
-                .end(function (err, res){
-                    if (err) throw err;
+                request(url)
+                    .put(exam_url)
+                    .set('Authorization', 'Bearer ' + access_token)
+                    .send (tmp)
+                    .expect(204)
+                    .end(function (err, res){
+                        if (err) throw err;
 
-                    done();
-                });
+                        done();
+                    });
+        });
+
+        it('Post empty Charlson', function (done){
+            var tmp = data.doctor.emptyData;
+                request(url)
+                    .post(patData_url+'/charlsons')
+                    .set('Authorization', 'Bearer ' + access_token)
+                    .send (tmp)
+                    .expect(400)
+                    .end(function (err, res){
+                        if (err) throw err;
+
+                        done();
+                    });
+        });
+
+        it('Put empty Charlson', function (done){
+            var tmp = data.doctor.emptyData;
+                request(url)
+                    .put(exam_url)
+                    .set('Authorization', 'Bearer ' + access_token)
+                    .send (tmp)
+                    .expect(400)
+                    .end(function (err, res){
+                        if (err) throw err;
+
+                        done();
+                    });
         });
 
         it('Doctor can delete certain Charlson Records', function (done){

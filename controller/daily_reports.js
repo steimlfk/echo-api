@@ -130,6 +130,7 @@ exports.del = function(req, res, next){
         }
     });
 };
+
 /**
  *  PUT /patients/id/daily_reports/recordid
  *  Steps:
@@ -140,7 +141,7 @@ exports.del = function(req, res, next){
  *  	5) add links to result
  *  	6) send
  */
-exports.update = function(req,res,next){
+exports.update = function(req,res,next) {
     var connection = req.con;
     // 3) create SQL Query from parameters
     var i = req.body;
@@ -152,8 +153,8 @@ exports.update = function(req,res,next){
     // query db
     connection.query('call reportUpdate(?,?,?, ?,?,?,?,?, ?,?,?,?,?,?, ?,?,?,?,?,?,?)',
         [rid, id, date,
-            i.q1, i.q2, i.q3, i.q4, i.q5, i.q1a, i.q1b, i.q1c,i.q3a, i.q3b, i.q3c, i.satO2,
-            i.walkingDist, i.temperature, i.pefr, i.heartRate, i.x, i.y], function(err, result) {
+            i.q1, i.q2, i.q3, i.q4, i.q5, i.q1a, i.q1b, i.q1c, i.q3a, i.q3b, i.q3c, i.satO2,
+            i.walkingDist, i.temperature, i.pefr, i.heartRate, i.x, i.y], function (err, result) {
             connection.release();
             if (err) next(err);
             else {
@@ -162,6 +163,7 @@ exports.update = function(req,res,next){
             }
         });
 };
+
 /**
  *  POST /patients/id/daily_reports
  *  Steps:

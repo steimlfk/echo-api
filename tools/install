@@ -1,13 +1,8 @@
 #! /bin/bash
 path=`pwd`
 output="$path/.."
-LS=`ls $output/config/*.example`
-for file in $LS; do
-    name=${file%.example}
-    cp $file $name
-done
-cd "$output/config"
-echo "Please configure your config files."
+cp "$output/config.js.example" "$output/config.js"
+echo "Please configure your config file."
 mkdir "$output/ssl"
 crons=`crontab -l`
 if [[ -z $crons ]]; then

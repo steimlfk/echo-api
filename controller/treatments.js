@@ -42,7 +42,7 @@ exports.del = function(req,res,next){
  *  	5) add links to result
  *  	6) send
  */
-exports.add = function(req,res,next){
+exports.add = function(req,res,next) {
     var connection = req.con;
     // 4) create SQL Query from parameters
     var i = req.body;
@@ -51,28 +51,32 @@ exports.add = function(req,res,next){
     // if no date is given make it null, so the trigger can set the date
     var date = i.diagnoseDate || null;
     // make status lower case so the db triggers can validate the value (valid are baseline and exacerbation)
-    var status = (i.status)? i.status.toLowerCase() : "";
-    // query db
-    // ? from query will be replaced by values in [] - including escaping!
-    connection.query('call treatmentCreate(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?)',
-        [id, date,status,i.antibiotics,i.antiflu,i.antipneum,i.lama,i.longActingB2,
-            i.ltot,i.ltotDevice,i.ltotStart,i.mycolytocis,i.niv,i.pdef4Inhalator,i.sama,i.shortActingB2,
-            i.steroidsInhaled,i.steroidsOral,i.theophyline,i.ultraLongB2,i.ventilationDevice,i.ventilationStart, i.other],
-        function(err, result) {
-            connection.release();
-            if (err) next(err);
-            else {
-                // this postpones the analysis of the data until the POST is completely processed
-                process.nextTick (function (){
-                    dailyAnalyzer.emit('goldAnalyzes', id);
-                });
-                // resource was created
-                // link will be provided in location header
-                res.loc = '/patients/'+ id + '/treatments/' + result[0][0].insertId;
-                res.modified = result[0][0].modified;
-                next();
-            }
-        });
+    var status = (i.status) ? i.status.toLowerCase() : "";
+    if (req.body.status == undefined) {
+        connection.release();
+        next({code:'ER_BAD_NULL_ERROR'})
+    } else {
+        // query db
+        // ? from query will be replaced by values in [] - including escaping!
+        connection.query('call treatmentCreate(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?)',
+            [id, date, status, i.antibiotics, i.antiflu, i.antipneum, i.lama, i.longActingB2,
+                i.ltot, i.ltotDevice, i.ltotStart, i.mycolytocis, i.niv, i.pdef4Inhalator, i.sama, i.shortActingB2,
+                i.steroidsInhaled, i.steroidsOral, i.theophyline, i.ultraLongB2, i.ventilationDevice, i.ventilationStart, i.other],
+            function (err, result) {
+                connection.release();
+                if (err) next(err);
+                else {
+                    // this postpones the analysis of the data until the POST is completely processed
+                    process.nextTick(function () {
+                        dailyAnalyzer.emit('goldAnalyzes', id);
+                    });
+                    // resource was created
+                    // link will be provided in location header
+                    res.loc = '/patients/' + id + '/treatments/' + result[0][0].insertId;
+                    next();
+                }
+            });
+    }
 };
 
 /**
@@ -85,7 +89,7 @@ exports.add = function(req,res,next){
  *  	5) add links to result
  *  	6) send
  */
-exports.update = function(req,res,next){
+exports.update = function(req,res,next) {
 
     var connection = req.con;
     // 3) create SQL Query from parameters
@@ -94,23 +98,29 @@ exports.update = function(req,res,next){
     var id = parseInt(req.params.id);
     var rid = parseInt(req.params.rid);
     // if no date is given make it null, so the trigger can set the date
-    var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null;
+    var date = (i.diagnoseDate || i.diagnoseDate != "") ? i.diagnoseDate : null;
     // make status lower case so the db triggers can validate the value (valid are baseline and exacerbation)
-    var status = (i.status)? i.status.toLowerCase() : "";
-    // query db
-    // ? from query will be replaced by values in [] - including escaping!
-    connection.query('call treatmentUpdate(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?)',
-        [rid, id, date,status,i.antibiotics,i.antiflu,i.antipneum,i.lama,i.longActingB2,
-            i.ltot,i.ltotDevice,i.ltotStart,i.mycolytocis,i.niv,i.pdef4Inhalator,i.sama,i.shortActingB2,
-            i.steroidsInhaled,i.steroidsOral,i.theophyline,i.ultraLongB2,i.ventilationDevice,i.ventilationStart, i.other],
-        function(err, result) {
-            connection.release();
-            if (err) next(err);
-            else {
-                res.affectedRows = result[0][0].affected_rows;
-                next();
-            }
-        });
+    var status = (i.status) ? i.status.toLowerCase() : "";
+
+    if (JSON.stringify(req.body) == '{}') {
+        connection.release();
+        next({code:'ER_BAD_NULL_ERROR'})
+    } else {
+        // query db
+        // ? from query will be replaced by values in [] - including escaping!
+        connection.query('call treatmentUpdate(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?)',
+            [rid, id, date, status, i.antibiotics, i.antiflu, i.antipneum, i.lama, i.longActingB2,
+                i.ltot, i.ltotDevice, i.ltotStart, i.mycolytocis, i.niv, i.pdef4Inhalator, i.sama, i.shortActingB2,
+                i.steroidsInhaled, i.steroidsOral, i.theophyline, i.ultraLongB2, i.ventilationDevice, i.ventilationStart, i.other],
+            function (err, result) {
+                connection.release();
+                if (err) next(err);
+                else {
+                    res.affectedRows = result[0][0].affected_rows;
+                    next();
+                }
+            });
+    }
 };
 
 var respMessages = commons.respMsg("Treatment");

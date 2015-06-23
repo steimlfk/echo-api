@@ -120,6 +120,21 @@ describe('CreatePatientWithAccount Tests:', function() {
                 });
         });
 
+        it('Post empty Account', function(done) {
+            var tmp = data.admin.emptyAcc;
+            request(url)
+                .post('/createPatientAndAccount')
+                .set('Authorization', 'Bearer ' + access_token_global)
+                .send(tmp)
+                .expect(400)
+                .end(function(err, res) {
+                    if (err) {
+                        throw err;
+                    }
+                    done();
+                });
+        });
+
         it('Creating should fail if socialId is use', function(done) {
             var tmp = data.admin.newData;
             tmp.patient.doctorId = doc_id;

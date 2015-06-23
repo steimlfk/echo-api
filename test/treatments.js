@@ -312,6 +312,20 @@ describe('Treatments Record Tests:', function() {
                 });
         });
 
+        it('Post empty Treatment', function (done){
+            var tmp = data.doctor.emptyTreatment;
+            request(url)
+                .post(patData_url+'/treatments')
+                .set('Authorization', 'Bearer ' + access_token)
+                .send (tmp)
+                .expect(400)
+                .end(function (err, res){
+                    if (err) throw err;
+
+                    done();
+                });
+        });
+
         it('Doctor can create new Treatments Records Data (exacerbation)', function (done){
             var tmp = data.doctor.newTreatment;
             tmp.status = "exacerbation";
@@ -383,6 +397,20 @@ describe('Treatments Record Tests:', function() {
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (tmp)
                 .expect(204)
+                .end(function (err, res){
+                    if (err) throw err;
+
+                    done();
+                });
+        });
+
+        it('Put empty Treatment', function (done){
+            var tmp = data.doctor.emptyTreatment;
+            request(url)
+                .put(exam2_url)
+                .set('Authorization', 'Bearer ' + access_token)
+                .send (tmp)
+                .expect(400)
                 .end(function (err, res){
                     if (err) throw err;
 

@@ -82,5 +82,6 @@ exports.tokensecret = tokensecret;
 exports.db = db;
 exports.ssl = ssl;
 exports.notificationService = service;
-
+exports.dumpMail = '';
+exports.workers = 0;
 

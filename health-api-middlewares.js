@@ -152,7 +152,7 @@ exports.resultProcessor = function (req, res, next){
         res.location(res.loc);
         res.sendStatus (201);
     }
-    else if (res.affectedRows){
+    else if (res.affectedRows != undefined){
         if (res.affectedRows > 0) res.sendStatus(204);
         else res.sendStatus(404);
     }

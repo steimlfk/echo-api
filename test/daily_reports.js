@@ -311,6 +311,19 @@ describe('Daily Reports Tests:', function() {
                 });
         });
 
+        it('Post empty Daily Report', function (done){
+            var tmp = data.doctor.emptyDaily;
+            request(url)
+                .post(patData_url+'/daily_reports')
+                .set('Authorization', 'Bearer ' + access_token)
+                .send (tmp)
+                .expect(400)
+                .end(function (err, res){
+                    if (err) throw err;
+                    done();
+                });
+        });
+
 
         it('Recordslists Length should be N+1', function (done){
             request(url)
@@ -349,6 +362,19 @@ describe('Daily Reports Tests:', function() {
                 .end(function (err, res){
                     if (err) throw err;
 
+                    done();
+                });
+        });
+
+        it('Put empty Daily Report', function (done){
+            var tmp = data.doctor.emptyDaily;
+            request(url)
+                .put(exam_url)
+                .set('Authorization', 'Bearer ' + access_token)
+                .send (tmp)
+                .expect(400)
+                .end(function (err, res){
+                    if (err) throw err;
                     done();
                 });
         });

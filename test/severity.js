@@ -299,6 +299,20 @@ describe('Severity Record Tests:', function() {
                 });
         });
 
+        it('Post empty Severity', function (done){
+            var tmp = data.doctor.emptySeverity;
+            request(url)
+                .post(patData_url+'/severity')
+                .set('Authorization', 'Bearer ' + access_token)
+                .send (tmp)
+                .expect(400)
+                .end(function (err, res){
+                    if (err) throw err;
+
+                    done();
+                });
+        });
+
 
         it('Recordslists Length should be N+1', function (done){
             request(url)

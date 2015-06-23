@@ -57,7 +57,8 @@ module.exports = {
     },
     // data for doctor tests
     doctor:{
-        newSeverity : newCat
+        newSeverity : newCat,
+        emptySeverity: {}
     },
     // data for patient tests
     patient:{
