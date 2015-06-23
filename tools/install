@@ -1,17 +1,12 @@
 #! /bin/bash
 path=`pwd`
-output="$path/.."
-cp "$output/config.js.example" "$output/config.js"
-echo "Please configure your config file."
-mkdir "$output/ssl"
 crons=`crontab -l`
 if [[ -z $crons ]]; then
     touch mycron
 else
     echo $crons > mycron
 fi
-echo "*/2 * * * * ${path}/keepAliveScript >&1" >> mycron
+echo "*/2 * * * * ${path}/res/keepAliveScript >&1" >> mycron
 crontab mycron
 rm mycron
-echo "If you want to use SSL copy your private key and your certificate
-into the ssl directory in the project root."
+echo "Please edit your config! If you want to use SSL copy your private key and your certificate into the ssl directory in the project root."

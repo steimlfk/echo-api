@@ -4,7 +4,6 @@ root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Project root
 root="$root/.."
 cd "${root}"
-#git pull
 cd "tools"
 js="$(which node)"
 if [[ -z $1 ]]; then
@@ -17,13 +16,14 @@ if [[ -z $2 ]]; then
 else
     pwd=$2
 fi
-if [[ -n $js ]]; then
-    node $root/tools/update.js $usr $pwd
-else
-    js="$(which nodejs)"
-    if [[ -n $js ]]; then
-        nodejs $root/tools/update.js $usr $pwd
-    else
-        echo "Please install node or nodejs, depending on your distribution"
-    fi
+
+js=`which node`
+if [[ -z $js ]]; then
+  js=`which nodejs`
+  if [[ -z $js ]]; then
+    echo "Please install node.js"
+    exit
+  fi
 fi
+
+$js $root/tools/res/update_db.js $usr $pwd

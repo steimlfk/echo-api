@@ -32,7 +32,7 @@ exec('mysql echo -u ' + user + ' -p' + pw + " -e \"CALL dropAllDbUsers(); DROP U
                     if (!use_external) {
                         async.series([
                             function (cb){
-                                async.each(['../database/settings.sql', '../database/questions.sql', '../database/initial.sql'], function(file, callback) {
+                                async.eachSeries(['../database/settings.sql', '../database/questions.sql', '../database/initial.sql'], function(file, callback) {
                                     // Perform operation on file here.
                                     console.log('Processing file ' + file);
                                     exec('mysql -u ' + user + ' -p' + pw + ' echo < '+ file, function (error, standOut, standErr) {
@@ -42,7 +42,9 @@ exec('mysql echo -u ' + user + ' -p' + pw + " -e \"CALL dropAllDbUsers(); DROP U
                                             if (standErr.indexOf('insecure') > -1 && !error) fatal2 = false;
                                         }
                                         if (!fatal2) callback();
-                                        else callback(new Error(error || standErr))
+                                        else {
+                                            callback(new Error(error || standErr))
+                                        }
                                     });
                                 }, function(err){
                                     if( err ) {
@@ -53,7 +55,7 @@ exec('mysql echo -u ' + user + ' -p' + pw + " -e \"CALL dropAllDbUsers(); DROP U
                                 });
                             },
                             function (cb){
-                                var pwPrefix = require('../config.js').db_pw_prefix;
+                                var pwPrefix = require('../../config.js').db_pw_prefix;
                                 var script = fs.readFileSync('./rebuild.sql', {encoding: 'utf8'});
                                 script = script.replace('##%%prefix%%##', pwPrefix);
                                 var users = require('./passwords.js');
@@ -73,13 +75,19 @@ exec('mysql echo -u ' + user + ' -p' + pw + " -e \"CALL dropAllDbUsers(); DROP U
                             }
 
                         ], function (err){
-                            process.exit();
+                            if (err){
+                                console.log (error || standErr);
+                                process.exit(1);
+                            }
+                            else  console.log('DB successfully updated and stored default values!');
+                            process.exit(0);
                         });
                     }
                     else {
                         var script = fs.readFileSync(backup, {encoding: 'utf8'});
 
                         exec('mysql -u ' + user + ' -p' + pw + ' echo < '+ backup, function (error, standOut, standErr) {
+                            console.log('Processed file '+ backup);
                             var fatal2 = false;
                             if (error || standErr) {
                                 fatal2 = true;
@@ -87,14 +95,17 @@ exec('mysql echo -u ' + user + ' -p' + pw + " -e \"CALL dropAllDbUsers(); DROP U
                                 else console.log('ERROR: ' + (error || standErr));
                             }
                             if (!fatal2) {
-                                console.log('DB successfully updated using an external script');
+                                console.log('DB successfully updated using an external script!');
+                                process.exit(0);
                             }
-                            process.exit();
+                            else process.exit(1);
                         });
                     }
                 }
+                else process.exit(1);
             });
         }
+        else process.exit(1);
     });
 
 

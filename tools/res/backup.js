@@ -1,13 +1,12 @@
 var exec = require('child_process').exec;
 var fs = require('fs');
 var http = require('http');
-var config = require('../config.js');
+var config = require('../../config.js');
 
 var user = process.argv[2];
 var pw = process.argv[3];
 var filename = process.argv[4]
-if (fs.existsSync('db.dump'))
-    fs.unlinkSync('db.dump');
+
 var cmd = 'mysqldump --no-create-info --skip-triggers -u' + user + ' -p' + pw + ' echo > ' + filename;
 exec(cmd, function(err, stdout, stderr) {
     if (err || stderr) {

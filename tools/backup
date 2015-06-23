@@ -15,6 +15,12 @@ if [[ -z $2 ]]; then
 else
     pwd=$2
 fi
+if [[ -z $3 ]]; then
+    d=`date +%Y-%m-%d`
+    loc="${root}/backup/db_$d.dump"
+else
+    loc=$3
+fi
 js=`which node`
 if [[ -z $js ]]; then
   js=`which nodejs`
@@ -26,6 +32,4 @@ fi
 if [ ! -d "${root}/backup" ]; then
     mkdir ${root}/backup
 fi
-d=`date +%Y-%m-%d`
-loc="${root}/backup/db_$d.dump"
-$js backup.js $usr $pwd $loc
+$js ./res/backup.js $usr $pwd $loc
