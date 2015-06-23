@@ -28,4 +28,5 @@ else
 	echo "*/2 * * * * ${path}/res/keepAliveScript >&1" >> mycron
 fi
 crontab mycron
+rm mycron
 echo "Please edit your config! If you want to use SSL copy your private key and your certificate into the ssl directory in the project root."
