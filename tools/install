@@ -1,12 +1,31 @@
 #! /bin/bash
+set -x
 path=`pwd`
+if [[ -z $1 ]]; then
+    read -p "root user of DB: " usr
+else
+    usr=$1
+fi
+if [[ -z $2 ]]; then
+    read -s -p "password: " pwd
+else
+    pwd=$2
+fi
+
+mysql -u $usr -p$pwd -e "source ../database/create.sql"
+mysql -u $usr -p$pwd echo < ../database/settings.sql
+mysql -u $usr -p$pwd echo < ../database/questions.sql
+mysql -u $usr -p$pwd echo < ../database/initial.sql
+
+touch mycron
 crons=`crontab -l`
 if [[ -z $crons ]]; then
-    touch mycron
+	echo "*/2 * * * * ${path}/res/keepAliveScript >&1" >> mycron
 else
-    echo $crons > mycron
+    #write out current crontab
+	crontab -l > mycron
+	#echo new cron into cron file
+	echo "*/2 * * * * ${path}/res/keepAliveScript >&1" >> mycron
 fi
-echo "*/2 * * * * ${path}/res/keepAliveScript >&1" >> mycron
 crontab mycron
-rm mycron
 echo "Please edit your config! If you want to use SSL copy your private key and your certificate into the ssl directory in the project root."

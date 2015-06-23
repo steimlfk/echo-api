@@ -27,8 +27,9 @@ if [[ -z $js ]]; then
 fi
 
 if [[ -z $3 ]]; then
-    $js $root/tools/res/update_db.js $usr $pwd $3
+	echo "Please provide a backup to reimport!"
 else
-    echo "Please provide a backup to reimport!"
+    loc=$3
+    $js $root/tools/res/update_db.js $usr $pwd $loc
 fi
 
