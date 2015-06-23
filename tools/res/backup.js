@@ -7,6 +7,7 @@ var user = process.argv[2];
 var pw = process.argv[3];
 var filename = process.argv[4]
 
+console.log('Creating backup in ' + filename);
 var cmd = 'mysqldump --no-create-info --skip-triggers -u' + user + ' -p' + pw + ' echo > ' + filename;
 exec(cmd, function(err, stdout, stderr) {
     if (err || stderr) {
@@ -17,6 +18,9 @@ exec(cmd, function(err, stdout, stderr) {
             console.log('ERROR: ' + (err || stderr));
         }
     }
+    process.exit(0);
+    
+    /*
     var postOptions = {
         path: url,
         host: config.notificationService.host,
@@ -46,4 +50,5 @@ exec(cmd, function(err, stdout, stderr) {
     });
     request.write(data);
     request.end();
+    */
 });

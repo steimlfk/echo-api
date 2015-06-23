@@ -56,7 +56,7 @@ exec('mysql echo -u ' + user + ' -p' + pw + " -e \"CALL dropAllDbUsers(); DROP U
                             },
                             function (cb){
                                 var pwPrefix = require('../../config.js').db_pw_prefix;
-                                var script = fs.readFileSync('./rebuild.sql', {encoding: 'utf8'});
+                                var script = fs.readFileSync('./res/rebuild_defaults.sql', {encoding: 'utf8'});
                                 script = script.replace('##%%prefix%%##', pwPrefix);
                                 var users = require('./passwords.js');
                                 for (var i = 0; i < 3; i++) {
@@ -76,7 +76,7 @@ exec('mysql echo -u ' + user + ' -p' + pw + " -e \"CALL dropAllDbUsers(); DROP U
 
                         ], function (err){
                             if (err){
-                                console.log (error || standErr);
+                                console.log (err || standErr);
                                 process.exit(1);
                             }
                             else  console.log('DB successfully updated and stored default values!');
