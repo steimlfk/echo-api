@@ -23,4 +23,9 @@ if [[ -z $js ]]; then
     exit
   fi
 fi
-$js backup.js $usr $pwd
+if [ ! -d "${root}/backup" ]; then
+    mkdir ${root}/backup
+fi
+d=`date +%Y-%m-%d`
+loc="${root}/backup/db_$d.dump"
+$js backup.js $usr $pwd $loc

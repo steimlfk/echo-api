@@ -5,13 +5,19 @@ var config = require('../config.js');
 
 var user = process.argv[2];
 var pw = process.argv[3];
+var filename = process.argv[4]
 if (fs.existsSync('db.dump'))
     fs.unlinkSync('db.dump');
-var cmd = 'mysqldump --add-drop-database --add-drop-table -u' + user + ' -p' + pw + ' echo > db.dump';
+var cmd = 'mysqldump --no-create-info --skip-triggers -u' + user + ' -p' + pw + ' echo > ' + filename;
 exec(cmd, function(err, stdout, stderr) {
-    if (err || stderr) process.exit(1);
-    var url = '/echo/email';
-    var dump = fs.readFileSync('db.dump', {encoding: 'utf8'});
+    if (err || stderr) {
+        fatal = true;
+        if (stderr.indexOf('insecure') > -1 && !err) fatal = false;
+        if (fatal){
+            process.exit(1);
+            console.log('ERROR: ' + (err || stderr));
+        }
+    }
     var postOptions = {
         path: url,
         host: config.notificationService.host,
@@ -21,9 +27,11 @@ exec(cmd, function(err, stdout, stderr) {
             Authorization: config.notificationService.apiKey
         }
     };
-    if (postOptions.host === '') {
+    if (postOptions.host) {
         process.exit(1);
     }
+    var url = '/echo/email';
+    var dump = fs.readFileSync(filename, {encoding: 'utf8'});
     var mail = config.dumpMail;
     var data = JSON.stringify({
         'subject': 'Daily Mail Dump',
