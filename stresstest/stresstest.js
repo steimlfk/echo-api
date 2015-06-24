@@ -114,9 +114,12 @@ flow[2] = {
 
 
 async.eachSeries(flow, function (singleFlow, cb){
+        var timestamp = new Date().toUTCString();
+        console.log('start: ' + timestamp);
         benchrest(singleFlow, runOptions)
             .on('error', function (err, ctxName) {
                 console.error('Failed in %s with err: ', ctxName, err);
+                console.log(err.stack);
                 cb(err);
             })
             .on('progress', function (stats, percent, concurrent, ips) {
@@ -129,6 +132,8 @@ async.eachSeries(flow, function (singleFlow, cb){
             });
     },
     function (err) {
+        var timestamp = new Date().toUTCString();
+        console.log('end: ' + timestamp);
         console.log(' FLOWS COMPLETE ');
     }
 );
