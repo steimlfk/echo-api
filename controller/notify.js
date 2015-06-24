@@ -227,6 +227,7 @@ var DailyAnalyzer = function() {
                             //else console.log(res)
                         });
                 }
+                else con.release();
             });
         });
     });
