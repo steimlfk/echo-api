@@ -275,7 +275,6 @@ var DailyAnalyzer = function() {
                                 break;
                         }
                     }
-                    connection.release();
                     var data = JSON.stringify({
                         'subject': 'Please insert a daily report',
                         'message': 'You have not inserted a daily report, yesterday. Please insert one now.',
