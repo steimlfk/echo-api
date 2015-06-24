@@ -5,7 +5,7 @@ SCRIPTPATH=`pwd -P`
 popd > /dev/null
 if [ -z $PIDS ]
 then
-    cd ${SCRIPTPATH}/..
+    cd ${SCRIPTPATH}/../..
     nodejs "echo-ws.js" >> "${SCRIPTPATH}/../../log" 2>&1
     # nodejs ../echo-ws.js  Starts the server
     # >> ../log  Writes the output into the file "log"
