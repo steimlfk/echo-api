@@ -23,8 +23,20 @@ if (cluster.isMaster) {
     for (var i = 0; i < cpuCount && (i < amount || amount == -1); i++) {
         cluster.fork();
     }
+    cluster.on('exit', function(worker, code, signal) {
+        var timestamp = new Date().toUTCString();
+
+        console.log(timestamp +': worker ' + worker.process.pid + ' died');
+    });
+    cluster.on('listening', function(worker, address) {
+        var timestamp = new Date().toUTCString();
+
+        console.log(timestamp + ": A worker is now connected to " + address.address + ":" + address.port);
+    });
+
 } else {
     /**
+     *
      * Config & Vars
      */
     var app = express();
@@ -134,10 +146,10 @@ if (cluster.isMaster) {
         };
     };
 
-for (var i = 0; i< echo_endpoints.length; i++){
-    app.use(echo_endpoints[i], ctrl_utils.resultProcessor);
-};
-app.use(ctrl_utils.errorHandler);
+    for (var i = 0; i< echo_endpoints.length; i++){
+        app.use(echo_endpoints[i], ctrl_utils.resultProcessor);
+    };
+    app.use(ctrl_utils.errorHandler);
 
 
     /**
@@ -206,7 +218,9 @@ app.use(ctrl_utils.errorHandler);
             process.exit(1);
         });
         server.listen(app.get('port'), function () {
-            console.log('ECHO REST API listening on host ' + host + ' on port ' + app.get('port'));
+            var timestamp = new Date().toUTCString();
+
+            console.log(timestamp + ' ECHO REST API listening on host ' + host + ' on port ' + app.get('port'));
             console.log('Server uses SSL');
             console.log('Swagger Base: https://' + host + ':' + url_port + api_docs);
         });
@@ -219,7 +233,7 @@ app.use(ctrl_utils.errorHandler);
                 return res.redirect('https://' + req.headers.host + req.url);
             }
             next();
-        })
+        });
 
         redirectServer.listen(8080);
 
@@ -234,7 +248,8 @@ app.use(ctrl_utils.errorHandler);
             process.exit(1);
         });
         server.listen(app.get('port'), function () {
-            console.log('ECHO REST API listening on host ' + host + ' on port ' + app.get('port'));
+            var timestamp = new Date().toUTCString();
+            console.log(timestamp + ': ECHO REST API listening on host ' + host + ' on port ' + app.get('port'));
             console.log('Swagger Base: http://' + host + ':' + url_port + api_docs);
         });
     }
