@@ -33,6 +33,7 @@ server.exchange(oauth2orize.exchange.password(function(client, username, passwor
 			// Call the SP login() 
 			// it checks whether a enabled account with the given username exists
 			connection.query('CALL login(?)', username, function(err, rows) {
+				connection.release();
 				// db error?
 				if (err) {  return done(err); }
 				// no user found?
@@ -47,7 +48,7 @@ server.exchange(oauth2orize.exchange.password(function(client, username, passwor
 						// user was found & token is created
 						var tokencontent = {
 								'accountId' : rows[0][0].accountId,
-								'role' : rows[0][0].role,
+								'role' : rows[0][0].role
 						};
 
 						// create refresh token and store it into the hashmap (value: userdata from database)
@@ -59,9 +60,11 @@ server.exchange(oauth2orize.exchange.password(function(client, username, passwor
 						done(null, token, null, { 'expires_in': '10080', 'role': rows[0][0].role, 'accountId' : rows[0][0].accountId, 'refreshToken': refreshTokenValue});
 					}
 					// password doesnt match the hash -> fail
-					else return done(null, false); 
+					else {
+						return done(null, false);
+					}
 				})
-				connection.release();
+
 			});
 		}
 	});
@@ -87,6 +90,7 @@ server.exchange(oauth2orize.exchange.refreshToken(function(client, refreshToken,
 			} else {
 				// check if account is still active!
 				connection.query('CALL loginRefresh(?)', usr, function(err, rows) {
+					connection.release();
 					if (err) {  return done(err); }
 					// not active? -> fail auth
 					if (rows[0].length == 0) {  return done(null, false);  }
@@ -103,7 +107,6 @@ server.exchange(oauth2orize.exchange.refreshToken(function(client, refreshToken,
 					var token = jwt.sign(tokencontent, tokensecret, {"expiresInMinutes": 10080});
 					done(null, token, null, { 'expires_in': '10080', 'role': rows[0][0].role, 'accountId' : rows[0][0].accountId, 'refreshToken': refreshTokenValue});
 
-					connection.release();
 				});
 			}
 		});
