@@ -33,7 +33,6 @@ exports.createPatientAndAccount = function(req,res,next) {
             function (err) {
                 if (err) {
                     // rollback if account was already created! (doctorId is part of req.body of patient)
-                    console.log('mydelete' + req.body.doctorId)
                     if (req.body.doctorId) {
                         req.params = {};
                         req.params.id = req.body.accountId;

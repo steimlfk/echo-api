@@ -10,6 +10,7 @@
 var host = 'localhost';
 var port = 3000;
 var url_port = 3000;
+var workers = 1;
 
 /**
  * Section about Database Users PW
@@ -83,5 +84,5 @@ exports.db = db;
 exports.ssl = ssl;
 exports.notificationService = service;
 exports.dumpMail = '';
-exports.workers = 0;
+exports.workers = workers;
 

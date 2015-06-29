@@ -167,7 +167,6 @@ exports.listOne = function(req,res,next){
  */
 exports.add = function(req,res,next) {
     var connection = req.con;
-    console.log(req.body)
 
     // 4) create SQL Query from parameters
     var i = req.body ? req.body : {};
