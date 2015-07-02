@@ -23,15 +23,17 @@ if (cluster.isMaster) {
     for (var i = 0; i < cpuCount && (i < amount || amount == -1); i++) {
         cluster.fork();
     }
+    /*
     cluster.on('exit', function(worker, code, signal) {
         var timestamp = new Date().toUTCString();
 
         console.log(timestamp +': worker ' + worker.process.pid + ' died');
     });
+    */
     cluster.on('listening', function(worker, address) {
         var timestamp = new Date().toUTCString();
 
-        console.log(timestamp + ": A worker is now connected to " + address.address + ":" + address.port);
+        console.log(timestamp + ": Worker "+ worker.process.pid + " is now connected to " + address.address + ":" + address.port);
     });
 
 } else {
