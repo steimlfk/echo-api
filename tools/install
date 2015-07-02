@@ -1,5 +1,4 @@
 #! /bin/bash
-set -x
 path=`pwd`
 if [[ -z $1 ]]; then
     read -p "root user of DB: " usr
