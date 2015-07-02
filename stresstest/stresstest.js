@@ -127,7 +127,7 @@ async.eachSeries(flow, function (singleFlow, cb){
             })
             .on('end', function (stats, errorCount) {
                 console.log('error count: ', errorCount);
-                console.log('stats', stats);
+                console.log('stats:', stats);
                 cb();
             });
     },
