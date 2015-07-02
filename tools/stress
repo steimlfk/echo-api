@@ -1,0 +1,57 @@
+#!/bin/bash
+# declare an array called array and define 3 vales
+array1=( 1 2 4 )
+array2=( 10 100 1000 10000 )
+
+root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# Project root
+root="$root/.."
+cd "${root}"
+
+js=`which nodejs`
+if [[ -z $js ]]; then
+  js=`which node`
+  if [[ -z $js ]]; then
+    echo "Please install node.js"
+    exit
+  fi
+fi
+
+pid=0
+cp $root/stresstest/config.js $root/stresstest/config.js_old 
+d=`date +%Y-%m-%d-%H-%M-%S`
+logsd="$root/stresstest/logs_$d"
+mkdir $logsd
+
+for i in "${array1[@]}"
+do
+	if [[ $pid -gt 0 ]]; then
+		kill -KILL $pid
+	fi
+	echo "CPU Count: $i"
+	line="exports.workers=$i;"
+	sed -i '' "86s/.*/$line/" config.js
+	$js echo-ws.js &
+	sleep 5
+	pid=$(echo $!)
+	for j in "${array2[@]}"
+		do
+			sleep 5
+			echo "Iterations: $j"
+			rm $root/stresstest/config.js
+			config="module.exports={url : 'http://localhost:3000',admin_username : 'nimda',admin_pwd:'nimda',runOptions:{limit:50,iterations:$j,prealloc: 100}};"
+			touch $root/stresstest/config.js
+			echo $config > $root/stresstest/config.js
+			cd "$logsd"
+			touch "${i}_cpus_{$j}_iter.log"
+			$js $root/stresstest/stresstest.js > "${i}_cpus_${j}_iter.log"
+			cd "$root"
+		done
+done
+kill -KILL $pid
+line="exports.workers=-1;"
+sed -i '' "86s/.*/$line/" config.js
+rm $root/stresstest/config.js
+mv $root/stresstest/config.js_old $root/stresstest/config.js
+
+
