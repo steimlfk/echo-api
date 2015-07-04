@@ -16,6 +16,24 @@ GRANT CREATE, GRANT OPTION ON echo.* TO 'echo_db_usr'@'localhost';
 GRANT SHOW VIEW, DELETE, INSERT, SELECT, UPDATE, TRIGGER, CREATE, GRANT OPTION ON TABLE echo.* TO 'echo_db_usr'@'localhost';
 
 -- -----------------------------------------------------
+-- function refreshTokenTest
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `refreshTokenTest`(token VARCHAR(128)) RETURNS int(11)
+    DETERMINISTIC
+BEGIN
+SET @val = null;
+SELECT accountId INTO @val FROM refreshToken WHERE refreshToken.token = token;
+RETURN @val;
+END$$
+
+DELIMITER ;
+
+GRANT EXECUTE ON function `echo`.`refreshTokenTest` TO 'echo_db_usr'@'localhost';
+
+-- -----------------------------------------------------
 -- function getRole
 -- -----------------------------------------------------
 
@@ -574,6 +592,16 @@ CREATE TABLE `severity` (
   PRIMARY KEY (`recordId`),
   CONSTRAINT `sevFKpat` FOREIGN KEY (`patientId`) REFERENCES `patients` (`patientId`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=InnoDB;
+
+-- -----------------------------------------------------
+-- Table `echo`.`refreshToken`
+-- -----------------------------------------------------
+CREATE TABLE `refreshToken` (
+  `token` varchar(128) NOT NULL,
+  `accountId` int(11) NOT NULL,
+  KEY `fk_refreshToken_1_idx` (`accountId`),
+  CONSTRAINT `fk_refreshToken_1` FOREIGN KEY (`accountId`) REFERENCES `accounts` (`accountId`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 USE `echo` ;
 
@@ -2601,6 +2629,28 @@ END$$
 DELIMITER ;
 
 -- -----------------------------------------------------
+-- Procedure `echo`.`refreshTokenAdd`
+-- -----------------------------------------------------
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `refreshTokenAdd`(IN token VARCHAR(128), IN aId INT(11))
+BEGIN
+    SET @t = token;
+    SET @aId = aId;
+	SET @a = null;
+	SELECT refreshToken.token INTO @a FROM refreshToken WHERE refreshToken.accountId = @aId;
+	IF @a is Null THEN
+	  INSERT INTO refreshToken (refreshToken.token, refreshToken.accountId) VALUES (@t, @aId);
+	ELSE
+	  UPDATE refreshToken SET refreshToken.token = @t WHERE refreshToken.accountId = @aId;
+	END IF;
+
+END$$
+
+DELIMITER ;
+
+
+-- -----------------------------------------------------
 -- View `echo`.`accounts_view`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`accounts_view`;
@@ -3156,6 +3206,7 @@ GRANT EXECUTE ON procedure `echo`.`login` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`loginRefresh` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`deviceAdd` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`deviceRemove` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`refreshTokenAdd` TO 'echo_db_usr'@'localhost';
 GRANT DELETE, INSERT, SELECT, UPDATE, TRIGGER, CREATE, GRANT OPTION ON TABLE echo.* TO 'echo_db_usr'@'localhost';
 
 

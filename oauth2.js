@@ -18,9 +18,6 @@ var server = oauth2orize.createServer();
 //get Secret which is used to sign the token
 var tokensecret = config.tokensecret;
 
-//create the Hashmap which stores the refresh tokens
-var hm = new HashMap();
-
 /*
  * OAuth: Ressource Owner Password Credentials FLow
  * Exchange username & password for access token.
@@ -28,19 +25,27 @@ var hm = new HashMap();
 server.exchange(oauth2orize.exchange.password(function(client, username, password, scope, done) {
 	db.getConnection(function(err, connection) {
 		if (err) {
+			connection.release();
 			return done(err);
 		} else {
 			// Call the SP login() 
 			// it checks whether a enabled account with the given username exists
 			connection.query('CALL login(?)', username, function(err, rows) {
 				// db error?
-				if (err) {  return done(err); }
+				if (err) {
+					connection.release();
+					return done(err);}
 				// no user found?
-				if (rows[0].length == 0) {  return done(null, false);  }
+				if (rows[0].length == 0) {
+					connection.release();
+					return done(null, false);
+				}
 
 				// passwort check ()
 				utils.comparePassword(password, rows[0][0].password, function(err, match){
-					if (err) {  return done(err); }
+					if (err) {
+						connection.release();
+						return done(err); }
 
 					// password matches the hash?
 					if (match){
@@ -52,16 +57,20 @@ server.exchange(oauth2orize.exchange.password(function(client, username, passwor
 
 						// create refresh token and store it into the hashmap (value: userdata from database)
 						var refreshTokenValue = utils.uid(128);
-						hm.set(refreshTokenValue, rows[0][0].accountId);
-
-						// create token as json web token
-						var token = jwt.sign(tokencontent, tokensecret, {"expiresInMinutes": 10080});
-						done(null, token, null, { 'expires_in': '10080', 'role': rows[0][0].role, 'accountId' : rows[0][0].accountId, 'refreshToken': refreshTokenValue});
+						connection.query('CALL refreshTokenAdd(?, ?)', [refreshTokenValue, rows[0][0].accountId], function(serr, srows) {
+							if (serr) { return done(err); }
+							// create token as json web token
+							var token = jwt.sign(tokencontent, tokensecret, {"expiresInMinutes": 10080});
+							done(null, token, null, { 'expires_in': '10080', 'role': rows[0][0].role, 'accountId' : rows[0][0].accountId, 'refreshToken': refreshTokenValue});
+							connection.release();
+						});
 					}
 					// password doesnt match the hash -> fail
-					else return done(null, false); 
-				})
-				connection.release();
+					else {
+						connection.release();
+						return done(null, false);
+					}
+				});
 			});
 		}
 	});
@@ -76,41 +85,40 @@ server.exchange(oauth2orize.exchange.password(function(client, username, passwor
  */
 server.exchange(oauth2orize.exchange.refreshToken(function(client, refreshToken, scope, done) {
 	// is the given refresh token member of the hashmap?
-	if (hm.has(refreshToken)){
-		// get userdata connected to this token from the hashmap
-		var usr = hm.get(refreshToken);
-		db.getConnection(function(err, connection) {
-			if (err) {
-				console.error('DB Connection error on login: ',err);
-				res.statusCode = 500;
-				res.send({err: 'Internal Server Error'}); 
-			} else {
-				// check if account is still active!
-				connection.query('CALL loginRefresh(?)', usr, function(err, rows) {
-					if (err) {  return done(err); }
-					// not active? -> fail auth
-					if (rows[0].length == 0) {  return done(null, false);  }
-					
-					// still active - create new token and new refresh token
-					var tokencontent = {
-							'accountId' : rows[0][0].accountId,
-							'role' : rows[0][0].role,
-					};
-					// delete the used refresh token -> refresh tokens are one-way-pwds
-					hm.remove(refreshToken);
-					var refreshTokenValue = utils.uid(128);
-					hm.set(refreshTokenValue, rows[0][0].accountId);
-					var token = jwt.sign(tokencontent, tokensecret, {"expiresInMinutes": 10080});
-					done(null, token, null, { 'expires_in': '10080', 'role': rows[0][0].role, 'accountId' : rows[0][0].accountId, 'refreshToken': refreshTokenValue});
+	db.getConnection(function(err, connection) {
+		if (err) {
+			connection.release();
+			console.error('DB Connection error on login: ',err);
+			res.statusCode = 500;
+			res.send({err: 'Internal Server Error'});
+		} else {
+			connection.query('SELECT refreshTokenTest(?) as token', refreshToken, function(err, result) {
+				if (result.length > 0) {
+					connection.query('CALL loginRefresh(?)', result[0].token, function(serr, srows) {
+						if (serr) {
+							connection.release();
+							return done(err); }
+						// not active? -> fail auth
+						if (srows[0].length == 0) {  return done(null, false);  }
 
-					connection.release();
-				});
-			}
-		});
+						// still active - create new token and new refresh token
+						var tokencontent = {
+							'accountId' : srows[0][0].accountId,
+							'role' : srows[0][0].role,
+						};
+						// delete the used refresh token -> refresh tokens are one-way-pwds
+						var refreshTokenValue = utils.uid(128);
+						connection.query('CALL refreshTokenAdd(?, ?)', [refreshTokenValue, srows[0][0].accountId], function(se, sr) {
+							var token = jwt.sign(tokencontent, tokensecret, {"expiresInMinutes": 10080});
+							done(null, token, null, { 'expires_in': '10080', 'role': srows[0][0].role, 'accountId' : srows[0][0].accountId, 'refreshToken': refreshTokenValue});
+						});
 
-	}
-	// given refresh token isnt part of the hashmap -> auth fail
-	else return done(null, false);
+						connection.release();
+					});
+				}
+			});
+		}
+	});
 }));
 
 exports.endpoint = server.token();

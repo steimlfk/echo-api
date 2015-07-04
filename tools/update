@@ -4,7 +4,7 @@ root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Project root
 root="$root/.."
 cd "${root}"
-#git pull
+git pull
 cd "tools"
 js="$(which node)"
 if [[ -z $1 ]]; then
