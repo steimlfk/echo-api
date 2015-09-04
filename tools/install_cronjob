@@ -1,20 +1,6 @@
 #! /bin/bash
 path=`pwd`
-if [[ -z $1 ]]; then
-    read -p "root user of DB: " usr
-else
-    usr=$1
-fi
-if [[ -z $2 ]]; then
-    read -s -p "password: " pwd
-else
-    pwd=$2
-fi
 
-mysql -u $usr -p$pwd -e "source ../database/create.sql"
-mysql -u $usr -p$pwd echo < ../database/settings.sql
-mysql -u $usr -p$pwd echo < ../database/questions.sql
-mysql -u $usr -p$pwd echo < ../database/initial.sql
 
 touch mycron
 crons=`crontab -l`

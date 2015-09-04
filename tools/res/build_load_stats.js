@@ -73,7 +73,40 @@ async.eachSeries(files, function(f, cb) {
     });
 
 }, function(err){
-    console.log(data);
+    var itCount = 4;
+    var cpuCount = 3;
+
+    function iterateOverData(o, depth){
+        var s = (depth)? depth : '';
+        for(var a in o){
+            if (typeof o[a] == 'object'){
+                s+=iterateOverData(o[a], s);
+            }else{
+                s += a + '\n';
+            }
+        }
+        return s;
+    }
+
+    var excelData = iterateOverData(data[0][0].stats, null);
+    console.log(excelData);
+
+    /*
+     var i = 0;
+     var captions = ['1 Core', '2 Cores', '4 Cores'];
+     var headings = a + '\t10 Iterations \t100 Iterations \t1000 Iterations \t10000 Iterations \n';
+     s += headings;
+     while (i < cpuCount){
+     s += captions[i] + '\t';
+     var j = itCount-1;
+     while(j >= 0) {
+     s += data[j+i][0].stats['main','meter', a] + '\t';
+     j--;
+     }
+     s += '\n';
+     i++;
+     }
+     */
 });
 
 
