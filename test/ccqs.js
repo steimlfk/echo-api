@@ -320,7 +320,6 @@ describe('CCQ Record Tests:', function() {
 
         it('Post empty CCQ', function (done){
             var tmp = data.doctor.emptyCCQ;
-            tmp.status = "baseline";
             request(url)
                 .post(patData_url+'/ccqs')
                 .set('Authorization', 'Bearer ' + access_token)
@@ -334,7 +333,6 @@ describe('CCQ Record Tests:', function() {
 
         it('Put empty CCQ', function (done){
             var tmp = data.doctor.emptyCCQ;
-
             request(url)
                 .put(exam_url)
                 .set('Authorization', 'Bearer ' + access_token)
@@ -349,6 +347,11 @@ describe('CCQ Record Tests:', function() {
         it('Doctor can create new CCQ Records Data (exacerbation)', function (done){
             var tmp = data.doctor.newCCQ;
             tmp.status = "exacerbation";
+            var today = new Date();
+            var dd = today.getDate();
+            var mm = today.getMonth()+1; //January is 0!
+            var yyyy = today.getFullYear();
+            tmp.diagnoseDate = yyyy+'-'+mm+'-'+dd;
             request(url)
                 .post(patData_url+'/ccqs')
                 .set('Authorization', 'Bearer ' + access_token)

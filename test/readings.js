@@ -330,6 +330,11 @@ describe('Readings Record Tests:', function() {
         it('Doctor can create new Readings Records Data (exacerbation)', function (done){
             var tmp = data.doctor.newReading;
             tmp.status = "exacerbation";
+            var today = new Date();
+            var dd = today.getDate();
+            var mm = today.getMonth()+1; //January is 0!
+            var yyyy = today.getFullYear();
+            tmp.diagnoseDate = yyyy+'-'+mm+'-'+dd;
             request(url)
                 .post(patData_url+'/readings')
                 .set('Authorization', 'Bearer ' + access_token)
