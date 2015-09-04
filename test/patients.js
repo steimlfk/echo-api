@@ -396,7 +396,7 @@ describe('Patients Tests:', function() {
         });
         it('Put empty Patient', function (done){
             request(url)
-                .put(('/patients/'+pat_id))
+                .put(pat_url)
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (data.admin.emptyAcc)
                 .expect(400)

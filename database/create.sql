@@ -751,14 +751,33 @@ CREATE DEFINER=CURRENT_USER PROCEDURE `repairPermissions`()
 BEGIN
 
   #declare variable
+  DECLARE p_obj VARCHAR(255);
   DECLARE ptr INTEGER;
   DECLARE ro VARCHAR(10);
   DECLARE done INT DEFAULT FALSE;
   #declare cursor
   DECLARE cur1 CURSOR FOR SELECT accountId,role
   FROM `echo`.`accounts`;
+
+  DECLARE cur2 CURSOR FOR SELECT DISTINCT procedure_obj
+  FROM `echo`.`perm_roles_procedures` ;
   #declare handle
   DECLARE CONTINUE  HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur2;
+
+    proc_loop: LOOP
+
+    FETCH cur2 INTO p_obj;
+    IF done THEN
+      LEAVE proc_loop;
+    END IF;
+	SET @stmt = CONCAT("GRANT EXECUTE ON PROCEDURE ",p_obj ," TO 'echo_db_usr'@'localhost'");
+	PREPARE s from @stmt;
+	EXECUTE s;
+	deallocate PREPARE s;
+  END LOOP proc_loop;
+  SET done = false;
 
   #open cursor
   OPEN cur1;
@@ -772,6 +791,7 @@ BEGIN
 	CALL grantRolePermissions(ptr, ro);
   END LOOP accounts_loop;
   CLOSE cur1;
+
 
 END$$
 
@@ -2270,21 +2290,24 @@ in landline VARCHAR(50),
 )
 begin
 	
+	DECLARE temp VARCHAR(50);
 	DECLARE exit handler for sqlwarning, sqlexception
 	BEGIN
 		-- WARNING
-		RESIGNAL;
 		rollback;
+		RESIGNAL;
 	END;
-
-
-	set @pat_affected = 0;	
-	set @acc_affected = 0;	
+	set @id = patientId;
+	SELECT v.lastName into temp from patients_view v where v.patientId = @id;
+    if temp is not null then
+	set @pat_affected = 0;
+	set @acc_affected = 0;
     START transaction;
 	SET @email = email;
 	SET @mobile = mobile;
-	set @id = patientId;
-	SELECT doctorId into @docId FROM patients WHERE patients.patientId = @id;
+
+	SELECT p.doctorId into @docId FROM patients p WHERE p.patientId = @id;
+
 
 	SET @stmt = "UPDATE patients SET firstName=?, lastName=?, secondName=?, socialId=?, sex=?, dateOfBirth=?, firstDiagnoseDate=?, fullAddress=?, landline=?, fileId=?, doctorId =? where patientId = ?";
 	SET @firstName = firstName;
@@ -2297,8 +2320,8 @@ begin
 	SET @fileId = fileId;
 	SET @fullAddress = fullAddress;
 	SET @landline = landline;
-	if getRole() = 'admin' then SET @docId = doctorId; end if;
-	
+	if getRole() = 'admin' then SET @docId = dId; end if;
+
 	PREPARE s FROM @stmt;
 	EXECUTE s using @firstName, @lastName, @secondName, @socialId, @sex, @dateOfBirth, @firstDiagnoseDate, @fullAddress, @landline, @fileId, @docId, @id;
 	select row_count() into @pat_affected;
@@ -2311,8 +2334,11 @@ begin
 	DEALLOCATE PREPARE s;
 
 	commit;
-	
+
 	SELECT @pat_affected+@acc_affected as affected_rows;
+    else
+		SELECT 0 as affected_rows;
+    end if;
 
 END$$
 
