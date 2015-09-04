@@ -4,7 +4,6 @@
 var express = require('express'),
     http = require('http'),
     https = require('https'),
-    path = require('path'),
     passport = require('passport'),
     bodyParser = require('body-parser'),
     serveStatic = require('serve-static'),
@@ -60,7 +59,6 @@ if (cluster.isMaster) {
     var url_port = config.url_port;
 
 
-    app.set('port', port);
     app.use(passport.initialize());
 
     /*
@@ -249,9 +247,9 @@ if (cluster.isMaster) {
             else console.error(err.stack);
             process.exit(1);
         });
-        server.listen(app.get('port'), function () {
+        server.listen(port, function () {
             var timestamp = new Date().toUTCString();
-            console.log(timestamp + ': ECHO REST API listening on host ' + host + ' on port ' + app.get('port'));
+            console.log(timestamp + ': ECHO REST API listening on host ' + host + ' on port ' + port);
             console.log('Swagger Base: http://' + host + ':' + url_port + api_docs);
         });
     }

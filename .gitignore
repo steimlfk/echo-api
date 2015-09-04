@@ -6,3 +6,4 @@ log
 ssl
 config.js
 test/config.js
+database/*.bak
