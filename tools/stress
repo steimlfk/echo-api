@@ -20,7 +20,7 @@ fi
 pid=0
 cp $root/stresstest/config.js $root/stresstest/config.js_old 
 d=`date +%Y-%m-%d-%H-%M-%S`
-logsd="$root/stresstest/logs_$d"
+logsd="$root/logs/logs_$d"
 mkdir $logsd
 
 for i in "${array1[@]}"
