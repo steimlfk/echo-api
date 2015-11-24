@@ -93,11 +93,19 @@ passport.use(new BearerStrategy({"realm" : "ECHO REST-API"}, function(accessToke
 
     });
 }));
+app.use( bodyParser.json());
 
 app.get('/instances', function(req, res, next){
     res.send('instances', addresses);
 });
-app.use( bodyParser.json());
+
+app.post('/instances', function(req, res, next){
+    addresses = req.body;
+    console.log(addresses);
+    res.send(200);
+});
+
+
 var echo_endpoints = ['/accounts', '/patients', '/questions','/notifications','/createPatientAndAccount','/changeDoctor', '/devices'];
 var echo_middlewares = [passport.authenticate(['bearer'], { session: false })];
 

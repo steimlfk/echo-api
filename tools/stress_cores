@@ -54,14 +54,4 @@ sed -i '' "86s/.*/$line/" config.js
 rm $root/stresstest/config.js
 mv $root/stresstest/config.js_old $root/stresstest/config.js
 
-OIFS=$IFS;
-IFS="|";
-
-animals="dog|cat|fish|squirrel|bird|shark";
-animalArray=($animals);
-
-for ((i=0; i<${#animalArray[@]}; ++i)); do     echo "animal $i: ${animalArray[$i]}"; done
-
-IFS=$OIFS;
-
 
