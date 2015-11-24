@@ -81,6 +81,13 @@ exports.errorHandler = function (err, req, res, next) {
             res.statusCode = 400;
             res.send({error: me});
         }
+        // Error Handling Account Deletion
+        else if (err.code == 'ECONNREFUSED'){
+            var me = 'Internal Server Error!';
+            console.err('Could not connect to DB/DB not running!')
+            res.statusCode = 500;
+            res.send({error: me});
+        }
 
         /*
          *  LOGIN ERROR
