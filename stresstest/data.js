@@ -38,33 +38,41 @@ var newPatData = {
 };
 
 
-var newDaily = {
-    "date": "2015-01-31",
-    "q1": false,
-    "q2": false,
-    "q3": false,
-    "q4": false,
-    "q5": false,
-    "q1a": false,
-    "q1b": false,
-    "q1c": false,
-    "q3a": false,
-    "q3b": false,
-    "q3c": false,
-    "satO2": 0,
-    "walkingDist": 0,
-    "temperature": 0,
-    "pefr": 0,
-    "heartRate": 0,
-    "x" : "48.7451666",
-    "y" : "9.106677"
+var generateReport = function(critical){
+    var newDaily = {
+        "date": "2015-01-31",
+        "q1": false,
+        "q2": false,
+        "q3": false,
+        "q4": false,
+        "q5": false,
+        "q1a": false,
+        "q1b": false,
+        "q1c": false,
+        "q3a": false,
+        "q3b": false,
+        "q3c": false,
+        "satO2": 0,
+        "walkingDist": 0,
+        "temperature": 0,
+        "pefr": 0,
+        "heartRate": 0,
+        "x" : "48.7451666",
+        "y" : "9.106677"
+    };
+    if (critical) {
+        newDaily.q1 = true;
+        newDaily.q2 = true;
+        newDaily.q3 = true;
+    };
+    return newDaily;
 };
 
 module.exports = {
     doctorsAccount :  newDAcc,
     patientsAccount : newPAcc,
     patientsData : newPatData,
-    dailyReport : newDaily
+    generateReport : generateReport
 
 
 };

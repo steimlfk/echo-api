@@ -12,6 +12,8 @@ var tok = null;
 var doc_id = null;
 var patients = [];
 var ctr = 0;
+var reportCtr = 0;
+var p = cfg.runOptions.iterations / (cfg.runOptions.iterations * cfg.alertPercentage);
 
 var saveToken = function(all){
     if (all.body.role == 'admin') tok = all.body.access_token;
@@ -55,7 +57,7 @@ var injectPatientIdIntoData = function(all){
 
 var injectDailyReportData = function(all){
     all.requestOptions.json = true;
-    var tmp = data.dailyReport;
+    var tmp = data.generateReport(((reportCtr++) % p)==0);
     all.requestOptions.body = tmp;
     all.requestOptions.uri += '/' + all.iterCtx.accountId + '/daily_reports'
     return all;
@@ -101,12 +103,12 @@ flow[1] = {
         { post: url+'/patients', beforeHooks: [injectDailyReportData,addAuthHeader]}
 
     ]
-}
+};
 
 flow[2] = {
     main: [  // the main flow for each iteration, #{INDEX} is unique iteration counter token
         { del: url+'/patients',  beforeHooks: [addId2URL, addAuthHeader]  },
-        { del: url+'/accounts',  beforeHooks: [addId2URL, addAuthHeader]  },
+        { del: url+'/accounts',  beforeHooks: [addId2URL, addAuthHeader]  }
     ],
     after: [{ del: url+'/accounts',  beforeHooks: [addDocId2URL, addAuthHeader]  }]
 };
