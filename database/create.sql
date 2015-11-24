@@ -205,7 +205,6 @@ CREATE TABLE IF NOT EXISTS `echo`.`ccqs` (
   `symptomScore` FLOAT NULL DEFAULT NULL,
   `mentalStateScore` FLOAT NULL DEFAULT NULL,
   `functionalStateScore` FLOAT NULL DEFAULT NULL,
-  `status` ENUM('baseline', 'exacerbation') NOT NULL,
   `modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`recordId`),
   INDEX `ccqFKpat_idx` (`patientId` ASC),
@@ -235,7 +234,6 @@ CREATE TABLE IF NOT EXISTS `echo`.`cats` (
   `q7` INT NOT NULL DEFAULT -1,
   `q8` INT NOT NULL DEFAULT -1,
   `totalCatscale` INT NULL DEFAULT 0,
-  `status` ENUM('baseline', 'exacerbation') NOT NULL,
   `modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`recordId`),
   INDEX `catsFKpat_idx` (`patientId` ASC),
@@ -297,7 +295,6 @@ CREATE TABLE IF NOT EXISTS `echo`.`treatments` (
   `recordId` INT NOT NULL AUTO_INCREMENT,
   `patientId` INT NOT NULL,
   `diagnoseDate` DATE NULL,
-  `status` ENUM('baseline', 'exacerbation') NOT NULL,
   `shortActingB2` TINYINT(1) NULL,
   `longActingB2` TINYINT(1) NULL,
   `ultraLongB2` TINYINT(1) NULL,
@@ -338,7 +335,6 @@ CREATE TABLE IF NOT EXISTS `echo`.`readings` (
   `recordId` INT NOT NULL AUTO_INCREMENT,
   `patientId` INT NOT NULL,
   `diagnoseDate` DATE NULL,
-  `status` ENUM('baseline', 'exacerbation') NOT NULL,
   `weight` INT NULL DEFAULT NULL,
   `height` INT NULL DEFAULT NULL,
   `pxy` INT NULL DEFAULT NULL,
@@ -596,12 +592,12 @@ CREATE TABLE IF NOT EXISTS `echo`.`patients_view` (`patientId` INT, `doctorId` I
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`cats_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`cats_view` (`recordId` INT, `patientId` INT, `diagnoseDate` INT, `q1` INT, `q2` INT, `q3` INT, `q4` INT, `q5` INT, `q6` INT, `q7` INT, `q8` INT, `totalCatscale` INT, `status` INT, modified INT);
+CREATE TABLE IF NOT EXISTS `echo`.`cats_view` (`recordId` INT, `patientId` INT, `diagnoseDate` INT, `q1` INT, `q2` INT, `q3` INT, `q4` INT, `q5` INT, `q6` INT, `q7` INT, `q8` INT, `totalCatscale` INT, modified INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`ccqs_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`ccqs_view` (`recordId` INT, `patientId` INT, `diagnoseDate` INT, `q1` INT, `q2` INT, `q3` INT, `q4` INT, `q5` INT, `q6` INT, `q7` INT, `q8` INT, `q9` INT, `q10` INT, `totalCCQScore` INT, `symptomScore` INT, `mentalStateScore` INT, `functionalStateScore` INT, `status` INT, modified INT);
+CREATE TABLE IF NOT EXISTS `echo`.`ccqs_view` (`recordId` INT, `patientId` INT, `diagnoseDate` INT, `q1` INT, `q2` INT, `q3` INT, `q4` INT, `q5` INT, `q6` INT, `q7` INT, `q8` INT, `q9` INT, `q10` INT, `totalCCQScore` INT, `symptomScore` INT, `mentalStateScore` INT, `functionalStateScore` INT, modified INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`charlsons_view`
@@ -611,12 +607,12 @@ CREATE TABLE IF NOT EXISTS `echo`.`charlsons_view` (`recordId` INT, `patientId` 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`treatments_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`treatments_view` (`patientId` INT, `diagnoseDate` INT, `status` INT, `shortActingB2` INT, `longActingB2` INT, `ultraLongB2` INT, `steroidsInhaled` INT, `steroidsOral` INT, `sama` INT, `lama` INT, `pdef4Inhalator` INT, `theophyline` INT, `mycolytocis` INT, `antibiotics` INT, `antiflu` INT, `antipneum` INT, `ltot` INT, `ltotStartDate` INT, `ltotDevice` INT, `niv` INT, `ventilationStart` INT, `ventilationDevice` INT, `recordId` INT, `other` int, modified INT);
+CREATE TABLE IF NOT EXISTS `echo`.`treatments_view` (`patientId` INT, `diagnoseDate` INT, `shortActingB2` INT, `longActingB2` INT, `ultraLongB2` INT, `steroidsInhaled` INT, `steroidsOral` INT, `sama` INT, `lama` INT, `pdef4Inhalator` INT, `theophyline` INT, `mycolytocis` INT, `antibiotics` INT, `antiflu` INT, `antipneum` INT, `ltot` INT, `ltotStartDate` INT, `ltotDevice` INT, `niv` INT, `ventilationStart` INT, `ventilationDevice` INT, `recordId` INT, `other` int, modified INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`readings_view`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`readings_view` (`patientId` INT, `diagnoseDate` INT, `weight` INT, `height` INT, `pxy` INT, `fev1` INT, `fev1_pro` INT, `fvc` INT, `fvc_pro` INT, `fev1_fvc` INT, `rv` INT, `rv_pro` INT, `tlc` INT, `tlc_pro` INT, `rv_tlc` INT, `satO2_pro` INT, `dlco_pro` INT, `pao2` INT, `paco2` INT, `hco3` INT, `pH` INT, `fvc_pre` INT, `fvc_pre_pro` INT, `fev1_pre` INT, `fev1_pre_pro` INT, `fev1_fvc_pre` INT, `fef25_75_pre_pro` INT, `pef_pre_pro` INT, `tlc_pre` INT, `tlc_pre_pro` INT, `frc_pre` INT, `frc_pre_pro` INT, `rv_pre` INT, `rv_pre_pro` INT, `kco_pro` INT, `hematocrit` INT, `status` INT, `fvc_post` INT, `del_fvc_pro` INT, `fev1_post` INT, `del_fev1_post` INT, `del_fef25_75_pro` INT, `del_pef_pro` INT, `mmrc` INT, `smoker` INT, `notes` INT, `recordId` INT, modified INT);
+CREATE TABLE IF NOT EXISTS `echo`.`readings_view` (`patientId` INT, `diagnoseDate` INT, `weight` INT, `height` INT, `pxy` INT, `fev1` INT, `fev1_pro` INT, `fvc` INT, `fvc_pro` INT, `fev1_fvc` INT, `rv` INT, `rv_pro` INT, `tlc` INT, `tlc_pro` INT, `rv_tlc` INT, `satO2_pro` INT, `dlco_pro` INT, `pao2` INT, `paco2` INT, `hco3` INT, `pH` INT, `fvc_pre` INT, `fvc_pre_pro` INT, `fev1_pre` INT, `fev1_pre_pro` INT, `fev1_fvc_pre` INT, `fef25_75_pre_pro` INT, `pef_pre_pro` INT, `tlc_pre` INT, `tlc_pre_pro` INT, `frc_pre` INT, `frc_pre_pro` INT, `rv_pre` INT, `rv_pre_pro` INT, `kco_pro` INT, `hematocrit` INT,`fvc_post` INT, `del_fvc_pro` INT, `fev1_post` INT, `del_fev1_post` INT, `del_fef25_75_pro` INT, `del_pef_pro` INT, `mmrc` INT, `smoker` INT, `notes` INT, `recordId` INT, modified INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`dailyReports_view`
@@ -1029,7 +1025,6 @@ USE `echo`$$
 CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `catCreate`(
 	in patId integer,
 	in diagnoseDate DATE,
-	in status VARCHAR(20),
 	in q1 integer,
 	in q2 integer,
 	in q3 integer,
@@ -1048,10 +1043,9 @@ proc: BEGIN
 		end if;
 	end if;
 	
-	SET @stmt = "INSERT INTO cats (patientId, diagnoseDate, status, q1, q2, q3, q4, q5, q6, q7, q8) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+	SET @stmt = "INSERT INTO cats (patientId, diagnoseDate, q1, q2, q3, q4, q5, q6, q7, q8) VALUES (?,?, ?,?, ?,?, ?,?, ?,?)";
 	set @patientId = patId;
 	set @diagnoseDate = diagnoseDate;
-	set @status = status;
 	set @q1= q1;
 	set @q2 = q2;
 	set @q3 = q3;
@@ -1062,7 +1056,7 @@ proc: BEGIN
 	set @q8 = q8;
 
 	PREPARE s FROM @stmt;
-	EXECUTE s using @patientId, @diagnoseDate, @status, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8;
+	EXECUTE s using @patientId, @diagnoseDate, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8;
 	SELECt last_insert_id() as insertId, now() as modified;
 	DEALLOCATE PREPARE s;
 
@@ -1080,7 +1074,6 @@ CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `catUpdate`(
 	in recordId INTEGER,
 	in patientId integer,
 	in diagnoseDate DATE,
-	in status VARCHAR(20),
 	in q1 integer,
 	in q2 integer,
 	in q3 integer,
@@ -1093,23 +1086,22 @@ CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `catUpdate`(
 BEGIN
 
 	
-	SET @stmt = "UPDATE cats_view  SET diagnoseDate = ?, status = ? , q1 = ?, q2=?, q3=?, q4=?, q5=?, q6=?, q7=?, q8=? where  recordId =? and patientId =?";
+	SET @stmt = "UPDATE cats_view  SET diagnoseDate = ?, q1 = ?, q2=?, q3=?, q4=?, q5=?, q6=?, q7=?, q8=? where  recordId =? and patientId =?";
 	set @catId = recordId;
 	set @patientId = patientId;
 	set @diagnoseDate = diagnoseDate;
-	set @status = status;
-	set @q1= q1;
+	set @q1 = q1;
 	set @q2 = q2;
 	set @q3 = q3;
 	set @q4 = q4;
 	set @q5 = q5;
-	set @q6 =q6;
+	set @q6 = q6;
 	set @q7 = q7;
 	set @q8 = q8;
 
 
 	PREPARE s FROM @stmt;
-	EXECUTE s using @diagnoseDate, @status, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @catId, @patientId;
+	EXECUTE s using @diagnoseDate, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @catId, @patientId;
 	SELECT ROW_COUNT() as affected_rows;
 	DEALLOCATE PREPARE s;
 
@@ -1128,7 +1120,6 @@ USE `echo`$$
 CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `ccqCreate`(
 	in patId integer,
 	in diagnoseDate DATE,
-	in status VARCHAR(20),
 	in q1 integer,
 	in q2 integer,
 	in q3 integer,
@@ -1149,10 +1140,9 @@ proc: BEGIN
 		end if;
 	end if;
 	
-	SET @stmt = "INSERT INTO ccqs (patientId, diagnoseDate, status, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+	SET @stmt = "INSERT INTO ccqs (patientId, diagnoseDate, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10) VALUES (?,?, ?,?, ?,?, ?,?, ?,?, ?,?)";
 	set @patientId = patId;
 	set @diagnoseDate = diagnoseDate;
-	set @status = status;
 	set @q1= q1;
 	set @q2 = q2;
 	set @q3 = q3;
@@ -1165,7 +1155,7 @@ proc: BEGIN
 	set @q10 = q10;
 
 	PREPARE s FROM @stmt;
-	EXECUTE s using @patientId, @diagnoseDate, @status, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10;
+	EXECUTE s using @patientId, @diagnoseDate, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10;
 	SELECt last_insert_id() as insertId, now() as modified;
 	DEALLOCATE PREPARE s;
 
@@ -1183,7 +1173,6 @@ CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `ccqUpdate`(
 	in recordId INTEGER,
 	in patientId integer,
 	in diagnoseDate DATE,
-	in status VARCHAR(20),
 	in q1 integer,
 	in q2 integer,
 	in q3 integer,
@@ -1198,11 +1187,10 @@ CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `ccqUpdate`(
 BEGIN
 
 	
-	SET @stmt = "UPDATE ccqs_view  SET diagnoseDate = ?, status =? , q1 =?, q2=?, q3=?, q4=?, q5=?, q6=?, q7=?, q8=?, q9=?, q10=? where  recordId =? and patientId = ?";
+	SET @stmt = "UPDATE ccqs_view  SET diagnoseDate = ?, q1 =?, q2=?, q3=?, q4=?, q5=?, q6=?, q7=?, q8=?, q9=?, q10=? where  recordId =? and patientId = ?";
 	set @catId = recordId;
 	set @patientId = patientId;
 	set @diagnoseDate = diagnoseDate;
-	set @status = status;
 	set @q1= q1;
 	set @q2 = q2;
 	set @q3 = q3;
@@ -1215,7 +1203,7 @@ BEGIN
 	set @q10 = q10;
 
 	PREPARE s FROM @stmt;
-	EXECUTE s using @diagnoseDate, @status, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10, @catId, @patientId;
+	EXECUTE s using @diagnoseDate,@q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10, @catId, @patientId;
 	SELECT ROW_COUNT() as affected_rows;	
 	DEALLOCATE PREPARE s;
 
@@ -1826,7 +1814,6 @@ USE `echo`$$
 CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `treatmentCreate`(
 in patId integer ,
 in diagnoseDate DATE ,
-in status VARCHAR(15) ,
 in antibiotics BOOLEAN ,
 in antiflu BOOLEAN ,
 in antipneum BOOLEAN ,
@@ -1860,11 +1847,10 @@ proc: BEGIN
 		end if;
 	end if;
 	
-	SET @stmt = "INSERT INTO treatments (patientId, diagnoseDate, status,antibiotics,antiflu,antipneum,lama,longActingB2,ltot,ltotDevice,ltotStartDate,mycolytocis,niv,pdef4Inhalator,sama,shortActingB2,steroidsInhaled,steroidsOral,theophyline,ultraLongB2,ventilationDevice,ventilationStart, other)
-VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+	SET @stmt = "INSERT INTO treatments (patientId, diagnoseDate, antibiotics,antiflu,antipneum,lama,longActingB2,ltot,ltotDevice,ltotStartDate,mycolytocis,niv,pdef4Inhalator,sama,shortActingB2,steroidsInhaled,steroidsOral,theophyline,ultraLongB2,ventilationDevice,ventilationStart, other)
+VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 	set @patientId = patId;
 	set @diagnoseDate = diagnoseDate;
-	set @status = status;
 set @q1 = antibiotics ;
 set @q2 = antiflu ;
 set @q3 = antipneum ;
@@ -1887,7 +1873,7 @@ set @q19 = ventilationStart ;
 set @q20 = other;
 
 	PREPARE s FROM @stmt;
-	EXECUTE s using @patientId, @diagnoseDate, @status, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10,@q11, @q12, @q13, @q14, @q15, @q16, @q17, @q18, @q19, @q20;
+	EXECUTE s using @patientId, @diagnoseDate, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10,@q11, @q12, @q13, @q14, @q15, @q16, @q17, @q18, @q19, @q20;
 	SELECt last_insert_id() as insertId, now() as modified;
 	DEALLOCATE PREPARE s;
 
@@ -1905,7 +1891,6 @@ CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `treatmentUpdate`(
 	in recordId integer,
 in patId integer ,
 in diagnoseDate DATE ,
-in status VARCHAR(15) ,
 in antibiotics BOOLEAN ,
 in antiflu BOOLEAN ,
 in antipneum BOOLEAN ,
@@ -1930,12 +1915,11 @@ in other TEXT
 BEGIN
 
 	
-	SET @stmt = "UPDATE treatments_view  SET diagnoseDate = ?, status =? ,antibiotics=?,antiflu=?,antipneum=?,lama=?,longActingB2=?,ltot=?,ltotDevice=?,ltotStartDate=?,mycolytocis=?,niv=?,pdef4Inhalator=?,sama=?,shortActingB2=?,steroidsInhaled=?,steroidsOral=?,theophyline=?,ultraLongB2=?,ventilationDevice=?,ventilationStart =?, other = ?
+	SET @stmt = "UPDATE treatments_view  SET diagnoseDate = ?, antibiotics=?,antiflu=?,antipneum=?,lama=?,longActingB2=?,ltot=?,ltotDevice=?,ltotStartDate=?,mycolytocis=?,niv=?,pdef4Inhalator=?,sama=?,shortActingB2=?,steroidsInhaled=?,steroidsOral=?,theophyline=?,ultraLongB2=?,ventilationDevice=?,ventilationStart =?, other = ?
  where  recordId =? and patientId = ?";
 	set @recId = recordId;
 	set @patientId = patId;
 	set @diagnoseDate = diagnoseDate;
-	set @status = status;
 set @q1 = antibiotics ;
 set @q2 = antiflu ;
 set @q3 = antipneum ;
@@ -1958,7 +1942,7 @@ set @q19 = ventilationStart ;
 set @q20 = other;
 
 	PREPARE s FROM @stmt;
-	EXECUTE s using @diagnoseDate, @status, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10,@q11, @q12, @q13, @q14, @q15, @q16, @q17, @q18, @q19, @q20, @recId, @patientId;
+	EXECUTE s using @diagnoseDate, @q1, @q2, @q3, @q4, @q5, @q6, @q7, @q8, @q9, @q10,@q11, @q12, @q13, @q14, @q15, @q16, @q17, @q18, @q19, @q20, @recId, @patientId;
 	SELECT ROW_COUNT() as affected_rows;
 	DEALLOCATE PREPARE s;
 
@@ -2391,7 +2375,6 @@ USE `echo`$$
 CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `readingsCreate`(
 in patId integer ,
 in diagnoseDate DATE ,
-in status VARCHAR(15) ,
 in del_fef25_75_pro FLOAT ,
 in del_fev1_post FLOAT ,
 in del_fvc_pro FLOAT ,
@@ -2448,11 +2431,10 @@ proc: BEGIN
 		end if;
 	end if;
 	
-	SET @stmt = "INSERT INTO readings (patientId, diagnoseDate, status,del_fef25_75_pro,del_fev1_post,del_fvc_pro,del_pef_pro,dlco_pro,fef25_75_pre_pro,fev1,fev1_fvc,fev1_fvc_pre,fev1_post,fev1_pre,fev1_pre_pro,fev1_pro,frc_pre,frc_pre_pro,fvc,fvc_post,fvc_pre,fvc_pre_pro,fvc_pro,hco3,height,hematocrit,kco_pro,mmrc,notes,paco2,pao2,pef_pre_pro,pH,pxy,rv,rv_pre,rv_pre_pro,rv_pro,rv_tlc,satO2_pro,smoker,tlc,tlc_pre,tlc_pre_pro,tlc_pro,weight) 
-VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+	SET @stmt = "INSERT INTO readings (patientId, diagnoseDate, del_fef25_75_pro,del_fev1_post,del_fvc_pro,del_pef_pro,dlco_pro,fef25_75_pre_pro,fev1,fev1_fvc,fev1_fvc_pre,fev1_post,fev1_pre,fev1_pre_pro,fev1_pro,frc_pre,frc_pre_pro,fvc,fvc_post,fvc_pre,fvc_pre_pro,fvc_pro,hco3,height,hematocrit,kco_pro,mmrc,notes,paco2,pao2,pef_pre_pro,pH,pxy,rv,rv_pre,rv_pre_pro,rv_pro,rv_tlc,satO2_pro,smoker,tlc,tlc_pre,tlc_pre_pro,tlc_pro,weight)
+VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 	set @patientId = patId;
 	set @diagnoseDate = diagnoseDate;
-	set @status = status;
 set @q1 = del_fef25_75_pro ;
 set @q2 = del_fev1_post ;
 set @q3 = del_fvc_pro ;
@@ -2500,7 +2482,7 @@ set @q44 = weight ;
 
 
 	PREPARE s FROM @stmt;
-	EXECUTE s using @patientId, @diagnoseDate, @status, @q1,@q2,@q3,@q4,@q5,@q6,@q7,@q8,@q9,@q10,@q11,@q12,@q13,@q14,@q15,@q16,@q17,@q18,@q19,@q20,@q21,@q22,@q23,@q24,@q25,@q26,@q27,@q28,@q29,@q30,@q31,@q33,@q34,@q35,@q36,@q37,@q38,@q39,@q40,@q41,@q42,@q43,@q44;
+	EXECUTE s using @patientId, @diagnoseDate, @q1,@q2,@q3,@q4,@q5,@q6,@q7,@q8,@q9,@q10,@q11,@q12,@q13,@q14,@q15,@q16,@q17,@q18,@q19,@q20,@q21,@q22,@q23,@q24,@q25,@q26,@q27,@q28,@q29,@q30,@q31,@q33,@q34,@q35,@q36,@q37,@q38,@q39,@q40,@q41,@q42,@q43,@q44;
 	SELECt last_insert_id() as insertId, now() as modified;
 	DEALLOCATE PREPARE s;
 
@@ -2518,7 +2500,6 @@ CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `readingsUpdate`(
 	in recordId integer,
 in patId integer ,
 in diagnoseDate DATE ,
-in status VARCHAR(15) ,
 in del_fef25_75_pro FLOAT ,
 in del_fev1_post FLOAT ,
 in del_fvc_pro FLOAT ,
@@ -2566,12 +2547,11 @@ in weight INTEGER
 BEGIN
 
 	
-	SET @stmt = "UPDATE readings_view  SET diagnoseDate = ?, status =? , del_fef25_75_pro = ? ,del_fev1_post = ? ,del_fvc_pro = ? ,del_pef_pro = ? ,dlco_pro = ? ,fef25_75_pre_pro = ? ,fev1 = ? ,fev1_fvc = ? ,fev1_fvc_pre = ? ,fev1_post = ? ,fev1_pre = ? ,fev1_pre_pro = ? ,fev1_pro = ? ,frc_pre = ? ,frc_pre_pro = ? ,fvc = ? ,fvc_post = ? ,fvc_pre = ? ,fvc_pre_pro = ? ,fvc_pro = ? ,hco3 = ? ,height = ? ,hematocrit = ? ,kco_pro = ? ,mmrc = ? ,notes = ? ,paco2 = ? ,pao2 = ? ,pef_pre_pro = ? ,pH = ? ,pxy = ? ,rv = ? ,rv_pre = ? ,rv_pre_pro = ? ,rv_pro = ? ,rv_tlc = ? ,satO2_pro = ? ,smoker = ? ,tlc = ? ,tlc_pre = ? ,tlc_pre_pro = ? ,tlc_pro = ? ,weight = ?
+	SET @stmt = "UPDATE readings_view  SET diagnoseDate = ?, del_fef25_75_pro = ? ,del_fev1_post = ? ,del_fvc_pro = ? ,del_pef_pro = ? ,dlco_pro = ? ,fef25_75_pre_pro = ? ,fev1 = ? ,fev1_fvc = ? ,fev1_fvc_pre = ? ,fev1_post = ? ,fev1_pre = ? ,fev1_pre_pro = ? ,fev1_pro = ? ,frc_pre = ? ,frc_pre_pro = ? ,fvc = ? ,fvc_post = ? ,fvc_pre = ? ,fvc_pre_pro = ? ,fvc_pro = ? ,hco3 = ? ,height = ? ,hematocrit = ? ,kco_pro = ? ,mmrc = ? ,notes = ? ,paco2 = ? ,pao2 = ? ,pef_pre_pro = ? ,pH = ? ,pxy = ? ,rv = ? ,rv_pre = ? ,rv_pre_pro = ? ,rv_pro = ? ,rv_tlc = ? ,satO2_pro = ? ,smoker = ? ,tlc = ? ,tlc_pre = ? ,tlc_pre_pro = ? ,tlc_pro = ? ,weight = ?
  where  recordId =? and patientId = ?";
 	set @recId = recordId;
 	set @patientId = patId;
 	set @diagnoseDate = diagnoseDate;
-	set @status = status;
 set @q1 = del_fef25_75_pro ;
 set @q2 = del_fev1_post ;
 set @q3 = del_fvc_pro ;
@@ -2619,7 +2599,7 @@ set @q44 = weight ;
 
 
 	PREPARE s FROM @stmt;
-	EXECUTE s using @diagnoseDate, @status, @q1,@q2,@q3,@q4,@q5,@q6,@q7,@q8,@q9,@q10,@q11,@q12,@q13,@q14,@q15,@q16,@q17,@q18,@q19,@q20,
+	EXECUTE s using @diagnoseDate, @q1,@q2,@q3,@q4,@q5,@q6,@q7,@q8,@q9,@q10,@q11,@q12,@q13,@q14,@q15,@q16,@q17,@q18,@q19,@q20,
 @q21,@q22,@q23,@q24,@q25,@q26,@q27,@q28,@q29,@q30,@q31,@q33,@q34,@q35,@q36,@q37,@q38,@q39,@q40,@q41,@q42,@q43,@q44,@recId, @patientId;
 	SELECT ROW_COUNT() as affected_rows;
 	DEALLOCATE PREPARE s;
@@ -2668,14 +2648,14 @@ from
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`cats_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`cats_view` AS select `echo`.`cats`.`recordId` AS `recordId`,`echo`.`cats`.`patientId` AS `patientId`,`echo`.`cats`.`diagnoseDate` AS `diagnoseDate`,`echo`.`cats`.`q1` AS `q1`,`echo`.`cats`.`q2` AS `q2`,`echo`.`cats`.`q3` AS `q3`,`echo`.`cats`.`q4` AS `q4`,`echo`.`cats`.`q5` AS `q5`,`echo`.`cats`.`q6` AS `q6`,`echo`.`cats`.`q7` AS `q7`,`echo`.`cats`.`q8` AS `q8`,`echo`.`cats`.`totalCatscale` AS `totalCatscale`,`echo`.`cats`.`status` AS `status`,`echo`.`cats`.`modified` AS `modified` from `echo`.`cats` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`cats`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`cats_view` AS select `echo`.`cats`.`recordId` AS `recordId`,`echo`.`cats`.`patientId` AS `patientId`,`echo`.`cats`.`diagnoseDate` AS `diagnoseDate`,`echo`.`cats`.`q1` AS `q1`,`echo`.`cats`.`q2` AS `q2`,`echo`.`cats`.`q3` AS `q3`,`echo`.`cats`.`q4` AS `q4`,`echo`.`cats`.`q5` AS `q5`,`echo`.`cats`.`q6` AS `q6`,`echo`.`cats`.`q7` AS `q7`,`echo`.`cats`.`q8` AS `q8`,`echo`.`cats`.`totalCatscale` AS `totalCatscale`,`echo`.`cats`.`modified` AS `modified` from `echo`.`cats` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`cats`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`ccqs_view`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`ccqs_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`ccqs_view` AS select `echo`.`ccqs`.`recordId` AS `recordId`,`echo`.`ccqs`.`patientId` AS `patientId`,`echo`.`ccqs`.`diagnoseDate` AS `diagnoseDate`,`echo`.`ccqs`.`q1` AS `q1`,`echo`.`ccqs`.`q2` AS `q2`,`echo`.`ccqs`.`q3` AS `q3`,`echo`.`ccqs`.`q4` AS `q4`,`echo`.`ccqs`.`q5` AS `q5`,`echo`.`ccqs`.`q6` AS `q6`,`echo`.`ccqs`.`q7` AS `q7`,`echo`.`ccqs`.`q8` AS `q8`,`echo`.`ccqs`.`q9` AS `q9`,`echo`.`ccqs`.`q10` AS `q10`,`echo`.`ccqs`.`totalCCQScore` AS `totalCCQScore`,`echo`.`ccqs`.`symptomScore` AS `symptomScore`,`echo`.`ccqs`.`mentalStateScore` AS `mentalStateScore`,`echo`.`ccqs`.`functionalStateScore` AS `functionalStateScore`,`echo`.`ccqs`.`status` AS `status`, `echo`.`ccqs`.`modified` AS `modified` from `echo`.`ccqs` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`ccqs`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`ccqs_view` AS select `echo`.`ccqs`.`recordId` AS `recordId`,`echo`.`ccqs`.`patientId` AS `patientId`,`echo`.`ccqs`.`diagnoseDate` AS `diagnoseDate`,`echo`.`ccqs`.`q1` AS `q1`,`echo`.`ccqs`.`q2` AS `q2`,`echo`.`ccqs`.`q3` AS `q3`,`echo`.`ccqs`.`q4` AS `q4`,`echo`.`ccqs`.`q5` AS `q5`,`echo`.`ccqs`.`q6` AS `q6`,`echo`.`ccqs`.`q7` AS `q7`,`echo`.`ccqs`.`q8` AS `q8`,`echo`.`ccqs`.`q9` AS `q9`,`echo`.`ccqs`.`q10` AS `q10`,`echo`.`ccqs`.`totalCCQScore` AS `totalCCQScore`,`echo`.`ccqs`.`symptomScore` AS `symptomScore`,`echo`.`ccqs`.`mentalStateScore` AS `mentalStateScore`,`echo`.`ccqs`.`functionalStateScore` AS `functionalStateScore`, `echo`.`ccqs`.`modified` AS `modified` from `echo`.`ccqs` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`ccqs`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`charlsons_view`
@@ -2696,14 +2676,14 @@ CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SEC
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`treatments_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`treatments_view` AS select `echo`.`treatments`.`patientId` AS `patientId`,`echo`.`treatments`.`diagnoseDate` AS `diagnoseDate`,`echo`.`treatments`.`status` AS `status`,`echo`.`treatments`.`shortActingB2` AS `shortActingB2`,`echo`.`treatments`.`longActingB2` AS `longActingB2`,`echo`.`treatments`.`ultraLongB2` AS `ultraLongB2`,`echo`.`treatments`.`steroidsInhaled` AS `steroidsInhaled`,`echo`.`treatments`.`steroidsOral` AS `steroidsOral`,`echo`.`treatments`.`sama` AS `sama`,`echo`.`treatments`.`lama` AS `lama`,`echo`.`treatments`.`pdef4Inhalator` AS `pdef4Inhalator`,`echo`.`treatments`.`theophyline` AS `theophyline`,`echo`.`treatments`.`mycolytocis` AS `mycolytocis`,`echo`.`treatments`.`antibiotics` AS `antibiotics`,`echo`.`treatments`.`antiflu` AS `antiflu`,`echo`.`treatments`.`antipneum` AS `antipneum`,`echo`.`treatments`.`ltot` AS `ltot`,`echo`.`treatments`.`ltotStartDate` AS `ltotStartDate`,`echo`.`treatments`.`ltotDevice` AS `ltotDevice`,`echo`.`treatments`.`niv` AS `niv`,`echo`.`treatments`.`ventilationStart` AS `ventilationStart`,`echo`.`treatments`.`ventilationDevice` AS `ventilationDevice`,`echo`.`treatments`.`recordId` AS `recordId`, `echo`.`treatments`.`other` AS `other`, `echo`.`treatments`.`modified` AS `modified` from `echo`.`treatments` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`treatments`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`treatments_view` AS select `echo`.`treatments`.`patientId` AS `patientId`,`echo`.`treatments`.`diagnoseDate` AS `diagnoseDate`,`echo`.`treatments`.`shortActingB2` AS `shortActingB2`,`echo`.`treatments`.`longActingB2` AS `longActingB2`,`echo`.`treatments`.`ultraLongB2` AS `ultraLongB2`,`echo`.`treatments`.`steroidsInhaled` AS `steroidsInhaled`,`echo`.`treatments`.`steroidsOral` AS `steroidsOral`,`echo`.`treatments`.`sama` AS `sama`,`echo`.`treatments`.`lama` AS `lama`,`echo`.`treatments`.`pdef4Inhalator` AS `pdef4Inhalator`,`echo`.`treatments`.`theophyline` AS `theophyline`,`echo`.`treatments`.`mycolytocis` AS `mycolytocis`,`echo`.`treatments`.`antibiotics` AS `antibiotics`,`echo`.`treatments`.`antiflu` AS `antiflu`,`echo`.`treatments`.`antipneum` AS `antipneum`,`echo`.`treatments`.`ltot` AS `ltot`,`echo`.`treatments`.`ltotStartDate` AS `ltotStartDate`,`echo`.`treatments`.`ltotDevice` AS `ltotDevice`,`echo`.`treatments`.`niv` AS `niv`,`echo`.`treatments`.`ventilationStart` AS `ventilationStart`,`echo`.`treatments`.`ventilationDevice` AS `ventilationDevice`,`echo`.`treatments`.`recordId` AS `recordId`, `echo`.`treatments`.`other` AS `other`, `echo`.`treatments`.`modified` AS `modified` from `echo`.`treatments` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`treatments`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`readings_view`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`readings_view`;
 USE `echo`;
-CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`readings_view` AS select `echo`.`readings`.`patientId` AS `patientId`,`echo`.`readings`.`diagnoseDate` AS `diagnoseDate`,`echo`.`readings`.`weight` AS `weight`,`echo`.`readings`.`height` AS `height`,`echo`.`readings`.`pxy` AS `pxy`,`echo`.`readings`.`fev1` AS `fev1`,`echo`.`readings`.`fev1_pro` AS `fev1_pro`,`echo`.`readings`.`fvc` AS `fvc`,`echo`.`readings`.`fvc_pro` AS `fvc_pro`,`echo`.`readings`.`fev1_fvc` AS `fev1_fvc`,`echo`.`readings`.`rv` AS `rv`,`echo`.`readings`.`rv_pro` AS `rv_pro`,`echo`.`readings`.`tlc` AS `tlc`,`echo`.`readings`.`tlc_pro` AS `tlc_pro`,`echo`.`readings`.`rv_tlc` AS `rv_tlc`,`echo`.`readings`.`satO2_pro` AS `satO2_pro`,`echo`.`readings`.`dlco_pro` AS `dlco_pro`,`echo`.`readings`.`pao2` AS `pao2`,`echo`.`readings`.`paco2` AS `paco2`,`echo`.`readings`.`hco3` AS `hco3`,`echo`.`readings`.`pH` AS `pH`,`echo`.`readings`.`fvc_pre` AS `fvc_pre`,`echo`.`readings`.`fvc_pre_pro` AS `fvc_pre_pro`,`echo`.`readings`.`fev1_pre` AS `fev1_pre`,`echo`.`readings`.`fev1_pre_pro` AS `fev1_pre_pro`,`echo`.`readings`.`fev1_fvc_pre` AS `fev1_fvc_pre`,`echo`.`readings`.`fef25_75_pre_pro` AS `fef25_75_pre_pro`,`echo`.`readings`.`pef_pre_pro` AS `pef_pre_pro`,`echo`.`readings`.`tlc_pre` AS `tlc_pre`,`echo`.`readings`.`tlc_pre_pro` AS `tlc_pre_pro`,`echo`.`readings`.`frc_pre` AS `frc_pre`,`echo`.`readings`.`frc_pre_pro` AS `frc_pre_pro`,`echo`.`readings`.`rv_pre` AS `rv_pre`,`echo`.`readings`.`rv_pre_pro` AS `rv_pre_pro`,`echo`.`readings`.`kco_pro` AS `kco_pro`,`echo`.`readings`.`hematocrit` AS `hematocrit`,`echo`.`readings`.`status` AS `status`,`echo`.`readings`.`fvc_post` AS `fvc_post`,`echo`.`readings`.`del_fvc_pro` AS `del_fvc_pro`,`echo`.`readings`.`fev1_post` AS `fev1_post`,`echo`.`readings`.`del_fev1_post` AS `del_fev1_post`,`echo`.`readings`.`del_fef25_75_pro` AS `del_fef25_75_pro`,`echo`.`readings`.`del_pef_pro` AS `del_pef_pro`,`echo`.`readings`.`mmrc` AS `mmrc`,`echo`.`readings`.`smoker` AS `smoker`,`echo`.`readings`.`notes` AS `notes`,`echo`.`readings`.`recordId` AS `recordId`, `echo`.`readings`.`modified` AS `modified` from `echo`.`readings` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`readings`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`readings_view` AS select `echo`.`readings`.`patientId` AS `patientId`,`echo`.`readings`.`diagnoseDate` AS `diagnoseDate`,`echo`.`readings`.`weight` AS `weight`,`echo`.`readings`.`height` AS `height`,`echo`.`readings`.`pxy` AS `pxy`,`echo`.`readings`.`fev1` AS `fev1`,`echo`.`readings`.`fev1_pro` AS `fev1_pro`,`echo`.`readings`.`fvc` AS `fvc`,`echo`.`readings`.`fvc_pro` AS `fvc_pro`,`echo`.`readings`.`fev1_fvc` AS `fev1_fvc`,`echo`.`readings`.`rv` AS `rv`,`echo`.`readings`.`rv_pro` AS `rv_pro`,`echo`.`readings`.`tlc` AS `tlc`,`echo`.`readings`.`tlc_pro` AS `tlc_pro`,`echo`.`readings`.`rv_tlc` AS `rv_tlc`,`echo`.`readings`.`satO2_pro` AS `satO2_pro`,`echo`.`readings`.`dlco_pro` AS `dlco_pro`,`echo`.`readings`.`pao2` AS `pao2`,`echo`.`readings`.`paco2` AS `paco2`,`echo`.`readings`.`hco3` AS `hco3`,`echo`.`readings`.`pH` AS `pH`,`echo`.`readings`.`fvc_pre` AS `fvc_pre`,`echo`.`readings`.`fvc_pre_pro` AS `fvc_pre_pro`,`echo`.`readings`.`fev1_pre` AS `fev1_pre`,`echo`.`readings`.`fev1_pre_pro` AS `fev1_pre_pro`,`echo`.`readings`.`fev1_fvc_pre` AS `fev1_fvc_pre`,`echo`.`readings`.`fef25_75_pre_pro` AS `fef25_75_pre_pro`,`echo`.`readings`.`pef_pre_pro` AS `pef_pre_pro`,`echo`.`readings`.`tlc_pre` AS `tlc_pre`,`echo`.`readings`.`tlc_pre_pro` AS `tlc_pre_pro`,`echo`.`readings`.`frc_pre` AS `frc_pre`,`echo`.`readings`.`frc_pre_pro` AS `frc_pre_pro`,`echo`.`readings`.`rv_pre` AS `rv_pre`,`echo`.`readings`.`rv_pre_pro` AS `rv_pre_pro`,`echo`.`readings`.`kco_pro` AS `kco_pro`,`echo`.`readings`.`hematocrit` AS `hematocrit`,`echo`.`readings`.`fvc_post` AS `fvc_post`,`echo`.`readings`.`del_fvc_pro` AS `del_fvc_pro`,`echo`.`readings`.`fev1_post` AS `fev1_post`,`echo`.`readings`.`del_fev1_post` AS `del_fev1_post`,`echo`.`readings`.`del_fef25_75_pro` AS `del_fef25_75_pro`,`echo`.`readings`.`del_pef_pro` AS `del_pef_pro`,`echo`.`readings`.`mmrc` AS `mmrc`,`echo`.`readings`.`smoker` AS `smoker`,`echo`.`readings`.`notes` AS `notes`,`echo`.`readings`.`recordId` AS `recordId`, `echo`.`readings`.`modified` AS `modified` from `echo`.`readings` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`readings`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`dailyReports_view`
