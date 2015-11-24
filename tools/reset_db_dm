@@ -1,0 +1,29 @@
+#! /bin/bash
+# Getting location of script
+root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# Project root
+root="$root/.."
+cd "${root}"
+cd "tools"
+js="$(which node)"
+if [[ -z $1 ]]; then
+    read -p "root user of DB: " usr
+else
+    usr=$1
+fi
+if [[ -z $2 ]]; then
+    read -s -p "password: " pwd
+else
+    pwd=$2
+fi
+
+js=`which nodejs`
+if [[ -z $js ]]; then
+  js=`which node`
+  if [[ -z $js ]]; then
+    echo "Please install node.js"
+    exit
+  fi
+fi
+
+$js $root/tools/res/update_db_dm.js $usr $pwd
