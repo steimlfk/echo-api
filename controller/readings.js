@@ -52,44 +52,40 @@ exports.add = function(req,res,next) {
     // if no date is given make it null, so the trigger can set the date
     var date = i.diagnoseDate || null;
 
-    if (req.body.status == undefined) {
-        connection.release();
-        next({code:'ER_BAD_NULL_ERROR'})
-    } else {
-        // query db
-        // ? from query will be replaced by values in [] - including escaping!
-        connection.query('call readingsCreate(?,?,?,?,?, ?,?,?,?,?,'
-            + '?,?,?,?,?, ?,?,?,?,?,'
-            + '?,?,?,?,?, ?,?,?,?,?,'
-            + '?,?,?,?,?, ?,?,?,?,?,'
-            + '?,?,?,?,?,?)',
-            [id, date, i.status, i.del_fef25_75_pro, i.del_fev1_post,
-                i.del_fvc_pro, i.del_pef_pro, i.dlco_pro, i.fef25_75_pre_pro, i.fev1,
-                i.fev1_fvc, i.fev1_fvc_pre, i.fev1_post, i.fev1_pre, i.fev1_pre_pro,
-                i.fev1_pro, i.frc_pre, i.frc_pre_pro, i.fvc, i.fvc_post,
-                i.fvc_pre, i.fvc_pre_pro, i.fvc_pro, i.hco3, i.height,
-                i.hematocrit, i.kco_pro, i.mmrc, i.notes, i.paco2,
-                i.pao2, i.pef_pre_pro, i.pH, i.pxy, i.rv,
-                i.rv_pre, i.rv_pre_pro, i.rv_pro, i.rv_tlc, i.satO2_pro,
-                i.smoker, i.tlc, i.tlc_pre, i.tlc_pre_pro, i.tlc_pro,
-                i.weight],
-            function (err, result) {
-                connection.release();
-                if (err) next(err);
-                else {
-                    var analyzer = require('./notify.js');
-                    var dailyAnalyzer = new analyzer();
-                    // this postpones the analysis of the data until the POST is completely processed
-                    process.nextTick(function () {
-                        dailyAnalyzer.emit('goldAnalyzes', id);
-                    });
-                    // resource was created
-                    // link will be provided in location header
-                    res.loc = '/patients/' + id + '/readings/' + result[0][0].insertId;
-                    next()
-                }
-            });
-    }
+    // query db
+    // ? from query will be replaced by values in [] - including escaping!
+    connection.query('call readingsCreate(?,?,?,?,?, ?,?,?,?,?,'
+        + '?,?,?,?,?, ?,?,?,?,?,'
+        + '?,?,?,?,?, ?,?,?,?,?,'
+        + '?,?,?,?,?, ?,?,?,?,?,'
+        + '?,?,?,?,?,?)',
+        [id, date, i.del_fef25_75_pro, i.del_fev1_post,
+            i.del_fvc_pro, i.del_pef_pro, i.dlco_pro, i.fef25_75_pre_pro, i.fev1,
+            i.fev1_fvc, i.fev1_fvc_pre, i.fev1_post, i.fev1_pre, i.fev1_pre_pro,
+            i.fev1_pro, i.frc_pre, i.frc_pre_pro, i.fvc, i.fvc_post,
+            i.fvc_pre, i.fvc_pre_pro, i.fvc_pro, i.hco3, i.height,
+            i.hematocrit, i.kco_pro, i.mmrc, i.notes, i.paco2,
+            i.pao2, i.pef_pre_pro, i.pH, i.pxy, i.rv,
+            i.rv_pre, i.rv_pre_pro, i.rv_pro, i.rv_tlc, i.satO2_pro,
+            i.smoker, i.tlc, i.tlc_pre, i.tlc_pre_pro, i.tlc_pro,
+            i.weight],
+        function (err, result) {
+            connection.release();
+            if (err) next(err);
+            else {
+                var analyzer = require('./notify.js');
+                var dailyAnalyzer = new analyzer();
+                // this postpones the analysis of the data until the POST is completely processed
+                process.nextTick(function () {
+                    dailyAnalyzer.emit('goldAnalyzes', id);
+                });
+                // resource was created
+                // link will be provided in location header
+                res.loc = '/patients/' + id + '/readings/' + result[0][0].insertId;
+                next()
+            }
+        });
+
 };
 
 /**
@@ -122,7 +118,7 @@ exports.update = function(req,res,next) {
             + '?,?,?,?,?, ?,?,?,?,?,'
             + '?,?,?,?,?, ?,?,?,?,?,'
             + '?,?,?,?,?, ?,?)',
-            [rid, id, date, i.status, i.del_fef25_75_pro, i.del_fev1_post, i.del_fvc_pro,
+            [rid, id, date, i.del_fef25_75_pro, i.del_fev1_post, i.del_fvc_pro,
                 i.del_pef_pro, i.dlco_pro, i.fef25_75_pre_pro, i.fev1, i.fev1_fvc,
                 i.fev1_fvc_pre, i.fev1_post, i.fev1_pre, i.fev1_pre_pro, i.fev1_pro,
                 i.frc_pre, i.frc_pre_pro, i.fvc, i.fvc_post, i.fvc_pre,
