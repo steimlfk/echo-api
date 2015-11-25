@@ -572,12 +572,22 @@ CREATE TABLE `severity` (
   CONSTRAINT `sevFKpat` FOREIGN KEY (`patientId`) REFERENCES `patients` (`patientId`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=InnoDB;
 
-USE `echo` ;
+-- -----------------------------------------------------
+-- Table `echo`.`exacerbations`
+-- -----------------------------------------------------
+CREATE TABLE `exacerbations` (
+  `recordId` int(11) NOT NULL AUTO_INCREMENT,
+  `patientId` int(11) NOT NULL,
+  `diagnoseDate` datetime NOT NULL,
+  `hospitalization` boolean,
+  `modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY `exaFKpat_idx` (`patientId`),
+  PRIMARY KEY (`recordId`),
+  CONSTRAINT `exaFKpat` FOREIGN KEY (`patientId`) REFERENCES `patients` (`patientId`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE=InnoDB;
 
--- -----------------------------------------------------
--- Placeholder table for view `echo`.`severity_view`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `echo`.`severity_view` (`recordId` INT, `patientId` INT, `severity` enum('A','B','C','D'), `diagnoseDate` date, `comment` mediumtext, modified INT);
+
+USE `echo` ;
 
 -- -----------------------------------------------------
 -- Placeholder table for view `echo`.`accounts_view`
@@ -628,6 +638,14 @@ CREATE TABLE IF NOT EXISTS `echo`.`deaths_view` (`patientId` INT, `date` INT, `c
 -- Placeholder table for view `echo`.`notifications_view`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `echo`.`notifications_view` (`notificationId` INT, `accountId` INT, `date` INT, `type` INT, `subjectsAccount` INT, `message` INT);
+-- -----------------------------------------------------
+-- Placeholder table for view `echo`.`severity_view`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `echo`.`severity_view` (`recordId` INT, `patientId` INT, `severity` enum('A','B','C','D'), `diagnoseDate` date, `comment` mediumtext, modified INT);
+-- -----------------------------------------------------
+-- Placeholder table for view `echo`.`exacerbations_view`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `echo`.`exacerbations_view` (`recordId` INT, `patientId` INT, `diagnoseDate` date, `hospitalization` INT, modified INT);
 
 
 -- -----------------------------------------------------
@@ -1510,6 +1528,8 @@ begin
 			set @table = 'treatments_view';
      	when 'severity' then
 			set @table = 'severity_view';
+		when 'exacerbations' then
+            set @table = 'exacerbations_view';
 		else
 			set @table = ' ';
 	end case;
@@ -2050,6 +2070,8 @@ BEGIN
 			set @table = 'treatments_view';
 		when 'severity' then
 		    set @table = 'severity_view';
+		when 'exacerbations' then
+            set @table = 'exacerbations_view';
 		else
 			set @table = ' ';
 	end case;
@@ -2111,6 +2133,8 @@ BEGIN
 			set @table = 'treatments_view';
 		when 'severity' then
 		    set @table = 'severity_view';
+		when 'exacerbations' then
+            set @table = 'exacerbations_view';
 		else
 			set @table = ' ';
 	end case;
@@ -2360,6 +2384,42 @@ set @stmt = "Insert into severity(patientId,severity,diagnoseDate,comment) VALUE
 
 PREPARE s FROM @stmt;
 EXECUTE s using @pid, @severity, @diagnoseDate ,@comment;
+SELECt last_insert_id() as insertId, now() as modified;
+DEALLOCATE PREPARE s;
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure exacerbationCreate
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `echo`$$
+CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `exacerbationCreate`(
+IN patId INT,
+IN date DATETIME,
+IN hospitalization boolean
+)
+BEGIN
+SET @doc = substring_index(user(), '@', 1);
+set @pid = patId;
+
+SET @test_stmt = 'SELECT patientId into @tmp FROM patients_view WHERE patientId = ? and doctorId = ?';
+PREPARE statement FROM @test_stmt;
+EXECUTE statement using @pid, @doc;
+DEALLOCATE PREPARE statement;
+IF @tmp IS NULL then
+	signal sqlstate '22403' set message_text = 'This patient isnt assigned to you!';
+end if;
+
+
+set @diagnoseDate = date;
+set @hospitalization = hospitalization ;
+set @stmt = "Insert into exacerbations(patientId,diagnoseDate,hospitalization) VALUES (?,?,?)";
+
+PREPARE s FROM @stmt;
+EXECUTE s using @pid, @diagnoseDate ,@hospitalization;
 SELECt last_insert_id() as insertId, now() as modified;
 DEALLOCATE PREPARE s;
 END$$
@@ -2665,11 +2725,18 @@ USE `echo`;
 CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`charlsons_view` AS select `echo`.`charlsons`.`recordId` AS `recordId`,`echo`.`charlsons`.`patientId` AS `patientId`,`echo`.`charlsons`.`diagnoseDate` AS `diagnoseDate`,`echo`.`charlsons`.`myocardialInfarction` AS `myocardialInfarction`,`echo`.`charlsons`.`congestiveHeartFailure` AS `congestiveHeartFailure`,`echo`.`charlsons`.`peripheralVascularDisease` AS `peripheralVascularDisease`,`echo`.`charlsons`.`cerebrovascularDisease` AS `cerebrovascularDisease`,`echo`.`charlsons`.`dementia` AS `dementia`,`echo`.`charlsons`.`chronicPulmonaryDiasease` AS `chronicPulmonaryDiasease`,`echo`.`charlsons`.`connectiveTissueDisease` AS `connectiveTissueDisease`,`echo`.`charlsons`.`ulcerDisease` AS `ulcerDisease`,`echo`.`charlsons`.`liverDiseaseMild` AS `liverDiseaseMild`,`echo`.`charlsons`.`diabetes` AS `diabetes`,`echo`.`charlsons`.`hemiplegia` AS `hemiplegia`,`echo`.`charlsons`.`renalDiseaseModerateOrSevere` AS `renalDiseaseModerateOrSevere`,`echo`.`charlsons`.`diabetesWithEndOrganDamage` AS `diabetesWithEndOrganDamage`,`echo`.`charlsons`.`anyTumor` AS `anyTumor`,`echo`.`charlsons`.`leukemia` AS `leukemia`,`echo`.`charlsons`.`malignantLymphoma` AS `malignantLymphoma`,`echo`.`charlsons`.`liverDiseaseModerateOrSevere` AS `liverDiseaseModerateOrSevere`,`echo`.`charlsons`.`metastaticSolidMalignancy` AS `metastaticSolidMalignancy`,`echo`.`charlsons`.`aids` AS `aids`,`echo`.`charlsons`.`noConditionAvailable` AS `noConditionAvailable`,`echo`.`charlsons`.`totalCharlson` AS `totalCharlson` , `echo`.`charlsons`.`modified` AS `modified` from `echo`.`charlsons` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`charlsons`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
--- View `echo`.severity_view`
+-- View `echo`.`severity_view`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `echo`.`severity_view`;
 USE `echo`;
 CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`severity_view` AS select `echo`.`severity`.`recordId` AS `recordId`, `echo`.`severity`.`patientId` AS `patientId`, `echo`.`severity`.`severity` AS `severity`, `echo`.`severity`.`diagnoseDate` AS `diagnoseDate`, `echo`.`severity`.`comment` AS `comment`, `echo`.`severity`.`modified` AS `modified`  from `echo`.`severity` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`severity`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
+
+-- -----------------------------------------------------
+-- View `echo`.`exacerbations_view`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `echo`.`exacerbations_view`;
+USE `echo`;
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`echo_db_usr`@`localhost` SQL SECURITY DEFINER VIEW `echo`.`exacerbations_view` AS select `echo`.`exacerbations`.`recordId` AS `recordId`, `echo`.`exacerbations`.`patientId` AS `patientId`, `echo`.`exacerbations`.`diagnoseDate` AS `diagnoseDate`, `echo`.`exacerbations`.`hospitalization` AS `hospitalization`, `echo`.`exacerbations`.`modified` AS `modified`  from `echo`.`exacerbations` where (case when (`getRole`() = 'admin') then (1 = 1) else `echo`.`exacerbations`.`patientId` in (select `echo`.`patients`.`patientId` from `echo`.`patients` where (`echo`.`patients`.`doctorId` = substring_index(user(),'@',1))) end);
 
 -- -----------------------------------------------------
 -- View `echo`.`treatments_view`
@@ -3090,6 +3157,7 @@ DELIMITER ;
 
 GRANT EXECUTE ON procedure `echo`.`accountsCreate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`severityCreate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`exacerbationCreate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`charlsonUpdate` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`createDbUser` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`accountsDelete` TO 'echo_db_usr'@'localhost';
@@ -3126,7 +3194,6 @@ GRANT EXECUTE ON procedure `echo`.`loginRefresh` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`deviceAdd` TO 'echo_db_usr'@'localhost';
 GRANT EXECUTE ON procedure `echo`.`deviceRemove` TO 'echo_db_usr'@'localhost';
 GRANT DELETE, INSERT, SELECT, UPDATE, TRIGGER, CREATE, GRANT OPTION ON TABLE echo.* TO 'echo_db_usr'@'localhost';
-
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
