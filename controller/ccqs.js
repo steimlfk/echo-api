@@ -7,6 +7,7 @@
  * Contains swagger specs and models
  */
 var swagger = require('swagger-node-express');
+var request = require('request');
 var commons = require('./controller_commons.js');
 var analyzer = require('./notify.js');
 var dailyAnalyzer = new analyzer();
@@ -62,6 +63,16 @@ exports.add = function(req,res,next){
             process.nextTick (function (){
                 dailyAnalyzer.emit('goldAnalyzes', id);
             });
+
+			// Notify flow engine
+			process.nextTick (function (){
+				request.post({url:'http://localhost:1880/analyzer/new_report', form: {url:'/patients/'+ id + '/ccqs/' + result[0][0].insertId, type: 'ccqs'}}, function(err,httpResponse,body){
+					if (!err && httpResponse.statusCode == 200) {
+			    		console.log(body);
+			    	}
+				});
+			});
+
             // resource was created
             // link will be provided in location header
             res.loc='/patients/'+ id + '/ccqs/' + result[0][0].insertId;
@@ -89,7 +100,6 @@ exports.update = function(req,res,next) {
     // any given ID in the body will be ignored and the ids from the url are used!
     var id = parseInt(req.params.id);
     var rid = parseInt(req.params.rid);
-
     // if no date is given make it null, so the trigger can set the date
     var date = i.diagnoseDate || null;
     // make status lower case so the db triggers can validate the value (valid are baseline and exacerbation)
@@ -100,11 +110,17 @@ exports.update = function(req,res,next) {
         connection.release();
         if (err) { next(err);}
         else {
-            if (result.length >= 1 && result[0].length >= 1) {
-                res.affectedRows = result[0][0].affected_rows;
-            } else {
-                res.affectedRows = -1;
-            }
+
+			// Notify flow engine
+			process.nextTick (function (){
+				request.post({url:'http://localhost:1880/analyzer/new_report', form: {url:'/patients/'+ id + '/ccqs/' + rid, type: 'ccqs'}}, function(err,httpResponse,body){
+					if (!err && httpResponse.statusCode == 200) {
+			    		console.log(body);
+			    	}
+				});
+			});
+
+            res.affectedRows = result[0][0].affected_rows;
             next();
         }
     });

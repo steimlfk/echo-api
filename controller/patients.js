@@ -209,6 +209,46 @@ exports.update = function(req,res,next){
 };
 
 
+/**
+ *  GET /patients/id/doctorId
+ *    Steps:
+ *    	1) Role Check
+ *  	2) Get DB Connection
+ *  	3) Change connected user to currently logged in user (found via req.user, which was populated by passport)
+ *  	4) create SQL Query from parameters
+ *  	5) add links to result
+ *  	6) send
+ */
+exports.getDoctorId = function(req,res,next){
+    var connection = req.con;
+    // 3) create SQL Query from parameters
+    var qry =  'SELECT doctorId FROM patients_view where patientId=?';
+    // query db
+    // ? from query will be replaced by values in [] - including escaping!
+    connection.query(qry, [req.params.id], function(err, rows) {
+        connection.release(err);
+		console.log();
+        if (err) next(err);
+        else {// there was a matching patient
+            var fullResult = {};
+            if (rows.length > 0) {
+                var o = rows[0];
+                o._links = {};
+                // add self link
+                o._links.self = {};
+                o._links.self.href = '/patients/' + req.params.id + "/doctorId";
+                fullResult = o;
+            }
+            res.result = fullResult;
+            next();
+
+        }
+    });
+
+};
+
+
+
 exports.listSpec = {
     summary : "List All enabled Patients (Roles: doctor and admin)",
     notes: "This Function lists all Patients which are visible to the logged in user and are enabled. <br>This function constructs a sql query from the parameters and executes it on patients_view. <br><br> <b>Parameters:</b> <br><br>  " +
@@ -248,6 +288,7 @@ exports.listSpec = {
         ]
 
 };
+
 exports.listOneSpec = {
     summary : "Get specific Patient (Roles: doctor and admin)",
     notes: "This Function returns the requested Patient, if it exists and is visible to the current user. <br>This function constructs a sql query from the parameters and executes it on patients_view. <br><br>" ,
@@ -378,6 +419,38 @@ exports.updateSpec = {
 
 };
 
+exports.getDoctorIdSpec = {
+    summary : "Get doctorId of specific Patient (Roles: patient, doctor and admin)",
+    notes: "This Function returns the requested Patient, if it exists and is visible to the current user. <br>This function constructs a sql query from the parameters and executes it on patients_view. <br><br>" ,
+    path : "/patients/{id}/doctorId",
+    method: "GET",
+    type : "doctorId",
+    nickname : "getDoctorId",
+    parameters : [swagger.pathParam("id", "ID of the patient which needs to be fetched", "string")],
+    responseMessages : [
+        {
+            code: 200,
+            message: "Patient is supplied.",
+            responseModel : "Patient"
+        },
+        {
+            code: 404,
+            message: "The requested patient doesnt exist or the current user isnt allowed to view it.."
+        },
+        {
+            code: 401,
+            message: "The logged-in user isnt allowed to use this function ",
+            responseModel : "ErrorMsg"
+        },
+        {
+            code: 500,
+            message: "Internal Server Error",
+            responseModel : "ErrorMsg"
+        }
+    ]
+
+};
+
 var  contents =  {
     "doctorId": {"type":"integer", "format" : "int32", "description": "Identifier of the Responsible Doctor"},
     "accountId": { "type":"integer","format": "int32","description": "Unique Identifier and ID of the corresponding Account"},
@@ -411,6 +484,11 @@ exports.models = {
         "required": ["patients"],
         "properties": { _links : { "$ref" : "CollectionLinks"}, patients : {"type" : "array", items : { "$ref" : "Patient"}}}
 
+    },
+    "doctorId":{
+        "id": "doctorId",
+        "required":["doctorId"],
+        "properties": {"doctorId": contents.doctorId}
     }
 };
 

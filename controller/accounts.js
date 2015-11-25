@@ -396,6 +396,11 @@ var contents =  {
         "format": "int64",
         "description": "Unique Identifier"
     },
+    "doctorId":{
+        "type":"integer",
+        "format": "int64",
+        "description": "Unique Identifier"
+    },
     "username":{
         "type": "string",
         "description" : "Unique Username"
@@ -439,7 +444,7 @@ var contents =  {
 exports.models = {
     "Account":{
         "id":"Account",
-        "required": ["accountId","username", "role", "email", "enabled", "reminderTime", "notificationEnabled", "notificationMode","mobile"],
+        "required": ["accountId", "username", "role", "email", "enabled", "reminderTime", "notificationEnabled", "notificationMode","mobile"],
         "properties": contents
     },
     "NewAccount":{

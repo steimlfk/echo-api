@@ -6,6 +6,7 @@
  * Contains swagger specs and models
  */
 var swagger = require('swagger-node-express');
+var request = require('request');
 var ssl = require('../config.js').ssl.useSsl;
 
 /**
@@ -93,6 +94,16 @@ exports.update = function(req,res,next){
             connection.release();
             if (err) next(err);
             else {
+				
+				// Notify flow engine
+				process.nextTick (function (){
+					request.post({url:'http://localhost:1880/analyzer/new_report', form: {url:'/patients/'+ id + '/death', type: 'death'}}, function(err,httpResponse,body){ 
+						if (!err && httpResponse.statusCode == 200) {
+				    		console.log(body);
+				    	}
+					});
+				});
+				
                 res.affectedRows = result[0][0].affected_rows > 0;
                 next();
             }
@@ -121,6 +132,16 @@ exports.add = function(req,res,next){
             connection.release();
             if (err) next(err);
             else {
+				
+				// Notify flow engine
+				process.nextTick (function (){
+					request.post({url:'http://localhost:1880/analyzer/new_report', form: {url:'/patients/'+ id + '/death', type: 'death'}}, function(err,httpResponse,body){ 
+						if (!err && httpResponse.statusCode == 200) {
+				    		console.log(body);
+				    	}
+					});
+				});
+				
                 res.loc = '/patients/'+ id + '/death';
                 res.modified = result[0][0].modified;
                 next();

@@ -2,6 +2,7 @@
  * Created by armin on 25.03.15.
  */
 var commons = require('./controller_commons');
+var request = require('request');
 var swagger = require('swagger-node-express');
 
 exports.list = function(req, res, next) {
@@ -35,6 +36,16 @@ exports.add = function(req,res,next) {
             connection.release();
             if (err) next(err);
             else {
+				
+				// Notify flow engine
+				process.nextTick (function (){
+					request.post({url:'http://localhost:1880/analyzer/new_report', form: {url:'/patients/'+ id + '/severity/' + result[0][0].insertId, type: 'severity'}}, function(err,httpResponse,body){ 
+						if (!err && httpResponse.statusCode == 200) {
+				    		console.log(body);
+				    	}
+					});
+				});
+				
                 res.loc  = '/patients/'+ id + '/severity/' + result[0][0].insertId;
                 res.modified = result[0][0].modified;
                 next();

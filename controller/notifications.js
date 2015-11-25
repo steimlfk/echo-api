@@ -62,13 +62,40 @@ exports.list = function(req, res, nextOp){
 
 /**
  *  POST /notifications
- *
- *  Since this is a debug function it only stores the request body in the database
-
+ *  Steps:
+ *  	1) Validate Role!
+ *  	2) Get DB Connection
+ *  	3) Change connected user to currently loggend in user (found via req.user, which was populated by passport)
+ *  	4) create SQL Query from parameters
+ *  	5) add links to result
+ *  	6) send
  */
+exports.add = function(req,res,next){
+    var connection = req.con;
+
+    var i = req.body;
+    var id = parseInt(i.accountId);
+	var aId = parseInt(i.subjectsAccount);
+	
+    // set date to null if not set
+    var date = i.date || null;
+    // query db
+    connection.query('call notificationCreate(?,?,?,?,?)',
+        [id, date, i.type, aId, i.message], function(err, result) {
+            connection.release();
+            if (err) next(err);
+            else {
+                res.loc = '/notifications/' + result[0][0].insertId;
+                res.modified = result[0][0].modified;
+                next();
+            }
+        });
+};
+
+/*
 exports.add = function(req, res, next){
     var connection = req.con;
-    var qry = 'INSERT INTO notifications SET ?';
+    var qry = 'call reportCreate(?,?, ?,?,?,?,?, ?,?,?, ?,?,?, ?,?,?,?,?,?,?)';
     connection.query(qry, [req.body], function(err, rows) {
         connection.release();
         if (err) next(err);
@@ -79,6 +106,7 @@ exports.add = function(req, res, next){
     });
 
 };
+*/
 
 exports.listSpec = {
     summary : "Get All Notifications of the logged-in User",
@@ -120,8 +148,8 @@ exports.listSpec = {
 };
 
 exports.addSpec = {
-    summary : "Create Notification. DEBUG PURPOSES! (Roles: Any)",
-    notes: "This Function creates a new Notification. <br>Since the Analysispart isnt implemented yet you can create Notifications here!  <br><br>" ,
+    summary : "Create Notification. (Roles: Patient, Doctor)",
+    notes: "This Function creates a new Notification. <br> This function is mostly used for analysis and notification services!  <br><br>" ,
     path : "/notifications",
     method: "POST",
     nickname : "addNotification",
@@ -153,7 +181,8 @@ exports.models = {
             "accountId":{"type":"integer","format": "int32","description": "Identifier of the Notifications Owner"},
             "date":{"type":"string","format": "Date", "description": "Date and Time of Notification"},
             "type":{"type":"integer","format": "int32","description": "notification type (range 1-6)"},
-            "subjectsAccount":{"type":"integer","format": "int32","description": "Patients Account for Doctors Notifications (3,4,5 and 6)"}
+            "subjectsAccount":{"type":"integer","format": "int32","description": "Patients Account for Doctors Notifications (3,4,5 and 6)"},
+			"message":{"type":"string"}
         }
     },
     "Notification":{

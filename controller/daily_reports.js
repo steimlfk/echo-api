@@ -7,6 +7,7 @@
  * Contains swagger specs and models
  */
 var swagger = require('swagger-node-express');
+var request = require('request');
 var analyzer = require('./notify.js');
 var dailyAnalyzer = new analyzer();
 
@@ -159,6 +160,16 @@ exports.update = function(req,res,next) {
             if (err) next(err);
             else {
                 res.affectedRows = result[0][0].affected_rows > 0;
+				
+				// Notify flow engine
+				process.nextTick (function (){
+					request.post({url:'http://localhost:1880/analyzer/new_report', form: {url:'/patients/'+ id + '/daily_reports/' + rid, type: 'daily_report'}}, function(err,httpResponse,body){ 
+						if (!err && httpResponse.statusCode == 200) {
+				    		console.log(body);
+				    	}
+					});
+				});
+				
                 next();
             }
         });
@@ -196,6 +207,16 @@ exports.add = function(req,res,next){
                 });
                 res.loc = '/patients/'+ id + '/daily_reports/' + result[0][0].insertId;
                 res.modified = result[0][0].modified;
+				
+				// Notify flow engine
+				process.nextTick (function (){
+					request.post({url:'http://localhost:1880/analyzer/new_report', form: {url:'/patients/'+ id + '/daily_reports/' + result[0][0].insertId, type: 'daily_report'}}, function(err,httpResponse,body){ 
+						if (!err && httpResponse.statusCode == 200) {
+				    		console.log(body);
+				    	}
+					});
+				});
+				
                 next();
             }
         });
@@ -240,7 +261,6 @@ exports.listOneSpec = {
     responseMessages: respMessages.listOne
 };
 
-
 exports.delSpec = {
     summary : "Delete specific Daily Report Record of this Patient (Roles: doctor and patient)",
     notes: "This Function deletes a record, which is specified by the url. (if the Body contains ids, theyre ignored) <br>This function passes its parameters to the SP reportDelete <br><br>" ,
@@ -263,7 +283,6 @@ exports.updateSpec = {
         swagger.bodyParam("DailyReport", "updated Readings Record", "NewDailyReport")],
     responseMessages: respMessages.update
 };
-
 
 var contents = {
     "patientId": {"type":"integer", "format": "int32", "description": "patientId"},

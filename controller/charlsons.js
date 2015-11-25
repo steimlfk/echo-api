@@ -7,6 +7,7 @@
  * Contains swagger specs and models
  */
 var swagger = require('swagger-node-express');
+var request = require('request');
 var commons = require('./controller_commons.js');
 
 /**
@@ -63,6 +64,14 @@ exports.add = function(req,res,next) {
                 if (err) next(err);
                 else {
                     res.loc = '/patients/' + id + '/charlsons/' + result[0][0].insertId;
+                    // Notify flow engine
+                    process.nextTick (function (){
+                        request.post({url:'http://localhost:1880/analyzer/new_report', form: {url:'/patients/'+ id + '/charlsons/' + result[0][0].insertId, type: 'charlsons'}}, function(err,httpResponse,body){
+                            if (!err && httpResponse.statusCode == 200) {
+                                console.log(body);
+                            }
+                        });
+                    });
                     next();
                 }
             });
@@ -105,6 +114,14 @@ exports.update = function(req,res,next) {
                 else {
                     // record  was updated
                     res.affectedRows = result[0][0].affected_rows > 0;
+                    // Notify flow engine
+                    process.nextTick (function (){
+                        request.post({url:'http://localhost:1880/analyzer/new_report', form: {url:'/patients/'+ id + '/charlsons/' + rid, type: 'charlsons'}}, function(err,httpResponse,body){
+                            if (!err && httpResponse.statusCode == 200) {
+                                console.log(body);
+                            }
+                        });
+                    });
                     next();
                 }
             });

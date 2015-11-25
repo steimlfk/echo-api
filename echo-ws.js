@@ -23,12 +23,12 @@ if (cluster.isMaster) {
         cluster.fork();
     }
     /*
-    cluster.on('exit', function(worker, code, signal) {
-        var timestamp = new Date().toUTCString();
+     cluster.on('exit', function(worker, code, signal) {
+     var timestamp = new Date().toUTCString();
 
-        console.log(timestamp +': worker ' + worker.process.pid + ' died');
-    });
-    */
+     console.log(timestamp +': worker ' + worker.process.pid + ' died');
+     });
+     */
     cluster.on('listening', function(worker, address) {
         var timestamp = new Date().toUTCString();
 
@@ -93,7 +93,7 @@ if (cluster.isMaster) {
     swagger.addPost({'spec':oauth2.loginSpec,'action':oauth2.endpoint})
 
 //setup protected ECHO Endpoints
-    var echo_endpoints = ['/accounts', '/patients', '/questions','/notifications','/createPatientAndAccount','/changeDoctor', '/devices'];
+    var echo_endpoints = ['/accounts', '/patients', '/questions','/notifications','/createPatientAndAccount','/changeDoctor', '/devices', '/analyse'];
     var echo_middlewares = [passport.authenticate(['bearer'], { session: false }), bodyParser.json(),bodyParser.urlencoded({ extended: false }), ctrl_utils.databaseHandler];
 
     for (var i = 0; i< echo_endpoints.length; i++){
@@ -191,11 +191,47 @@ if (cluster.isMaster) {
         produces: ["application/json"]
     });
 
+    swagger.configureDeclaration("analyse", {
+        description : "Analyse operations",
+        produces: ["application/json"]
+    });
+
     var j = schedule.scheduleJob('*/30 * * * *', function() {
         var analyzer = require('./controller/notify.js');
         var notify = new analyzer();
         notify.emit('oneDayInactiveAnalyzes');
         notify.emit('nDayInactiveAnalyzes', 5);
+
+        /**
+         * Flow engine notification for time based tasks based on their reminder time
+         */
+        var db = require('./utils.js').db;
+        db.getConnection(function(err, con){
+            if (err) { return done(null, false); }
+
+            // This query fetches all account information about accounts
+            // which are available and have set a reminder time within the time slot range of 30 minutes
+            var qry = 'SELECT accountId, role, reminderTime FROM accounts WHERE enabled = true AND role = \'patient\' AND reminderTime > TIME_FORMAT(DATE_SUB(NOW(), INTERVAL 15 MINUTE), \'%H:%i:00\') AND reminderTime <= TIME_FORMAT(DATE_ADD(NOW(), INTERVAL 15 MINUTE), \'%H:%i:00\');';
+
+            // Query database and notify flow engine with result
+            con.query(qry, function(err, result) {
+                if (err) { return done(null, false); }
+                if(result.length > 0) {
+                    var request = require('request');
+
+                    // Notify flow engine about reminders
+                    request.post({url:'http://'+config.flowEngine.host+':'+config.flowEngine.port+''+config.flowEngine.path+'/time_based', json: result}, function(err,httpResponse,body){
+                        if (!err && httpResponse.statusCode == 200) {
+                            console.log(body);
+                        } else {
+                            console.log("[ERROR] Cannot run time based cronjob for analysis.");
+                        }
+                    });
+                }
+            });
+
+            con.release();
+        });
     });
 
 
@@ -254,4 +290,3 @@ if (cluster.isMaster) {
         });
     }
 }
-

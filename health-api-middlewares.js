@@ -105,7 +105,31 @@ exports.errorHandler = function (err, req, res, next) {
             res.statusCode = 400;
             res.send({error: 'Invalid JSON'});
         }
-
+		
+        /*
+         *  NODE RED COMMUNICATION ERROR
+         */
+        else if (err == 'Error: NODE_RED_COMMUNICATION_ERROR'){
+            res.statusCode = 400;
+            res.send({error: 'Node-Red communication error.'});
+        }
+		
+        /*
+         *  NODE RED FLOW CREATION ERROR
+         */
+        else if (err == 'Error: NODE_RED_FLOW_CREATION_ERROR'){
+            res.statusCode = 400;
+            res.send({error: 'Node-red cannot validates and deploy analyser flow.'});
+        }
+		
+        /*
+         *  NODE RED FLOW DELETE ERROR
+         */
+        else if (err == 'Error: NOT_FOUND'){
+            res.statusCode = 400;
+            res.send({error: 'Cannot delete analyser from flow engine.'});
+        }
+		
         /*
          *  ANY OTHER ERRORS
          */

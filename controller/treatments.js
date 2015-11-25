@@ -7,6 +7,7 @@
  * Contains swagger specs and models
  */
 var swagger = require('swagger-node-express');
+var request = require('request');
 var commons = require('./controller_commons.js');
 var analyzer = require('./notify.js');
 var dailyAnalyzer = new analyzer();
@@ -69,6 +70,11 @@ exports.add = function(req,res,next) {
                     // this postpones the analysis of the data until the POST is completely processed
                     process.nextTick(function () {
                         dailyAnalyzer.emit('goldAnalyzes', id);
+                        request.post({url:'http://localhost:1880/analyzer/new_report', form: {url:'/patients/'+ id + '/treatments/' + result[0][0].insertId, type: 'treatments'}}, function(err,httpResponse,body){
+                            if (!err && httpResponse.statusCode == 200) {
+                                console.log(body);
+                            }
+                        });
                     });
                     // resource was created
                     // link will be provided in location header
@@ -117,6 +123,14 @@ exports.update = function(req,res,next) {
                 if (err) next(err);
                 else {
                     res.affectedRows = result[0][0].affected_rows;
+                    // Notify flow engine
+                    process.nextTick (function (){
+                        request.post({url:'http://localhost:1880/analyzer/new_report', form: {url:'/patients/'+ id + '/treatments/' + rid, type: 'treatments'}}, function(err,httpResponse,body){
+                            if (!err && httpResponse.statusCode == 200) {
+                                console.log(body);
+                            }
+                        });
+                    });
                     next();
                 }
             });
