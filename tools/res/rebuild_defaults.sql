@@ -10,15 +10,15 @@ values
 (3, 2, "averel", "test", "", "12345", 1, CURDATE(), CURDATE(), "abc 123", "00493654646465432", 2),
 (4, 2, "joe", "dalton", "john", "234234", 1, CURDATE(), CURDATE(), "cba 321", "0030231315648", 1);
 
-INSERT INTO echo.cats (recordId, patientId, diagnoseDate, q1, q2, q3, q4, q5, q6, q7, q8, totalCatscale, status)
+INSERT INTO echo.cats (recordId, patientId, diagnoseDate, q1, q2, q3, q4, q5, q6, q7, q8, totalCatscale )
 values
-(1, 3, CURDATE(), 1, 1, 0, 0, 1, 0, 1, 1, 3, "baseline"),
-(2, 4, CURDATE(), 0, 1, 0, 1, 0, 1, 0, 1, 2, "exacerbation");
+(1, 3, CURDATE(), 1, 1, 0, 0, 1, 0, 1, 1, 3),
+(2, 4, CURDATE(), 0, 1, 0, 1, 0, 1, 0, 1, 2);
 
-INSERT INTO echo.ccqs (recordId, patientId, diagnoseDate, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, status)
+INSERT INTO echo.ccqs (recordId, patientId, diagnoseDate, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10 )
 values
-(1, 3, CURDATE(), 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, "baseline"),
-(2, 4, CURDATE(), 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, "exacerbation");
+(1, 3, CURDATE(), 1, 1, 0, 1, 0, 0, 0, 1, 0, 1),
+(2, 4, CURDATE(), 0, 1, 0, 1, 0, 1, 0, 1, 0, 1);
 
 INSERT INTO echo.charlsons (recordId, patientId, diagnoseDate, myocardialInfarction, congestiveHeartFailure, peripheralVascularDisease,
     cerebrovascularDisease, dementia, chronicPulmonaryDiasease, connectiveTissueDisease, ulcerDisease, liverDiseaseMild, diabetes,
@@ -39,12 +39,12 @@ values
 (1, 3, "A", now(), "this is a test"),
 (2, 4, "C", now() - interval 1 day, "another test");
 
-INSERT INTO echo.treatments (recordId, patientId, diagnoseDate, status, shortActingB2, longActingB2, ultraLongB2, steroidsInhaled, steroidsOral,
+INSERT INTO echo.treatments (recordId, patientId, diagnoseDate, shortActingB2, longActingB2, ultraLongB2, steroidsInhaled, steroidsOral,
     sama, lama, pdef4Inhalator, theophyline, mycolytocis, antibiotics, antiflu, antipneum, ltot, ltotStartDate, ltotDevice, niv,
     ventilationStart, ventilationDevice)
 values
-(1, 3, CURDATE() - interval 2 day, "baseline", 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, CURDATE(), "Liquid", 1, CURDATE(), "CPAP"),
-(2, 4, CURDATE() - interval 1 day, "baseline", 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, CURDATE(), "Liquid", 1, CURDATE(), "CPAP");
+(1, 3, CURDATE() - interval 2 day, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, CURDATE(), "Liquid", 1, CURDATE(), "CPAP"),
+(2, 4, CURDATE() - interval 1 day, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, CURDATE(), "Liquid", 1, CURDATE(), "CPAP");
 
 INSERT INTO echo.notifications (notificationId, accountId, date, type, subjectsAccount)
 VALUES
