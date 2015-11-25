@@ -296,9 +296,8 @@ describe('Treatments Record Tests:', function() {
                 });
         });
 
-        it('Doctor can create new Treatments Records Data (baseline)', function (done){
+        it('Doctor can create new Treatments Records Data', function (done){
             var tmp = data.doctor.newTreatment;
-            tmp.status = "baseline";
             request(url)
                 .post(patData_url+'/treatments')
                 .set('Authorization', 'Bearer ' + access_token)
@@ -326,44 +325,7 @@ describe('Treatments Record Tests:', function() {
                 });
         });
 
-        it('Doctor can create new Treatments Records Data (exacerbation)', function (done){
-            var tmp = data.doctor.newTreatment;
-            tmp.status = "exacerbation";
-            var today = new Date();
-            var dd = today.getDate();
-            var mm = today.getMonth()+1; //January is 0!
-            var yyyy = today.getFullYear();
-            tmp.diagnoseDate = yyyy+'-'+mm+'-'+dd;
-            request(url)
-                .post(patData_url+'/treatments')
-                .set('Authorization', 'Bearer ' + access_token)
-                .send (tmp)
-                .expect(201)
-                .end(function (err, res){
-                    if (err) throw err;
-
-                    exam2_url = res.headers.location;
-                    done();
-                });
-        });
-
-
-        it('Doctor cant create new Treatments Records Data with status any other than baseline or exacerbation', function (done){
-            var tmp = data.doctor.newTreatment;
-            tmp.status = "fine";
-            request(url)
-                .post(patData_url+'/treatments')
-                .set('Authorization', 'Bearer ' + access_token)
-                .send (tmp)
-                .expect(400)
-                .end(function (err, res){
-                    if (err) throw err;
-
-                    done();
-                });
-        });
-
-        it('Recordslists Length should be N+2', function (done){
+        it('Recordslists Length should be N+1', function (done){
             request(url)
                 .get(patData_url+'/treatments')
                 .set('Authorization', 'Bearer ' + access_token)
@@ -371,7 +333,7 @@ describe('Treatments Record Tests:', function() {
                 .end(function (err, res){
                     if (err) throw err;
                     res.body.should.have.property('treatments');
-                    res.body.treatments.length.should.equal(list_length+2);
+                    res.body.treatments.length.should.equal(list_length+1);
                     res.headers.should.have.property('last-modified');
 
                     done();
@@ -395,10 +357,9 @@ describe('Treatments Record Tests:', function() {
 
         it('Doctor can update Treatments Records Data', function (done){
             var tmp = data.doctor.newTreatment;
-            tmp.status = "exacerbation";
             tmp.mycolytocis = true;
             request(url)
-                .put(exam2_url)
+                .put(exam_url)
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (tmp)
                 .expect(204)
@@ -412,7 +373,7 @@ describe('Treatments Record Tests:', function() {
         it('Put empty Treatment', function (done){
             var tmp = data.doctor.emptyTreatment;
             request(url)
-                .put(exam2_url)
+                .put(exam_url)
                 .set('Authorization', 'Bearer ' + access_token)
                 .send (tmp)
                 .expect(400)
@@ -434,17 +395,6 @@ describe('Treatments Record Tests:', function() {
                         .end(function (err, res){
                             if (err) throw cb(err);
                             cb(null, res);
-                        });
-                },
-                function (cb) {
-                    request(url)
-                        .del(exam2_url)
-                        .set('Authorization', 'Bearer ' + access_token)
-                        .expect(204)
-                        .end(function (err, res){
-                            if (err) throw cb(err);
-                            cb(null, res);
-
                         });
                 },
                 function (cb) {
