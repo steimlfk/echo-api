@@ -50,28 +50,31 @@ exports.add = function(req,res,next) {
     var id = parseInt(req.params.id);
     // if no date is given make it null, so the trigger can set the date
     var date = i.diagnoseDate || null;
-
-    // query db
-    // ? from query will be replaced by values in [] - including escaping!
-    connection.query('call treatmentCreate(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?)',
-        [id, date, , i.antibiotics, i.antiflu, i.antipneum, i.lama, i.longActingB2,
-            i.ltot, i.ltotDevice, i.ltotStart, i.mycolytocis, i.niv, i.pdef4Inhalator, i.sama, i.shortActingB2,
-            i.steroidsInhaled, i.steroidsOral, i.theophyline, i.ultraLongB2, i.ventilationDevice, i.ventilationStart, i.other],
-        function (err, result) {
-            connection.release();
-            if (err) next(err);
-            else {
-                // this postpones the analysis of the data until the POST is completely processed
-                process.nextTick(function () {
-                    dailyAnalyzer.emit('goldAnalyzes', id);
-                });
-                // resource was created
-                // link will be provided in location header
-                res.loc = '/patients/' + id + '/treatments/' + result[0][0].insertId;
-                next();
-            }
-        });
-
+    if (JSON.stringify(req.body) == '{}') {
+        connection.release();
+        next({code:'ER_BAD_NULL_ERROR'})
+    } else {
+        // query db
+        // ? from query will be replaced by values in [] - including escaping!
+        connection.query('call treatmentCreate(?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?)',
+            [id, date, i.antibiotics, i.antiflu, i.antipneum, i.lama, i.longActingB2,
+                i.ltot, i.ltotDevice, i.ltotStart, i.mycolytocis, i.niv, i.pdef4Inhalator, i.sama, i.shortActingB2,
+                i.steroidsInhaled, i.steroidsOral, i.theophyline, i.ultraLongB2, i.ventilationDevice, i.ventilationStart, i.other],
+            function (err, result) {
+                connection.release();
+                if (err) next(err);
+                else {
+                    // this postpones the analysis of the data until the POST is completely processed
+                    process.nextTick(function () {
+                        dailyAnalyzer.emit('goldAnalyzes', id);
+                    });
+                    // resource was created
+                    // link will be provided in location header
+                    res.loc = '/patients/' + id + '/treatments/' + result[0][0].insertId;
+                    next();
+                }
+            });
+    }
 };
 
 /**
@@ -103,8 +106,8 @@ exports.update = function(req,res,next) {
     } else {
         // query db
         // ? from query will be replaced by values in [] - including escaping!
-        connection.query('call treatmentUpdate(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?)',
-            [rid, id, date,  i.antibiotics, i.antiflu, i.antipneum, i.lama, i.longActingB2,
+        connection.query('call treatmentUpdate(?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?)',
+            [rid, id, date, i.antibiotics, i.antiflu, i.antipneum, i.lama, i.longActingB2,
                 i.ltot, i.ltotDevice, i.ltotStart, i.mycolytocis, i.niv, i.pdef4Inhalator, i.sama, i.shortActingB2,
                 i.steroidsInhaled, i.steroidsOral, i.theophyline, i.ultraLongB2, i.ventilationDevice, i.ventilationStart, i.other],
             function (err, result) {

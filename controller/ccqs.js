@@ -52,7 +52,7 @@ exports.add = function(req,res,next){
     var date = i.diagnoseDate || null;
     // query db
     // ? from query will be replaced by values in [] - including escaping!
-    connection.query('call ccqCreate(?,?,?,?,?,?,?,?,?,?,?,?,?)', [id, date, i.q1, i.q2, i.q3, i.q4, i.q5, i.q6, i.q7, i.q8, i.q9, i.q10], function(err, result) {
+    connection.query('call ccqCreate(?,?,?,?,?,?,?,?,?,?,?,?)', [id, date, i.q1, i.q2, i.q3, i.q4, i.q5, i.q6, i.q7, i.q8, i.q9, i.q10], function(err, result) {
         connection.release();
         if (err) next(err);
         else {
@@ -92,7 +92,7 @@ exports.update = function(req,res,next) {
     var date = i.diagnoseDate || null;
     // query db
     // ? from query will be replaced by values in [] - including escaping!
-    connection.query('call ccqUpdate(?, ?,?,?,?,?,?,?,?,?,?,?, ?, ?)', [rid, id, date, i.q1, i.q2, i.q3, i.q4, i.q5, i.q6, i.q7, i.q8, i.q9, i.q10], function (err, result) {
+    connection.query('call ccqUpdate(?, ?,?,?,?,?,?,?,?,?,?,?, ?)', [rid, id, date, i.q1, i.q2, i.q3, i.q4, i.q5, i.q6, i.q7, i.q8, i.q9, i.q10], function (err, result) {
         connection.release();
         if (err) { next(err);}
         else {

@@ -54,7 +54,7 @@ exports.add = function(req,res,next){
     // query db
     // ? from query will be replaced by values in [] - including escaping!
     // any given ID in the body will be ignored and the ids from the url are used!
-    connection.query('call catCreate(?,?,?,?,?,?,?,?,?,?,?)',
+    connection.query('call catCreate(?,?,?,?,?,?,?,?,?,?)',
         [id, date, i.q1, i.q2, i.q3, i.q4, i.q5, i.q6, i.q7, i.q8], function(err, result) {
             connection.release();
             if (err) next(err);
@@ -93,7 +93,7 @@ exports.update = function(req,res,next){
     var date = (i.diagnoseDate || i.diagnoseDate != "")? i.diagnoseDate : null;
     // query db
     // ? from query will be replaced by values in [] - including escaping!
-    connection.query('call catUpdate(?, ?,?,?,?,?,?,?,?,?,?,?)',  [rid, id, date, i.q1, i.q2, i.q3, i.q4, i.q5, i.q6, i.q7, i.q8], function(err, result) {
+    connection.query('call catUpdate(?,?,?,?,?,?,?,?,?,?,?)',  [rid, id, date, i.q1, i.q2, i.q3, i.q4, i.q5, i.q6, i.q7, i.q8], function(err, result) {
         connection.release();
         if (err) {
             next(err);
