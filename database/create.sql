@@ -66,68 +66,76 @@ GRANT EXECUTE ON function `echo`.`twoDayAnalyzes` TO 'echo_db_usr'@'localhost';
 -- -----------------------------------------------------
 
 DELIMITER $$
-CREATE DEFINER=`echo_db_usr`@`localhost` FUNCTION `goldAnalyzes`(
+CREATE DEFINER=`echo_db_usr`@`localhost` FUNCTION `goldAnalyzer`(
 id int
 ) RETURNS varchar(1) CHARSET utf8
     DETERMINISTIC
 BEGIN
-CREATE TEMPORARY TABLE exTemp (status varchar(30), diagnoseDate date);
-insert into exTemp select distinct status='exacerbation', diagnoseDate from cats where patientId=id and diagnoseDate>=(now() - interval 1 year);
-insert into exTemp select distinct status='exacerbation', diagnoseDate from ccqs where patientId=id and diagnoseDate>=(now() - interval 1 year);
-insert into exTemp select distinct status='exacerbation', diagnoseDate from treatments where patientId=id and diagnoseDate>=(now() - interval 1 year);
-insert into exTemp select distinct status='exacerbation', diagnoseDate from readings where patientId=id and diagnoseDate>=(now() - interval 1 year);
-select sum(status) into @exacerbation from exTemp group by diagnoseDate;
+select count(*) into @exacerbation from exacerbations where patientId=id and diagnoseDate>=(now() - interval 1 year);
 
-select case
-	when (coalesce((select fev1>=80 and fev1_fvc<70 from readings where patientId=id))) then 1
-    when (coalesce((select 50<=fev1<80 and fev1_fvc<70 from readings where patientId=id))) then 2
-    when (coalesce((select 30<=fev1<50 and fev1_fvc<70 from readings where patientId=id))) then 3
-    when (coalesce((select fev1<30 and fev1_fvc<70 from readings where patientId=id))) then 4
-    else null end into @stadium;
+select fev1_pre_pro, fev1_fvc into @fev1, @fevfvc from readings where patientId = id order by diagnoseDate DESC LIMIT 1;
+if @fevfvc < 0.7 then
+    if @fev1 >= 80 then
+        set @stadium = 1;
+    else
+        if @fev1 >= 50 then
+            set @stadium = 2;
+        else
+            if @fev1 >= 30 then
+                set @stadium = 3;
+            else
+                set @stadium = 4;
+            end if;
+        end if;
+    end if;
+else
+    set @stadium = 0;
+end if;
 
 select totalCatscale is not null into @catExists from cats where patientId=id and diagnoseDate>=(now() - interval 1 year);
 if @catExists then
-    select coalesce((select totalCatscale from cats where patientId=id order by diagnoseDate desc limit 1)) into @tot;
+    select coalesce((select totalCatscale from cats where patientId=id order by diagnoseDate desc limit 1)) into @cat;
 else
-    select coalesce((select mmrc from readings where patientId=id order by diagnoseDate desc limit 1)) into @tot;
+    select coalesce((select mmrc from readings where patientId=id order by diagnoseDate desc limit 1)) into @mmrc;
 end if;
 
-if @exacerbation>=2 then
-    if (@tot>10 and @catExists or @tot>=2) then
-        set @severity='D';
-	else
-		set @severity='C';
-	end if;
-else
-    if (@tot>10 and @catExists or @tot>=2) then
-        set @severity='B';
-	else
-        set @severity='A';
-	end if;
-end if;
-
-if (coalesce((select severity from severity where patientId=id order by diagnoseDate desc limit 1))<>@severity) then
-    insert into notification (accountId, date, type, subjectsAccount)
-    values
-    (id, now(), 7, null),
-    (coalesce((select doctorId from patients where patientId=id)), now(), 8, id);
-    if @catExists then
-        insert into severity (patientId, severity, validFrom, comment)
-        values
-        (id, @severity, now(), (select concat('Exacerbations:', @exacerbation, ';Stadium:', @stadium, ';CAT-Scale:', @tot)));
+if @catExists then
+    if @cat >= 10 then
+        if (@stadium > 2 or @exacerbation>=2) then
+            set @severity='D';
+        else
+            set @severity='B';
+        end if;
     else
-        insert into severity (patientId, severity, validFrom, comment)
-        values
-        (id, @severity, now(), (select concat('Exacerbations:', @exacerbation, ';Stadium:', @stadium, ';MMRC:', @tot)));
+        if (@stadium > 2 or @exacerbation>=2) then
+            set @severity='C';
+        else
+            set @severity='A';
+        end if;
     end if;
-    return @severity;
+else
+    if @mmrc >= 2 then
+        if (@stadium > 2 or @exacerbation>=2) then
+            set @severity='D';
+        else
+            set @severity='B';
+        end if;
+    else
+        if (@stadium > 2 or @exacerbation>=2) then
+            set @severity='C';
+        else
+            set @severity='A';
+        end if;
+    end if;
 end if;
-RETURN null;
+
+return @severity;
+
 END$$
 
 DELIMITER ;
 
-GRANT EXECUTE ON function `echo`.`goldAnalyzes` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON function `echo`.`goldAnalyzer` TO 'echo_db_usr'@'localhost';
 
 -- -----------------------------------------------------
 -- Table `echo`.`accounts`
