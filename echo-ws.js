@@ -207,30 +207,34 @@ if (cluster.isMaster) {
          */
         var db = require('./utils.js').db;
         db.getConnection(function(err, con){
-            if (err) { return done(null, false); }
+            if (err) { console.err("Scheduler couldnt connect to database!"); }
+            else
+            {
+                // This query fetches all account information about accounts
+                // which are available and have set a reminder time within the time slot range of 30 minutes
+                var qry = 'SELECT accountId, role, reminderTime FROM accounts WHERE enabled = true AND role = \'patient\' AND reminderTime > TIME_FORMAT(DATE_SUB(NOW(), INTERVAL 15 MINUTE), \'%H:%i:00\') AND reminderTime <= TIME_FORMAT(DATE_ADD(NOW(), INTERVAL 15 MINUTE), \'%H:%i:00\');';
 
-            // This query fetches all account information about accounts
-            // which are available and have set a reminder time within the time slot range of 30 minutes
-            var qry = 'SELECT accountId, role, reminderTime FROM accounts WHERE enabled = true AND role = \'patient\' AND reminderTime > TIME_FORMAT(DATE_SUB(NOW(), INTERVAL 15 MINUTE), \'%H:%i:00\') AND reminderTime <= TIME_FORMAT(DATE_ADD(NOW(), INTERVAL 15 MINUTE), \'%H:%i:00\');';
+                // Query database and notify flow engine with result
+                con.query(qry, function(err, result) {
+                    if (err) { console.err("Scheduler couldnt issue query"); }
+                    else {
+                        if(result.length > 0) {
+                            var request = require('request');
 
-            // Query database and notify flow engine with result
-            con.query(qry, function(err, result) {
-                if (err) { return done(null, false); }
-                if(result.length > 0) {
-                    var request = require('request');
-
-                    // Notify flow engine about reminders
-                    request.post({url:'http://'+config.flowEngine.host+':'+config.flowEngine.port+''+config.flowEngine.path+'/time_based', json: result}, function(err,httpResponse,body){
-                        if (!err && httpResponse.statusCode == 200) {
-                            console.log(body);
-                        } else {
-                            console.log("[ERROR] Cannot run time based cronjob for analysis.");
+                            // Notify flow engine about reminders
+                            request.post({url:'http://'+config.flowEngine.host+':'+config.flowEngine.port+''+config.flowEngine.path+'/time_based', json: result}, function(err,httpResponse,body){
+                                if (!err && httpResponse.statusCode == 200) {
+                                    console.log(body);
+                                } else {
+                                    console.log("[ERROR] Cannot run time based cronjob for analysis.");
+                                }
+                            });
                         }
-                    });
-                }
-            });
+                    }
 
-            con.release();
+                });
+                con.release();
+            }
         });
     });
 
