@@ -793,57 +793,6 @@ SET character_set_client = @saved_cs_client;
 
 
 --
--- Table structure for table `perm_roles_procedures`
---
-
-DROP TABLE IF EXISTS `perm_roles_procedures`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `perm_roles_procedures` (
-  `role` varchar(45) NOT NULL,
-  `procedure_obj` varchar(45) NOT NULL,
-  PRIMARY KEY (`role`,`procedure_obj`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `perm_roles_procedures`
---
-
-LOCK TABLES `perm_roles_procedures` WRITE;
-/*!40000 ALTER TABLE `perm_roles_procedures` DISABLE KEYS */;
-INSERT  IGNORE INTO `perm_roles_procedures` (`role`, `procedure_obj`) VALUES ('admin','accountsCreate'),('admin','accountsDelete'),('admin','accountsUpdate'),('admin','analyserCreate'),('admin','analyserDelete'),('admin','analyserFilterCreate'),('admin','analyserFilterListOne'),('admin','analyserList'),('admin','analyserListAll'),('admin','analyserListOne'),('admin','analyserOperatorList'),('admin','analyserRulesCreate'),('admin','analyserRulesListOne'),('admin','analyserRulesListOneAll'),('admin','analyserUpdate'),('admin','daysExacerbationListOne'),('admin','daysExacerbationTraining'),('admin','deviceAdd'),('admin','deviceRemove'),('admin','patientsCreate'),('admin','patientsDelete'),('admin','patientsRessourceUpdate'),('doctor','accountsCreate'),('doctor','accountsUpdate'),('doctor','analyserCreate'),('doctor','analyserDelete'),('doctor','analyserFilterCreate'),('doctor','analyserFilterListOne'),('doctor','analyserList'),('doctor','analyserListAll'),('doctor','analyserListOne'),('doctor','analyserOperatorList'),('doctor','analyserRulesCreate'),('doctor','analyserRulesListOne'),('doctor','analyserRulesListOneAll'),('doctor','analyserUpdate'),('doctor','catCreate'),('doctor','catUpdate'),('doctor','ccqCreate'),('doctor','ccqUpdate'),('doctor','charlsonCreate'),('doctor','charlsonUpdate'),('doctor','daysExacerbationListOne'),('doctor','daysExacerbationTraining'),('doctor','deathCreate'),('doctor','deathDelete'),('doctor','deathGet'),('doctor','deathUpdate'),('doctor','deleteExamRecord'),('doctor','deviceAdd'),('doctor','deviceRemove'),('doctor','listExams'),('doctor','listSingleExam'),('doctor','notificationCreate'),('doctor','patientsCreate'),('doctor','patientsDelete'),('doctor','patientsRessourceUpdate'),('doctor','readingsCreate'),('doctor','readingsUpdate'),('doctor','reportCreate'),('doctor','reportDelete'),('doctor','reportList'),('doctor','reportListOne'),('doctor','reportUpdate'),('doctor','severityCreate'),('doctor','treatmentCreate'),('doctor','treatmentUpdate'),('patient','accountsUpdate'),('patient','analyserCreate'),('patient','analyserDelete'),('patient','analyserFilterCreate'),('patient','analyserFilterListOne'),('patient','analyserList'),('patient','analyserListAll'),('patient','analyserListOne'),('patient','analyserOperatorList'),('patient','analyserRulesCreate'),('patient','analyserRulesListOne'),('patient','analyserRulesListOneAll'),('patient','analyserUpdate'),('patient','deviceAdd'),('patient','deviceRemove'),('patient','notificationCreate'),('patient','reportCreate'),('patient','reportDelete'),('patient','reportList'),('patient','reportListOne'),('patient','reportUpdate');
-/*!40000 ALTER TABLE `perm_roles_procedures` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `perm_roles_views`
---
-
-DROP TABLE IF EXISTS `perm_roles_views`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `perm_roles_views` (
-  `role` varchar(45) NOT NULL,
-  `view_obj` varchar(45) NOT NULL,
-  PRIMARY KEY (`role`,`view_obj`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `perm_roles_views`
---
-
-LOCK TABLES `perm_roles_views` WRITE;
-/*!40000 ALTER TABLE `perm_roles_views` DISABLE KEYS */;
-INSERT  IGNORE INTO `perm_roles_views` (`role`, `view_obj`) VALUES ('admin','accounts_view'),('admin','analyserEvents_view'),('admin','analyserExpression_view'),('admin','analyserField_view'),('admin','analyserFilter_view'),('admin','analyserHost_view'),('admin','analyserNotification_view'),('admin','analyserOperator_view'),('admin','analyserRules_view'),('admin','analyser_view'),('admin','daysExacerbation_view'),('admin','notifications_view'),('admin','patients_view'),('doctor','accounts_view'),('doctor','analyserEvents_view'),('doctor','analyserExpression_view'),('doctor','analyserField_view'),('doctor','analyserFilter_view'),('doctor','analyserHost_view'),('doctor','analyserNotification_view'),('doctor','analyserOperator_view'),('doctor','analyserRules_view'),('doctor','analyser_view'),('doctor','daysExacerbation_view'),('doctor','notifications_view'),('doctor','patients_view'),('patient','accounts_view'),('patient','analyserEvents_view'),('patient','analyserExpression_view'),('patient','analyserField_view'),('patient','analyserFilter_view'),('patient','analyserHost_view'),('patient','analyserNotification_view'),('patient','analyserOperator_view'),('patient','analyserRules_view'),('patient','analyser_view'),('patient','notifications_view'),('patient','patients_view');
-/*!40000 ALTER TABLE `perm_roles_views` ENABLE KEYS */;
-UNLOCK TABLES;
---
--- Dumping events for database 'echo'
---
-
---
 -- Dumping routines for database 'echo'
 --
 
@@ -1634,6 +1583,17 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
-
-
-
+GRANT EXECUTE ON procedure `echo`.`analyserCreate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`analyserDelete` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`analyserFilterCreate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`analyserFilterListOne` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`analyserList` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`analyserListAll` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`analyserListOne` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`analyserOperatorList` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`analyserRulesCreate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`analyserRulesListOne` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`analyserRulesListOneAll` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`analyserUpdate` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`daysExacerbationListOne` TO 'echo_db_usr'@'localhost';
+GRANT EXECUTE ON procedure `echo`.`daysExacerbationTraining` TO 'echo_db_usr'@'localhost';

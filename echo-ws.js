@@ -125,6 +125,11 @@ if (cluster.isMaster) {
 
 // Loading Controllers
     var files = utils.getFilesFromDir('./controller');
+    var files2 = utils.getFilesFromDir('./analyzer');
+
+    for (var i = 0; i < files2.length; i++){
+        files.push(files2[i]);
+    }
 
     for (var i = 0; i < files.length; i++){
         //var res_name = files[i].split('/').pop().split('.')[0];
