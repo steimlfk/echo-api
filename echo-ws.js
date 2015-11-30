@@ -19,23 +19,33 @@ var ctrl_utils = require('./health-api-middlewares');
 if (cluster.isMaster) {
     var cpuCount = require('os').cpus().length;
     var amount = require('./config.js').workers;
+    var timeAnalyzer = null;
     for (var i = 0; i < cpuCount && (i < amount || amount == -1); i++) {
-        cluster.fork();
+        var c = cluster.fork();
+        timeAnalyzer = c;
     }
-    /*
+
     cluster.on('exit', function(worker, code, signal) {
         var timestamp = new Date().toUTCString();
 
         console.log(timestamp +': worker ' + worker.process.pid + ' died');
+        console.log(timestamp +': Worker ' + worker.process.pid + ' died with code: ' + code + ', and signal: ' + signal);
+        console.log(timestamp +': Starting a new worker');
+        if (code == 0) timeAnalyzer = cluster.fork();
     });
-    */
+
     cluster.on('listening', function(worker, address) {
         var timestamp = new Date().toUTCString();
 
         console.log(timestamp + ": Worker "+ worker.process.pid + " is now connected to " + address.address + ":" + address.port);
     });
 
-} else {
+    var j = schedule.scheduleJob('*/1 * * * *', function () {
+        timeAnalyzer.send ({timebased: true});
+    });
+
+
+    } else {
     /**
      *
      * Config & Vars
@@ -191,11 +201,13 @@ if (cluster.isMaster) {
         produces: ["application/json"]
     });
 
-    var j = schedule.scheduleJob('*/30 * * * *', function() {
-        var analyzer = require('./controller/notify.js');
-        var notify = new analyzer();
-        notify.emit('oneDayInactiveAnalyzes');
-        notify.emit('nDayInactiveAnalyzes', 5);
+    process.on('message', function (msg) {
+        if (msg.timebased) {
+            var analyzer = require('./controller/notify.js');
+            var notify = new analyzer();
+            notify.emit('oneDayInactiveAnalyzes');
+            notify.emit('nDayInactiveAnalyzes', 5);
+        }
     });
 
 
