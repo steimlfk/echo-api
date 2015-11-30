@@ -81,7 +81,7 @@ exports.addSpec = {
 
 };
 
-exports.delSpec = {
+exports.delete = {
     summary : "Deletes a DeviceId for Push Notifications (Roles: all)",
     notes: "This Function removes a DeviceID from the current Users Account. After removing no more Push Notifications will be send to that device. <br>This function passes its parameters to the SP deviceRemove <br><br>",
     path : "/devices/{deviceId}",

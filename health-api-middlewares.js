@@ -157,7 +157,12 @@ exports.resultProcessor = function (req, res, next){
     if (res.loc){
         if (res.modified) res.setHeader('Last-Modified' , res.modified);
         res.location(res.loc);
-        res.sendStatus (201);
+        res.status (201);
+        if (req.originalUrl.indexOf('devices')>0) res.send({'flash':'flash'});
+        else {
+            res.type("text/plain; charset=utf-8");
+            res.send('Created');
+        }
     }
     else if (res.affectedRows != undefined){
         if (res.affectedRows > 0) res.sendStatus(204);

@@ -41,7 +41,7 @@ if (cluster.isMaster) {
     else console.log('Swagger Base: http://' + host + ':' + url_port + api_docs);
 
 
-    var cpuCount = require('os').cpus().length;
+    var cpuCount = 1;//require('os').cpus().length;
     var amount = require('./config.js').workers;
     var timeAnalyzer = null;
     for (var i = 0; i < cpuCount && (i < amount || amount == -1); i++) {
@@ -116,8 +116,14 @@ if (cluster.isMaster) {
 
 //setup login-Endpoint
     app.use('/login', bodyParser.json(), bodyParser.urlencoded({ extended: false }));
-    swagger.addPost({'spec':oauth2.loginSpec,'action':oauth2.endpoint})
+    swagger.addPost({'spec':oauth2.loginSpec,'action':oauth2.endpoint});
 
+    app.delete ('*', function(req,res,next){
+       if (req.originalUrl.indexOf('devices') > 0){
+           res.sendStatus(204);
+       }
+       else next();
+    });
 //setup protected ECHO Endpoints
     var echo_endpoints = ['/accounts', '/patients', '/questions','/notifications','/createPatientAndAccount','/changeDoctor', '/devices'];
     var echo_middlewares = [passport.authenticate(['bearer'], { session: false }), bodyParser.json(),bodyParser.urlencoded({ extended: false }), ctrl_utils.databaseHandler];
@@ -128,7 +134,7 @@ if (cluster.isMaster) {
 
     if (config.debug) {
         app.use( function (req,res,next) {
-            var timestamp = new Date().toUTCString()
+            var timestamp = new Date().toUTCString();
             var user = req.user || 'none';
             console.error(timestamp + ': ' + req.method + ' ' + req.url );
             console.error('User: ');
