@@ -21,7 +21,7 @@ exports.add = function(req,res,next){
     var connection = req.con;
     // 3) create SQL Query from parameters
     // ? from query will be replaced by values in [] - including escaping!
-    connection.query('CALL deviceAdd(?)' , [req.body.deviceId], function(err) {
+    connection.query('CALL deviceAdd(?)' , [req.body.deviceId], function(err, result) {
         connection.release();
         if (err) next(err);
         else {
