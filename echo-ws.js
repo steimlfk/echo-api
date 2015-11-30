@@ -13,10 +13,34 @@ var express = require('express'),
     BearerStrategy = require('passport-http-bearer').Strategy,
     schedule = require('node-schedule'),
     cluster = require('cluster');
+var config = require('./config.js');
+
+var port = config.port;
+var host = config.host;
+var url_port = config.url_port;
+var api_docs = "/api-docs";
 
 var ctrl_utils = require('./health-api-middlewares');
 
 if (cluster.isMaster) {
+    var portTester = http.createServer(function (req, res) { res.end('Hello world!'); }).listen(port);
+    portTester.on('error', function (err) {
+        if (err.message.indexOf('EADDRINUSE') > 1) console.error('Port in use. Server already running?');
+        else console.error(err.stack);
+        process.exit(1);
+    });
+    portTester.close();
+    var timestamp = new Date().toUTCString();
+
+    console.log(timestamp + ' ECHO Master Node PID  ' +process.pid);
+    console.log('ECHO REST API listening on host ' + host + ' on port ' + port);
+    if (config.ssl.useSsl) {
+        console.log('Server uses SSL');
+        console.log('Swagger Base: https://' + host + ':' + url_port + api_docs);
+    }
+    else console.log('Swagger Base: http://' + host + ':' + url_port + api_docs);
+
+
     var cpuCount = require('os').cpus().length;
     var amount = require('./config.js').workers;
     var timeAnalyzer = null;
@@ -28,16 +52,14 @@ if (cluster.isMaster) {
     cluster.on('exit', function(worker, code, signal) {
         var timestamp = new Date().toUTCString();
 
-        console.log(timestamp +': worker ' + worker.process.pid + ' died');
         console.log(timestamp +': Worker ' + worker.process.pid + ' died with code: ' + code + ', and signal: ' + signal);
         console.log(timestamp +': Starting a new worker');
-        if (code == 0) timeAnalyzer = cluster.fork();
+        //if (code == 0) timeAnalyzer = cluster.fork();
     });
 
     cluster.on('listening', function(worker, address) {
         var timestamp = new Date().toUTCString();
-
-        console.log(timestamp + ": Worker "+ worker.process.pid + " is now connected to " + address.address + ":" + address.port);
+        console.log(timestamp + ": Worker "+ worker.process.pid + " is now running.");
     });
 
     var j = schedule.scheduleJob('*/30 * * * *', function () {
@@ -53,9 +75,7 @@ if (cluster.isMaster) {
     var app = express();
     var oauth2 = require('./oauth2.js'),
         utils = require('./utils.js'),
-        config = require('./config.js'),
         ssl = config.ssl;
-    var api_docs = "/api-docs";
     swagger.setAppHandler(app);
     swagger.configureSwaggerPaths("", api_docs, "");
     swagger.setHeaders = function setHeaders(res) {
@@ -63,11 +83,6 @@ if (cluster.isMaster) {
     };
 
     var tokensecret = config.tokensecret;
-
-    var port = config.port;
-    var host = config.host;
-    var url_port = config.url_port;
-
 
     app.use(passport.initialize());
 
@@ -96,6 +111,7 @@ if (cluster.isMaster) {
     /**
      * REST API
      */
+
     app.get('/', function(req, res){res.redirect('/docs');});
 
 //setup login-Endpoint
@@ -110,6 +126,18 @@ if (cluster.isMaster) {
         app.use(echo_endpoints[i], echo_middlewares);
     };
 
+    if (config.debug) {
+        app.use( function (req,res,next) {
+            var timestamp = new Date().toUTCString()
+            var user = req.user || 'none';
+            console.error(timestamp + ': ' + req.method + ' ' + req.url );
+            console.error('User: ');
+            console.error(user);
+            console.error('Body: ');
+            console.error(req.body);
+            next();
+        });
+    }
 
     var models = {
         CollectionLinks : {
@@ -225,17 +253,9 @@ if (cluster.isMaster) {
 
         var server = https.createServer(options, app);
         server.on('error', function (err) {
-            if (err.message.indexOf('EADDRINUSE') > 1) console.error('Port in use. Server already running?');
-            else console.error(err.stack);
-            process.exit(1);
+            console.error(err.stack);
         });
-        server.listen(app.get('port'), function () {
-            var timestamp = new Date().toUTCString();
-
-            console.log(timestamp + ' ECHO REST API listening on host ' + host + ' on port ' + app.get('port'));
-            console.log('Server uses SSL');
-            console.log('Swagger Base: https://' + host + ':' + url_port + api_docs);
-        });
+        server.listen(port);
 
         var redirectApp = express(),
             redirectServer = http.createServer(redirectApp);
@@ -255,15 +275,9 @@ if (cluster.isMaster) {
 
         var server = http.createServer(app);
         server.on('error', function (err) {
-            if (err.message.indexOf('EADDRINUSE') > 1) console.error('Port in use. Server already running?');
-            else console.error(err.stack);
-            process.exit(1);
+            console.error(err.stack);
         });
-        server.listen(port, function () {
-            var timestamp = new Date().toUTCString();
-            console.log(timestamp + ': ECHO REST API listening on host ' + host + ' on port ' + port);
-            console.log('Swagger Base: http://' + host + ':' + url_port + api_docs);
-        });
+        server.listen(port);
     }
 }
 
