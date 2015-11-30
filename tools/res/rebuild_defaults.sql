@@ -1,14 +1,18 @@
-INSERT INTO echo.accounts (accountId, username, password, role, email, enabled, reminderTime, notificationEnabled, mobile)
+INSERT INTO echo.accounts (accountId, username, password, role, email, enabled, reminderTime, notificationEnabled, notificationMode, mobile)
 values
-(2, "##%%user1%%##", "##%%pw1%%##", "doctor", "who@dr.who", 1, "18:00", 0, "0049123456789"),
-(3, "##%%user2%%##", "##%%pw2%%##", "patient", "av@e.rel", 1, "10:00", 0, "0049987654321"),
-(4, "##%%user3%%##", "##%%pw3%%##", "patient", "joe@dalt.on", 1, "8:45", 0, "00304525515825");
+(2, "dr.siafakis", "$$2a$$10$$sJyY0IDFFdDW4cIFi6nM5uTGmSu9Tpq6YrbyYSKkg.YA1Ql6LLuIC", "doctor", "who@dr.who", 1, "19:00", 1, "email" ,  "0049123456789"),
+(3, "george1", "$$2a$$10$$sJyY0IDFFdDW4cIFi6nM5uAjfvA80TQwF9C/mZi4RQjEmP80n6c0i", "patient", "george@hospital.gr", 1,  "19:00", 1, "email", "0049987654321"),
+(4, "john1", "$$2a$$10$$sJyY0IDFFdDW4cIFi6nM5uAjfvA80TQwF9C/mZi4RQjEmP80n6c0i", "patient", "john@@hospital.gr", 1,  "19:00", 1, "push", "00304525515825"),
+(5, "konst1", "$$2a$$10$$sJyY0IDFFdDW4cIFi6nM5uAjfvA80TQwF9C/mZi4RQjEmP80n6c0i", "patient", "konst@hospital.gr", 1,  "19:00", 1, "sms", "0049987654321"),
+(6, "dim1", "$$2a$$10$$sJyY0IDFFdDW4cIFi6nM5uAjfvA80TQwF9C/mZi4RQjEmP80n6c0i", "patient", "dimi@hospital.gr", 1,  "19:00", 1, "push", "00304525515825");;
 
 insert into echo.patients (patientId, doctorId, firstName, lastName, secondName, socialId, sex, dateOfBirth, firstDiagnoseDate, fullAddress,
     landline, fileId)
 values
-(3, 2, "averel", "test", "", "12345", 1, CURDATE(), CURDATE(), "abc 123", "00493654646465432", 2),
-(4, 2, "joe", "dalton", "john", "234234", 1, CURDATE(), CURDATE(), "cba 321", "0030231315648", 1);
+(3, 2, "Georgios", "Papadopoulos", "", "12345", 1, CURDATE(), CURDATE(), "abc 123", "00493654646465432", 1),
+(4, 2, "Ioannis", "Vlahos", "D.", "234234", 1, CURDATE(), CURDATE(), "cba 321", "0030231315648", 2),
+(5, 2, "Konstantinos", "Angelopoulos", "", "34567", 1, CURDATE(), CURDATE(), "abc 123", "00493654646465432", 3),
+(6, 2, "Dimitrios", "Nikolaidis", "D.", "45678", 1, CURDATE(), CURDATE(), "cba 321", "0030231315648", 4);
 
 INSERT INTO echo.cats (recordId, patientId, diagnoseDate, q1, q2, q3, q4, q5, q6, q7, q8, totalCatscale, status)
 values
@@ -31,8 +35,11 @@ values
 INSERT INTO echo.dailyReports (recordId, patientId, date, q1, q2, q3, q4, q5, q1a, q1b, q1c, q3a, q3b, q3c, satO2, walkingDist,
     temperature, pefr, heartRate, loc) 
 values
-(1, 3, CURDATE(), 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 40, 2500, 36, 40, 95, GeomFromText("POINT(9 49)")),
-(2, 4, CURDATE(), 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 54, 8435, 38, 42, 78, GeomFromText("POINT(9 49)"));
+(1, 3, CURDATE() - interval 6 day, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 40, 2500, 36, 40, 95, GeomFromText("POINT(49 9)")),
+(2, 4, CURDATE() - interval 6 day, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 40, 2500, 36, 40, 95, GeomFromText("POINT(49 9)")),
+(3, 5, CURDATE() - interval 6 day, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 40, 2500, 36, 40, 95, GeomFromText("POINT(49 9)")),
+(4, 6, CURDATE() - interval 2 day, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 40, 2500, 36, 40, 95, GeomFromText("POINT(49 9)")),
+(5, 6, CURDATE() - interval 1 day, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 54, 8435, 38, 42, 78, GeomFromText("POINT(49 9)"));
 
 INSERT INTO echo.severity (recordId, patientId, severity, diagnoseDate, comment)
 values

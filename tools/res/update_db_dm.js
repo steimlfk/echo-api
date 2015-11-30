@@ -58,10 +58,6 @@ exec('mysql echo -u ' + user + ' -p' + pw + " -e \"CALL dropAllDbUsers(); DROP U
                                 var pwPrefix = require('../../config.js').db_pw_prefix;
                                 var script = fs.readFileSync('./res/rebuild_defaults_dm.sql', {encoding: 'utf8'});
                                 script = script.replace('##%%prefix%%##', pwPrefix);
-                                var users = require('./passwords.js');
-                                for (var i = 0; i < 3; i++) {
-                                    script = script.replace('##%%user' + (i + 1) + '%%##', users[i].username).replace('##%%pw' + (i + 1) + '%%##', users[i].password)
-                                }
                                 exec('mysql -u ' + user + ' -p' + pw + " echo -e '" + script + "'", function (error, standOut, standErr) {
                                     console.log('Processing file rebuild.sql');
                                     var fatal2 = false;
