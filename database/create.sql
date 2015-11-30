@@ -542,8 +542,7 @@ CREATE TABLE IF NOT EXISTS `echo`.`devices` (
   `accountId` INT NOT NULL,
   `deviceId` VARCHAR(255) NOT NULL,
   `modified` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`accountId`, `deviceId`),
-  UNIQUE INDEX `deviceId_UNIQUE` (`deviceId` ASC),
+  PRIMARY KEY (`accountId`),
   CONSTRAINT `devicesFKacc`
     FOREIGN KEY (`accountId`)
     REFERENCES `echo`.`accounts` (`accountId`)
@@ -1551,7 +1550,7 @@ CREATE DEFINER=`echo_db_usr`@`localhost` PROCEDURE `deviceAdd`(in deviceId varch
 BEGIN
 	SET @id = substring_index(user(), '@', 1);
 	set @deviceId = deviceId;
-	SET @test_stmt = 'INSERT INTO devices(accountId, deviceId) VALUES (?,?)';
+	SET @test_stmt = 'REPLACE INTO devices(accountId, deviceId) VALUES (?,?)';
 	PREPARE statement FROM @test_stmt;
 	EXECUTE statement using @id, @deviceId;
 	DEALLOCATE PREPARE statement;

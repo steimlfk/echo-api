@@ -86,7 +86,7 @@ var DailyAnalyzer = function() {
                     var notificationqry = 'INSERT INTO notifications (accountId, date, type, subjectsAccount, message) VALUES (?, now(), ? ,?, ?)';
                     var patient_name = i.firstName + ' ' + i.lastName;
                     var pattext = (type == 1)? 'Please call your doctor! (' + i.doc_mobile + ')' : 'Go to the Hospital!';
-                    var doctext = (type == 1)? "Your patient ' + patient_name + ' should call you! \n" : "Your patient " + patient_name + " should go to the hospital.\n";
+                    var doctext = (type == 1)? "Your patient " + patient_name + " should call you! \n" : "Your patient " + patient_name + " should go to the hospital.\n";
                     switch (rule){
                         case 2: {
                             doctext +=  "In his report your patient said that his shortness of breath increased, that his cough increased and that his sputum changed to";
@@ -123,96 +123,24 @@ var DailyAnalyzer = function() {
                             },
                             function(cb){
                                 // patients notification
-                                if (service.apiKey.length > 1 && i.notificationEnabled){
-                                    var opts = {
-                                        host : postOptions.host,
-                                        port : postOptions.port,
-                                        method : postOptions.method,
-                                        headers : postOptions.headers
-                                    };
-                                    var msg = {
-                                        'message': pattext
-                                    };
+                                if (i.notificationEnabled){
                                     switch (i.notificationMode) {
-                                        case 'email':
-                                            msg.to = [];
-                                            msg.to[0] = i.email;
-                                            msg.subject = service.email.subject;
-                                            opts.path = service.email.url;
-                                            break;
-                                        case 'sms':
-                                            msg.receivers = [];
-                                            msg.reveivers[0] = i.mobile;
-                                            msg.label = service.sms.label;
-                                            opts.path = service.sms.url;
-                                            break;
-                                        case 'push':
-                                            msg.arns = [];
-                                            msg.arns[0] = i.patient_device;
-                                            opts.path = service.push.url;
-                                            break;
+                                        case 'email': sendMessage(i.notificationMode, i.email, pattext); break;
+                                        case 'sms': sendMessage(i.notificationMode, i.mobile, pattext); break;
+                                        case 'push': sendMessage(i.notificationMode, i.patient_device, pattext); break;
                                     }
-                                    var payload = JSON.stringify(msg);
-                                    opts.headers['Content-Length'] = payload.length;
-
-
-                                    var request = http.request(opts, function (res) {
-                                        res.setEncoding('utf8');
-                                        res.on('data', function (data) {
-                                            //console.log(i.notificationMode + ': '+ data);
-                                        })
-                                    });
-                                    request.write(payload);
-                                    request.end();
                                     cb(null, 'patients notification was sent');
                                 }
                                 else cb (null, 'omitting sending patients notification!')
                             },
                             function(cb){
                                 // doctors notification
-                                if (service.apiKey.length > 1 && i.doc_enabled){
-
-                                    var opts = {
-                                        host : postOptions.host,
-                                        port : postOptions.port,
-                                        method : postOptions.method,
-                                        headers : postOptions.headers
-                                    };
-                                    var msg = {
-                                        'message': doctext
-                                    };
-
+                                if (i.doc_enabled){
                                     switch (i.doc_mode) {
-                                        case 'email':
-                                            msg.to = [];
-                                            msg.to[0] = i.doc_email;
-                                            msg.subject = service.email.subject;
-                                            opts.path = service.email.url;
-                                            break;
-                                        case 'sms':
-                                            msg.receivers = [];
-                                            msg.reveivers[0] = i.doc_mobile;
-                                            msg.label = service.sms.label;
-                                            opts.path = service.sms.url;
-                                            break;
-                                        case 'push':
-                                            msg.arns = [];
-                                            msg.arns[0] = i.doc_device;
-                                            opts.path = service.push.url;
-                                            break;
+                                        case 'email': sendMessage(i.notificationMode, i.doc_email, doctext); break;
+                                        case 'sms': sendMessage(i.notificationMode, i.doc_mobile, doctext); break;
+                                        case 'push': sendMessage(i.notificationMode, i.doc_device, doctext); break;
                                     }
-                                    var payload = JSON.stringify(msg);
-                                    opts.headers['Content-Length'] = payload.length;
-
-
-                                    var request = http.request(opts, function (res) {
-                                        res.setEncoding('utf8');
-                                        res.on('data', function (data) {
-                                            //console.log(i.doc_mode + ': ' + data);
-                                        })
-                                    });
-                                    request.write(payload);
-                                    request.end();
                                     cb(null, 'doctors notification was sent');
                                 }
                                 else cb (null, 'omitting sending doctor notification!')
@@ -233,178 +161,115 @@ var DailyAnalyzer = function() {
     });
 
     this.on('oneDayInactiveAnalyzes', function() {
-        var postOptions = {
-            host: service.host,
-            port: '80',
-            method: 'POST',
-            headers: {
-                Authorization: service.apiKey
-            }
-        };
-        if (postOptions.host === '')
-            return;
         db.getConnection(function(err, connection) {
             var date = new Date();
-            var startTime = date.getHours() + ':' + (date.getMinutes() - 15) + ':' + '00';
-            var endTime = date.getHours() + ':' + (date.getMinutes()) + ':' + '00';
-            connection.query('SELECT a.accountId, notificationEnabled, email, mobile, deviceId, doctorId from accounts a ' +
-                'left join devices on a.accountId=devices.accountId ' +
-                'inner join patients on a.accountId = patients.patientId ' +
-                'inner join dailyReports d on a.accountId=d.patientId where d.date = Date((now() - interval 1 day)) and reminderTime>=? and reminderTime <=? and notificationEnabled=1 group by a.accountId;',
+            var startDate = new Date();
+            startDate.setMinutes(date.getMinutes() - 15);
+            var endDate = new Date();
+            endDate.setMinutes(date.getMinutes() + 15);
+            var startTime = startDate.getHours() + ':' + (startDate.getMinutes()) + ':' + '00';
+            var endTime = endDate.getHours() + ':' + (endDate.getMinutes()) + ':' + '00';
+            connection.query("SELECT a.notificationMode, a.notificationEnabled, a.accountId, a.email, a.reminderTime, a.mobile, p.firstName, p.lastName, pdev.deviceId as patient_device, pdev.modified as modified " +
+                "FROM accounts a left join devices pdev on (a.accountId = pdev.accountId), patients p " +
+                "WHERE a.accountId = p.patientId  and a.notificationEnabled = 1 and a.reminderTime>=? and a.reminderTime <=? AND " +
+                "a.accountId in (SELECT distinct d.patientId from dailyReports d where d.patientId not in (SELECT distinct b.patientId from dailyReports b where DATE(b.date) = DATE(now())) and d.patientId  in (SELECT distinct a.patientId from dailyReports a where DATE(a.date) >= DATE(now() - interval 1 day))) ORDER BY modified DESC;",
                 [startTime, endTime], function (err, result) {
-                    connection.release();
-                    var email = [],
-                        mobile = [],
-                        push = [];
-                    for (var r in result) {
-                        connection.query('INSERT INTO notifications (accountId, date, type, subjectsAccount, modified) values (?, ?, 0, ?, ?)', [r.accountId, date, null, date]);
-                        switch (r.notificationMode) {
-                            case 'email':
-                                email[email.length] = r.email;
-                                postOptions.path = '/echo/email';
-                                break;
-
-                            case 'sms':
-                                mobile[mobile.length] = r.mobile;
-                                postOptions.path = '/echo/sms';
-                                break;
-
-                            case 'push':
-                                push[push.length] = r.deviceId;
-                                postOptions.path = '/echo/sns';
-                                break;
+                    for (var i = 0; i < result.length; i++) {
+                        var r = result[i];
+                        var patient_name = r.firstName + ' ' + r.lastName;
+                        var message = 'Dear ' + patient_name + ', Please insert a daily Report.';
+                        connection.query('INSERT INTO notifications (accountId, date, type, subjectsAccount, message) values (?, ?, 0, ?, ?)', [r.accountId, date, null, message]);
+                        if (r.notificationEnabled) {
+                            switch (r.notificationMode) {
+                                case 'email': sendMessage(r.notificationMode, r.email, message); break;
+                                case 'sms': sendMessage(r.notificationMode, r.mobile, message); break;
+                                case 'push': sendMessage(r.notificationMode, r.patient_device, message); break;
+                            }
                         }
                     }
-                    var data = JSON.stringify({
-                        'subject': 'Please insert a daily report',
-                        'message': 'You have not inserted a daily report, yesterday. Please insert one now.',
-                        'to': email,
-                        'label': 'ECHO',
-                        'arns': push,
-                        'receivers': mobile
-                    });
-                    postOptions.path = '/echo/sns';
-                    var request = http.request(postOptions, function (res) {
-                        res.setEncoding('utf8');
-                        res.on('data', function (data) {
-                            console.log(data);
-                        })
-                    });
-                    if (push.length > 0) {
-                        request.write(data);
-                        request.end();
-                    }
-                    postOptions.path = '/echo/sms';
-                    var request = http.request(postOptions, function (res) {
-                        res.setEncoding('utf8');
-                        res.on('data', function (data) {
-                            console.log(data);
-                        })
-                    });
-                    if (mobile.length > 0) {
-                        request.write(data);
-                        request.end();
-                    }
-                    postOptions.path = '/echo/email';
-                    var request = http.request(postOptions, function (res) {
-                        res.setEncoding('utf8');
-                        res.on('data', function (data) {
-                            console.log(data);
-                        })
-                    });
-                    if (email.length > 0) {
-                        request.write(data);
-                        request.end();
-                    }
+                    connection.release();
                 });
         });
     });
 
     this.on('nDayInactiveAnalyzes', function(n) {
-        var postOptions = {
-            host: service.host,
-            port: '80',
-            method: 'POST',
-            headers: {
-                Authorization: service.apiKey
-            }
-        };
-        if (postOptions.host === '')
-            return;
+        var date = new Date();
+        var startDate = new Date();
+        startDate.setMinutes(date.getMinutes() - 15);
+        var endDate = new Date();
+        endDate.setMinutes(date.getMinutes() + 15);
+        var startTime = startDate.getHours() + ':' + (startDate.getMinutes()) + ':' + '00';
+        var endTime = endDate.getHours() + ':' + (endDate.getMinutes()) + ':' + '00';
         db.getConnection(function(err, connection) {
-            var date = new Date();
-            var startTime = date.getHours() + ':' + (date.getMinutes() - 15) + ':' + '00';
-            var endTime = date.getHours() + ':' + (date.getMinutes()) + ':' + '00';
-            connection.query('SELECT a.accountId, notificationEnabled, email, mobile, deviceId, doctorId from accounts a ' +
-                'left join devices on a.accountId=devices.accountId ' +
-                'inner join patients on a.accountId = patients.patientId ' +
-                'inner join dailyReports d on a.accountId=patientId where d.date <= Date((now() - interval ? day)) and reminderTime>=? and reminderTime <=? and notificationEnabled=1 group by a.accountId;',
-                [n, startTime, endTime], function (err, result) {
-                    var email = [],
-                        mobile = [],
-                        push = [];
-                    for (var r in result) {
-                        connection.query('INSERT INTO notifications (accountId, date, type, subjectsAccount, modified) values (?, ?, 0, ?, ?)', [r.accountId, date, null, date]);
-                        connection.query('INSERT INTO notifications (accountId, date, type, subjectsAccount, modified) values (?, ?, 6, ?, ?)', [r.doctorId, date, r.accountId, date]);
-                        switch (r.notificationMode) {
-                            case 'email':
-                                email[email.length] = r.email;
-                                postOptions.path = '/echo/email';
-                                break;
-
-                            case 'sms':
-                                mobile[mobile.length] = r.mobile;
-                                postOptions.path = '/echo/sms';
-                                break;
-
-                            case 'push':
-                                push[push.length] = r.deviceId;
-                                postOptions.path = '/echo/sns';
-                                break;
+            connection.query("SELECT a.accountId, a.notificationMode, a.notificationEnabled, a.email, a.reminderTime, a.mobile, dev.deviceId, p.firstName, p.lastName, p.patientId " +
+                "FROM accounts a left join devices dev on (a.accountId = dev.accountId), patients p "+
+                "WHERE a.accountId = p.doctorId  and a.role = 'doctor' and  a.reminderTime>=? and a.reminderTime <=? AND " +
+                "p.patientId in (SELECT distinct d.patientId from dailyReports d where d.patientId in (SELECT distinct b.patientId from dailyReports b) and d.patientId not in (SELECT distinct a.patientId from dailyReports a where DATE(a.date) >= DATE(now() - interval ? day))) ORDER BY a.accountId DESC;",
+                [startTime, endTime, n], function (err, result) {
+                    var docs = {};
+                    for (var i = 0; i < result.length; i++) {
+                        var r = result[i];
+                        var patient_name = r.firstName + ' ' + r.lastName;
+                        var m = 'Your patient ' + patient_name + ' has not filled in a report for more than ' + n + ' Days.';
+                        connection.query('INSERT INTO notifications (accountId, date, type, subjectsAccount, message) values (?, ?, 0, ?, ?)', [r.accountId, date, r.patientId, m]);
+                        if (docs[r.accountId]) {
+                            docs[r.accountId].ctr += 1;
+                        }
+                        else {
+                            docs[r.accountId] = {};
+                            docs[r.accountId].ctr = 1;
+                            docs[r.accountId].notificationEnabled = r.notificationEnabled;
+                            docs[r.accountId].notificationMode = r.notificationMode;
+                            docs[r.accountId].destination = {};
+                            switch (r.notificationMode) {
+                                case 'email':
+                                    docs[r.accountId].destination = r.email;
+                                    break;
+                                case 'sms':
+                                    docs[r.accountId].destination = r.mobile;
+                                    break;
+                                case 'push':
+                                    docs[r.accountId].destination = r.deviceId;
+                                    break;
+                            }
+                        }
+                    }
+                    for (var doc in docs) {
+                        var d = docs[doc];
+                        if (d.notificationEnabled) {
+                            var message = d.ctr + ' of your patients havent filled in a report for more than ' + n + ' days!';
+                            sendMessage(d.notificationMode, d.destination, message);
                         }
                     }
                     connection.release();
-                    var data = JSON.stringify({
-                        'subject': 'Please insert a daily report',
-                        'message': 'You have not inserted a daily report, yesterday. Please insert one now.',
-                        'to': email,
-                        'label': 'ECHO',
-                        'arns': push,
-                        'receivers': mobile
-                    });
-                    postOptions.path = '/echo/sns';
-                    var request = http.request(postOptions, function (res) {
-                        res.setEncoding('utf8');
-                        res.on('data', function (data) {
-                            console.log(data);
-                        })
-                    });
-                    if (push.length > 0) {
-                        request.write(data);
-                        request.end();
+                });
+        });
+        db.getConnection(function(err, connection) {
+            connection.query("SELECT a.notificationMode, a.notificationEnabled, a.accountId, a.email, a.reminderTime, a.mobile, p.firstName, p.lastName, pdev.deviceId as patient_device, pdev.modified as modified " +
+                "FROM accounts a left join devices pdev on (a.accountId = pdev.accountId), patients p " +
+                "WHERE a.accountId = p.patientId  and a.notificationEnabled = 1  and a.reminderTime>=? and a.reminderTime <=? AND " +
+                "a.accountId in (SELECT distinct d.patientId from dailyReports d where d.patientId in (SELECT distinct b.patientId from dailyReports b) and d.patientId not in (SELECT distinct a.patientId from dailyReports a where DATE(a.date) >= DATE(now() - interval ? day))) ORDER BY modified DESC;",
+                [startTime, endTime, n], function (err, result) {
+                    for (var i = 0; i < result.length; i++) {
+                        var r = result[i];
+                        var patient_name = r.firstName + ' ' + r.lastName;
+                        var message = 'Dear ' + patient_name + ', You have not filled in a report for more than ' + n + ' Days. Please do so now.';
+                        connection.query('INSERT INTO notifications (accountId, date, type, subjectsAccount, message) values (?, ?, 0, ?, ?)', [r.accountId, date, null, message]);
+                        if (r.notificationEnabled) {
+                            switch (r.notificationMode) {
+                                case 'email':
+                                    sendMessage(r.notificationMode, r.email, message);
+                                    break;
+                                case 'sms':
+                                    sendMessage(r.notificationMode, r.mobile, message);
+                                    break;
+                                case 'push':
+                                    sendMessage(r.notificationMode, r.patient_device, message);
+                                    break;
+                            }
+                        }
                     }
-                    postOptions.path = '/echo/sms';
-                    var request = http.request(postOptions, function (res) {
-                        res.setEncoding('utf8');
-                        res.on('data', function (data) {
-                            console.log(data);
-                        })
-                    });
-                    if (mobile.length > 0) {
-                        request.write(data);
-                        request.end();
-                    }
-                    postOptions.path = '/echo/email';
-                    var request = http.request(postOptions, function (res) {
-                        res.setEncoding('utf8');
-                        res.on('data', function (data) {
-                            console.log(data);
-                        })
-                    });
-                    if (email.length > 0) {
-                        request.write(data);
-                        request.end();
-                    }
+                    connection.release();
                 });
         });
     });
@@ -419,8 +284,6 @@ var DailyAnalyzer = function() {
                 Authorization: service.apiKey
             }
         };
-        if (postOptions.host === '')
-            return;
         db.getConnection(function(err, con) {
             con.query('SELECT goldAnalyzes(?) as new, notificationMode, email, mobile, deviceId from accounts left join devices on accounts.accountId=devices.accountId where accounts.accountId=?;',
                 [id, id], function (err, result) {
@@ -429,49 +292,18 @@ var DailyAnalyzer = function() {
                     if (r == null) {
                         return;
                     } else {
+                        var message = 'The severity of your illness changed to ' + r['new'];
                         switch (r.notificationMode) {
                             case 'email':
-                                postOptions.path = '/echo/email';
-                                var data = JSON.stringify({
-                                    'subject': '',
-                                    'message': 'You are dead.',
-                                    'to': [r.email],
-                                    'label': 'ECHO'
-                                });
+                                sendMessage(r.notificationMode, r.email, message);
                                 break;
-
                             case 'sms':
-                                postOptions.path = '/echo/sms';
-                                var data = JSON.stringify({
-                                    'subject': 'This is an ECHO Notification',
-                                    'message': 'You are dead.',
-                                    'label': 'ECHO',
-                                    'receivers': r.mobile
-                                });
+                                sendMessage(r.notificationMode, r.mobile, message);
                                 break;
-
                             case 'push':
-                                postOptions.path = '/echo/sns';
-                                var data = JSON.stringify({
-                                    'subject': 'This is an ECHO Notification',
-                                    'message': 'You are dead.',
-                                    'label': 'ECHO',
-                                    'arns': r.deviceId
-                                });
+                                sendMessage(r.notificationMode, r.patient_device, message);
                                 break;
                         }
-
-                        data.subject = 'The severity changed.';
-                        data.message = 'The severity of your illness changed to ' + r['new'];
-
-                        var request = http.request(postOptions, function (res) {
-                            res.setEncoding('utf8');
-                            res.on('data', function (data) {
-                                console.log(data);
-                            })
-                        });
-                        request.write(data);
-                        request.end();
                     }
                 });
         });
@@ -483,3 +315,53 @@ util.inherits(DailyAnalyzer, EventEmitter);
 
 // we specify that this module is a refrence to the Radio class
 module.exports = DailyAnalyzer;
+
+function sendMessage(mode, destination, message){
+    var debug = false;
+    if (service.apiKey.length > 1) {
+        var opts = {
+            host: postOptions.host,
+            port: postOptions.port,
+            method: postOptions.method,
+            headers: postOptions.headers
+        };
+        var msg = {
+            'message': message
+        };
+        switch (mode) {
+            case 'email':
+                msg.to = [];
+                msg.to[0] = destination;
+                msg.subject = service.email.subject;
+                opts.path = service.email.url;
+                break;
+            case 'sms':
+                msg.receivers = [];
+                msg.receivers[0] = destination;
+                msg.label = service.sms.label;
+                opts.path = service.sms.url;
+                break;
+            case 'push':
+                msg.arns = [];
+                msg.arns[0] = destination;
+                opts.path = service.push.url;
+                break;
+        }
+        var payload = JSON.stringify(msg);
+        opts.headers['Content-Length'] = payload.length;
+
+
+        var request = http.request(opts, function (res) {
+            res.setEncoding('utf8');
+            res.on('data', function (data) {
+                //console.log(i.notificationMode + ': '+ data);
+            });
+            res.on('error', function (err, data){
+
+            });
+        });
+        request.write(payload);
+        request.end();
+    }
+    if (debug) console.log ("Sent Message to " + destination + " ("+ mode+"): " + message);
+};
