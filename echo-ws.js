@@ -40,12 +40,12 @@ if (cluster.isMaster) {
         console.log(timestamp + ": Worker "+ worker.process.pid + " is now connected to " + address.address + ":" + address.port);
     });
 
-    var j = schedule.scheduleJob('*/1 * * * *', function () {
+    var j = schedule.scheduleJob('*/30 * * * *', function () {
         timeAnalyzer.send ({timebased: true});
     });
 
 
-    } else {
+} else {
     /**
      *
      * Config & Vars
