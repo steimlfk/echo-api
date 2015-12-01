@@ -3,6 +3,7 @@
  */
 var express = require('express'),
     http = require('http'),
+    async = require('async'),
     https = require('https'),
     passport = require('passport'),
     bodyParser = require('body-parser'),
@@ -23,49 +24,62 @@ var api_docs = "/api-docs";
 var ctrl_utils = require('./health-api-middlewares');
 
 if (cluster.isMaster) {
-    var portTester = http.createServer(function (req, res) { res.end('Hello world!'); }).listen(port);
-    portTester.on('error', function (err) {
-        if (err.message.indexOf('EADDRINUSE') > 1) console.error('Port in use. Server already running?');
-        else console.error(err.stack);
-        process.exit(1);
-    });
-    portTester.close();
-    var timestamp = new Date().toUTCString();
+    var portTester;
+    async.series([
+        function(cb){
+            portTester = http.createServer(function (req, res) { res.end('Hello world!'); }).listen(port);
+            portTester.on('error', function (err) {
+                if (err.message.indexOf('EADDRINUSE') > 1) console.error('Port in use. Server already running?');
+                else console.error(err.stack);
+                process.exit(1);
+            });
+            cb (null, true);
+        },
+        function(cb){
+            setTimeout(cb(null, true), 1000);
+        },
+        function(cb){
+            portTester.close();
+            cb (null, true);
+        },
+    ], function(err, res){
 
-    console.log(timestamp + ' ECHO Master Node PID  ' +process.pid);
-    console.log('ECHO REST API listening on host ' + host + ' on port ' + port);
-    if (config.ssl.useSsl) {
-        console.log('Server uses SSL');
-        console.log('Swagger Base: https://' + host + ':' + url_port + api_docs);
-    }
-    else console.log('Swagger Base: http://' + host + ':' + url_port + api_docs);
-
-
-    var cpuCount = 1;//require('os').cpus().length;
-    var amount = require('./config.js').workers;
-    var timeAnalyzer = null;
-    for (var i = 0; i < cpuCount && (i < amount || amount == -1); i++) {
-        var c = cluster.fork();
-        timeAnalyzer = c;
-    }
-
-    cluster.on('exit', function(worker, code, signal) {
         var timestamp = new Date().toUTCString();
 
-        console.log(timestamp +': Worker ' + worker.process.pid + ' died with code: ' + code + ', and signal: ' + signal);
-        console.log(timestamp +': Starting a new worker');
-        //if (code == 0) timeAnalyzer = cluster.fork();
-    });
+        console.log(timestamp + ' ECHO Master Node PID  ' +process.pid);
+        console.log('ECHO REST API listening on host ' + host + ' on port ' + port);
+        if (config.ssl.useSsl) {
+            console.log('Server uses SSL');
+            console.log('Swagger Base: https://' + host + ':' + url_port + api_docs);
+        }
+        else console.log('Swagger Base: http://' + host + ':' + url_port + api_docs);
 
-    cluster.on('listening', function(worker, address) {
-        var timestamp = new Date().toUTCString();
-        console.log(timestamp + ": Worker "+ worker.process.pid + " is now running.");
-    });
 
-    var j = schedule.scheduleJob('*/30 * * * *', function () {
-        timeAnalyzer.send ({timebased: true});
-    });
+        var cpuCount = require('os').cpus().length;
+        var amount = require('./config.js').workers;
+        var timeAnalyzer = null;
+        for (var i = 0; i < cpuCount && (i < amount || amount == -1); i++) {
+            var c = cluster.fork();
+            timeAnalyzer = c;
+        }
 
+        cluster.on('exit', function(worker, code, signal) {
+            var timestamp = new Date().toUTCString();
+
+            console.log(timestamp +': Worker ' + worker.process.pid + ' died with code: ' + code + ', and signal: ' + signal);
+            console.log(timestamp +': Starting a new worker');
+            //if (code == 0) timeAnalyzer = cluster.fork();
+        });
+
+        cluster.on('listening', function(worker, address) {
+            var timestamp = new Date().toUTCString();
+            console.log(timestamp + ": Worker "+ worker.process.pid + " is now running.");
+        });
+
+        var j = schedule.scheduleJob('*/30 * * * *', function () {
+            timeAnalyzer.send ({timebased: true});
+        });
+    });
 
 } else {
     /**
@@ -119,10 +133,10 @@ if (cluster.isMaster) {
     swagger.addPost({'spec':oauth2.loginSpec,'action':oauth2.endpoint});
 
     app.delete ('*', function(req,res,next){
-       if (req.originalUrl.indexOf('devices') > 0){
-           res.sendStatus(204);
-       }
-       else next();
+        if (req.originalUrl.indexOf('devices') > 0){
+            res.sendStatus(204);
+        }
+        else next();
     });
 //setup protected ECHO Endpoints
     var echo_endpoints = ['/accounts', '/patients', '/questions','/notifications','/createPatientAndAccount','/changeDoctor', '/devices'];
