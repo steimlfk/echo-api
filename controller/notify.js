@@ -317,7 +317,7 @@ util.inherits(DailyAnalyzer, EventEmitter);
 module.exports = DailyAnalyzer;
 
 function sendMessage(mode, destination, message){
-    var debug = false;
+    var debug = require('../config.js').debug;
     if (service.apiKey.length > 1) {
         var opts = {
             host: postOptions.host,
@@ -354,10 +354,10 @@ function sendMessage(mode, destination, message){
         var request = http.request(opts, function (res) {
             res.setEncoding('utf8');
             res.on('data', function (data) {
-                //console.log(i.notificationMode + ': '+ data);
+                if (debug) console.log(mode + ': '+ data);
             });
             res.on('error', function (err, data){
-
+                if (debug) console.log(mode + ': '+ data);
             });
         });
         request.write(payload);
