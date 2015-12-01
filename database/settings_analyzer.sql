@@ -12,7 +12,6 @@ INSERT  IGNORE INTO `perm_roles_procedures` (`role`, `procedure_obj`) VALUES
 ('admin','analyserRulesListOneAll'),
 ('admin','analyserUpdate'),
 ('admin','daysExacerbationListOne'),
-('admin','daysExacerbationTraining'),
 ('doctor','analyserCreate'),
 ('doctor','analyserDelete'),
 ('doctor','analyserFilterCreate'),
@@ -25,8 +24,7 @@ INSERT  IGNORE INTO `perm_roles_procedures` (`role`, `procedure_obj`) VALUES
 ('doctor','analyserRulesListOne'),
 ('doctor','analyserRulesListOneAll'),
 ('doctor','analyserUpdate'),
-('doctor','daysExacerbationListOne'),
-('doctor','daysExacerbationTraining');
+('doctor','daysExacerbationListOne');
 
 INSERT  IGNORE INTO `perm_roles_views` (`role`, `view_obj`) VALUES
 ('admin','analyserEvents_view'),

@@ -32,7 +32,7 @@ exec('mysql echo -u ' + user + ' -p' + pw + " -e \"CALL dropAllDbUsers(); DROP U
                     if (!use_external) {
                         async.series([
                             function (cb){
-                                async.eachSeries(['../database/settings.sql', '../database/questions.sql', '../database/initial.sql'], function(file, callback) {
+                                async.eachSeries(['../database/settings.sql','../database/analyzer.sql','../database/settings_analyzer.sql', '../database/questions.sql', '../database/initial.sql'], function(file, callback) {
                                     // Perform operation on file here.
                                     console.log('Processing file ' + file);
                                     exec('mysql -u ' + user + ' -p' + pw + ' echo < '+ file, function (error, standOut, standErr) {
