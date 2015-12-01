@@ -137,9 +137,9 @@ var DailyAnalyzer = function() {
                                 // doctors notification
                                 if (i.doc_enabled){
                                     switch (i.doc_mode) {
-                                        case 'email': sendMessage(i.notificationMode, i.doc_email, doctext); break;
-                                        case 'sms': sendMessage(i.notificationMode, i.doc_mobile, doctext); break;
-                                        case 'push': sendMessage(i.notificationMode, i.doc_device, doctext); break;
+                                        case 'email': sendMessage(i.doc_mode, i.doc_email, doctext); break;
+                                        case 'sms': sendMessage(i.doc_mode, i.doc_mobile, doctext); break;
+                                        case 'push': sendMessage(i.doc_mode, i.doc_device, doctext); break;
                                     }
                                     cb(null, 'doctors notification was sent');
                                 }
